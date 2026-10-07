@@ -57,3 +57,13 @@ that the statement logically follows from the quote. Human review is still requi
 `GET /api/v1/analyses/{id}`, `GET /api/v1/findings?analysis_run_id=...` and
 `GET /api/v1/findings/{id}` expose persisted results and run metadata.
 Source documents referenced by analyses cannot be deleted (409), preserving the audit trail.
+
+## Human review
+
+`POST /api/v1/findings/{id}/reviews` accepts `action` (`CONFIRM`, `MODIFY`, `REJECT`)
+and `comment`. `MODIFY` additionally requires `reviewed_value` with `statement`,
+`category` and `requirement_type`. Other actions retain the latest effective value.
+`GET /api/v1/findings/{id}/reviews` returns append-only history, original output,
+previous/current values and timestamps. Finding fields preserve the original AI output;
+`effective_value` and `review_status` reflect review history. Analysis responses remain
+immutable snapshots. Human confirmation does not change evidence grounding status.

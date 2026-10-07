@@ -93,7 +93,14 @@ class EvidenceRef(BaseModel):
     grounding_status: GroundingStatus
 
 
+class ReviewedValue(BaseModel):
+    statement: str = Field(min_length=1, max_length=4000, pattern=r"\S")
+    category: RequirementCategory
+    requirement_type: RequirementType
+
+
 class Finding(BaseModel):
+    reviewed_value: ReviewedValue | None = None
     analysis_run_id: str = ""
     id: str
     statement: str
@@ -104,6 +111,13 @@ class Finding(BaseModel):
     confidence_reason: str | None = None
     review_status: ReviewStatus = ReviewStatus.UNREVIEWED
     created_at: datetime
+
+    @computed_field
+    @property
+    def effective_value(self) -> ReviewedValue:
+        return self.reviewed_value or ReviewedValue(
+            statement=self.statement, category=self.category, requirement_type=self.requirement_type
+        )
 
     @computed_field
     @property
