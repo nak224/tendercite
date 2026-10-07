@@ -31,6 +31,8 @@ services:
       - "127.0.0.1:8501:8501"
     environment:
       TENDERCITE_API_URL: http://api:8000
+      NO_PROXY: "${NO_PROXY:-},api,localhost,127.0.0.1"
+      no_proxy: "${no_proxy:-${NO_PROXY:-}},api,localhost,127.0.0.1"
     security_opt:
       - no-new-privileges:true
     cap_drop: [ALL]

@@ -67,8 +67,10 @@ docker build --secret id=ca_bundle,src=/path/to/trusted-ca-bundle.pem \
 ```
 
 The CA is mounted only during dependency/build installation. Never disable TLS verification.
-The onboarding build also needed host networking and a host mapping for its environment proxy;
-these are cloud-network details, not a requirement for ordinary Docker installations.
+In managed cloud environments, preserve the platform Docker proxy defaults and registry
+configuration. Supply the provided trusted CA (or combined system bundle) to every networked
+build step. Running containers need a read-only CA mount and client-specific trust variables
+when using that proxy; rebuild or recreate containers after a session proxy changes.
 Runtime provider/model access needs appropriate runtime proxy/CA configuration separately.
 
 ## Backup, cleanup and troubleshooting
@@ -83,3 +85,6 @@ invalid structured output; 502 means retrieval/provider failure. Check configura
 without logging document bodies or secrets. A 409 deletion protects referenced sources.
 
 The API is a local prototype, not a hardened public service. See SECURITY.md and the release gates.
+
+Compose appends the internal `api` service name to the UI process `NO_PROXY` list so local
+UI-to-API traffic stays on the Docker network. External requests keep the configured proxy.
