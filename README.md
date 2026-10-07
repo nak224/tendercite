@@ -1,154 +1,152 @@
 # TenderCite
 
-**Evidence-grounded AI for public procurement documents.**
+**Evidence-grounded AI for public procurement documents**
 
-TenderCite is an open-source document-intelligence application for analyzing public tender documents with traceable evidence. Its core rule is simple: important findings should point back to the source document, page and supporting text instead of appearing as unsupported AI answers.
+TenderCite turns text-based tender PDFs into source-linked findings that a human can review
+and use in a Go / No-Go matrix. Every claimed citation is checked against a stored document,
+page and text passage. A valid quotation does **not** prove the model's interpretation is correct.
 
-> Status: **v0.1 vertical slice** — page-aware PDF ingestion, deterministic chunking, source-quote validation, REST API, local persistence and a minimal upload UI are implemented. Semantic retrieval, structured extraction and the human-review workflow are the next milestones.
+**Status:** unreleased development work built on v0.1. The complete workflow is implemented
+and tested with deterministic model doubles. Live E5/LLM evaluation is still an open release
+gate; this repository is **not yet declared v1.0.0**. See [release checks](docs/release-check.md).
 
-## Why TenderCite?
+## What works
 
-Typical "chat with your PDF" systems optimize for fluent answers. TenderCite optimizes for **reviewability**:
+- Multi-PDF upload, page-aware pypdf parsing, bounded chunks and exact source offsets.
+- SQLite persistence and duplicate-upload detection by SHA-256.
+- Replaceable local embeddings (default `intfloat/e5-small-v2`) and persistent Chroma search.
+- Document-scoped retrieval with source metadata; idempotent reindexing.
+- OpenAI-compatible structured extraction with Pydantic validation and per-citation checks.
+- Explicit VERIFIED_QUOTE / INVALID_QUOTE / MISSING_EVIDENCE states.
+- Confirm, modify or reject findings while preserving original AI output and review history.
+- Human-managed Go / No-Go statuses, defaulting to CLARIFICATION_NEEDED.
+- JSON, CSV and Markdown exports; Streamlit UI; FastAPI/OpenAPI.
+- Synthetic evaluation corpus, offline tests, hashed dependency locks, Docker and CI definitions.
 
-- multiple tender documents can be ingested and kept source-separated;
-- chunks never cross page boundaries;
-- extracted evidence is modeled as structured data;
-- quoted evidence is validated against stored page text;
-- unsupported quotes can be rejected deterministically;
-- AI findings are designed for human confirmation, modification or rejection;
-- Go/No-Go assessment is human-assisted rather than presented as legal advice.
+## Architecture
 
-## Target v1.0 capabilities
-
-- Multi-PDF import with page-preserving text extraction
-- Semantic search with source-backed hits
-- Structured requirement extraction
-- Requirement classes: `MUST`, `SCORING`, `INFORMATION`, `RISK`
-- Evidence objects containing document, page, quote and grounding status
-- Human review with an audit trail
-- Go/No-Go matrix
-- JSON, CSV and Markdown export
-- REST API and a lightweight web UI
-- Dockerized local deployment and CI
-
-## Quick start
-
-### API
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
-pip install -e ".[dev]"
-uvicorn tendercite.main:app --reload
+```mermaid
+flowchart TD
+    PDF[PDF upload] --> Parser[Page-aware parsing]
+    Parser --> SQLite[(SQLite source pages)]
+    SQLite --> Chunks[Page-bounded chunks]
+    Chunks --> Embeddings[EmbeddingProvider: local E5]
+    Embeddings --> Chroma[(Chroma local index)]
+    Chroma --> Retrieval[Document-scoped retrieval]
+    Retrieval --> LLM[StructuredLLM: OpenAI-compatible adapter]
+    LLM --> Validation[Schema and deterministic evidence validation]
+    SQLite --> Validation
+    Validation --> Findings[Original findings]
+    Findings --> Review[Human review and audit trail]
+    Review --> Matrix[Human-managed Go / No-Go matrix]
+    Matrix --> Export[JSON / CSV / Markdown]
+    UI[Streamlit] --> API[FastAPI modular monolith]
+    API --> PDF
+    API --> Retrieval
+    API --> Review
 ```
 
-Then open `http://localhost:8000/docs`.
+No agent framework, microservices or remote Chroma server is required. See
+[architecture](docs/architecture.md) and [data models](docs/data-models.md).
 
-### Docker Compose
+## Quick start (Python 3.12, Linux CPU)
+
+```bash
+git clone https://github.com/nak224/tendercite.git
+cd tendercite
+python -m pip install uv==0.12.19
+uv venv .venv
+uv pip install --python .venv/bin/python --torch-backend cpu --require-hashes -r requirements-dev.lock
+uv pip install --python .venv/bin/python --no-deps -e .
+source .venv/bin/activate
+uvicorn tendercite.main:app --host 127.0.0.1 --port 8000
+# In a second terminal, activate the same environment:
+streamlit run frontend/app.py --server.address=127.0.0.1
+```
+
+The first text upload/search downloads E5 model files from Hugging Face. Allow sufficient
+network access and a writable Hugging Face cache; set `HF_HOME` if necessary. If unavailable,
+the source remains stored and upload returns 503: fix model access and retry upload or
+`POST /api/v1/documents/{id}/index`. To work on ingestion alone, explicitly set
+`TENDERCITE_RETRIEVAL_ENABLED=false` before starting the API.
+
+For other platforms, install `.[dev,retrieval,ui]` using your platform's PyTorch instructions;
+the checked-in locks target Python 3.12 Linux CPU. Revalidate on other platforms.
+
+### Configure structured analysis
+
+```bash
+export TENDERCITE_LLM_BASE_URL=http://localhost:11434/v1
+export TENDERCITE_LLM_MODEL=your-served-model
+# Set TENDERCITE_LLM_API_KEY securely if your provider requires it.
+```
+
+Restart the API after changing settings. The server must support OpenAI-compatible
+`/chat/completions` and JSON-schema output; compatibility with every Ollama/vLLM/LM Studio
+version is not claimed. No model server is bundled. The API reads `.env`; the Streamlit
+API URL must be exported as `TENDERCITE_API_URL` when overriding its default.
+
+Analysis sends selected retrieved passages to the configured provider. Review its privacy,
+retention and model-license terms first. Offline tests do not need model downloads or paid APIs.
+
+### UI walkthrough
+
+1. Import PDFs in **Documents**; inspect page/chunk counts.
+2. Use **Search** and select source documents in the sidebar.
+3. In **Analysis & review**, choose a focus and explicitly permit sending passages.
+4. Inspect quotes and source pages; confirm, modify or reject each finding with a comment.
+5. In **Go / No-Go**, record bidder facts, status and rationale.
+6. Download **Export** results. Unreviewed/rejected findings remain explicitly labeled.
+
+## Tests and evaluation
+
+```bash
+pytest
+ruff check .
+ruff format --check .
+# With a working real embedding model and running API:
+python -m evaluation.run --output /tmp/retrieval-evaluation.json
+# Additionally uses the configured LLM, with synthetic text only:
+python -m evaluation.run --analysis --output /tmp/full-evaluation.json
+```
+
+Tests exercise real SQLite/Chroma and the API/UI with deterministic embedding/LLM doubles.
+The [six-case evaluation](evaluation/README.md) measures retrieval Hit@k, exact source-span/type
+precision/recall/F1 and evidence rates. It does not establish broad tender-analysis accuracy.
+
+## Docker
 
 ```bash
 docker compose up --build
 ```
 
-This starts:
+Both services run as a non-root user. Host ports bind to loopback; SQLite, source PDFs,
+Chroma and downloaded models live in the `tendercite-data` volume. Processes restart;
+persistent files remain. See [deployment](docs/deployment.md) for configuration and proxy CAs.
 
-- FastAPI at `http://localhost:8000`
-- Streamlit at `http://localhost:8501`
+## API
 
-## Example: validate source evidence
+OpenAPI is served at `/docs`. Core routes are under `/api/v1`: `documents`, `search`,
+`analyses`, `findings`, `findings/{id}/reviews`, `go-no-go`, `exports`. Liveness: `/health`.
+Examples and error semantics: [API documentation](docs/api.md).
 
-```bash
-curl -X POST http://localhost:8000/api/v1/evidence/validate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "document_id": "<document-id>",
-    "page_number": 4,
-    "quote": "Mindestens zwei vergleichbare Referenzprojekte"
-  }'
-```
+## Limitations and responsible use
 
-A verified response contains `"grounding_status": "VERIFIED_QUOTE"`. A quote that is not present on that page is returned as `INVALID_QUOTE` rather than silently accepted.
+- Not legal or procurement advice. Findings and bidder assessments require human review.
+- Confidence is an uncalibrated model signal, not a probability of correctness.
+- Quote validation proves text occurrence and source identity, not logical entailment.
+- Retrieval covers selected top-k chunks, not necessarily every requirement in a tender.
+- No OCR; scans, complex layouts/tables and encrypted PDFs are not reliably supported.
+- E5-small-v2 primarily targets English. German-language quality is not validated.
+- No authentication, multi-tenancy, bidder capability inference or legal automation.
+- Local documents are confidential data. Use a trusted single-user deployment; see
+  [SECURITY.md](SECURITY.md) and the [dependency audit](docs/security-review.md).
+- Sources referenced by analyses are retained for audit; no selective history purge UI exists.
 
-## Architecture
+## License and handover
 
-TenderCite is intentionally a modular monolith for v1.0:
-
-```text
-PDF -> page parser -> page-bounded chunks -> embeddings/vector search
-                                      |                |
-                                      |                v
-                                      +--------> structured extraction
-                                                       |
-                                                       v
-                                               evidence validation
-                                                       |
-                                                       v
-                                             human review / matrix
-```
-
-See [`docs/architecture.md`](docs/architecture.md) for the design rationale and provenance invariant.
-
-## Planned stack
-
-| Layer | Choice |
-|---|---|
-| Language | Python 3.12 |
-| API | FastAPI + Pydantic v2 |
-| PDF MVP | pypdf |
-| Advanced parser candidate | Docling adapter |
-| Embeddings | sentence-transformers / `intfloat/e5-small-v2` |
-| Vector store | Chroma, local mode |
-| App persistence | SQLite |
-| LLM abstraction | Small `StructuredLLM` protocol + OpenAI-compatible adapter |
-| UI | Streamlit |
-| Quality | pytest, Ruff, GitHub Actions |
-| Packaging/deployment | Docker / Docker Compose |
-
-The project does not require a hosted LLM for document ingestion, page tracking or evidence validation.
-
-## Roadmap to v1.0
-
-### v0.1 — provenance foundation
-
-- [x] Professional repository structure
-- [x] Page-aware PDF ingestion
-- [x] Page-bounded chunking
-- [x] SQLite persistence for documents/pages/chunks
-- [x] Evidence quote validator
-- [x] REST API baseline
-- [x] Minimal UI
-- [x] Tests and CI configuration
-
-### v0.5 — useful tender analysis
-
-- [ ] Local embeddings + Chroma indexing
-- [ ] Semantic search endpoint/UI
-- [ ] Structured extraction schema and prompt
-- [ ] Extraction of deadlines, eligibility, references, financial, insurance, technical, award, contract, privacy and security requirements
-- [ ] Evidence validation for every generated finding
-- [ ] Finding list/detail UI
-
-### v1.0 — reviewable decision workflow
-
-- [ ] Confirm / modify / reject workflow with preserved original AI output
-- [ ] Review comments and history
-- [ ] Human-assisted Go/No-Go matrix
-- [ ] JSON / CSV / Markdown export
-- [ ] End-to-end fixture and evaluation examples
-- [ ] Deployment documentation and demo screenshots
-- [ ] License audit notes for dependencies/models/example data
-- [ ] Tagged `v1.0.0` release
-
-## Non-goals
-
-TenderCite is not intended to:
-
-- fabricate requirements when evidence is missing;
-- make autonomous legal eligibility decisions;
-- replace procurement or legal review;
-- hide uncertainty behind a single confidence number;
-- lock retrieval and citation logic to one commercial LLM provider.
-
-## License
-
-TenderCite source code is licensed under the Apache License 2.0. Third-party dependencies, model weights and datasets keep their own licenses. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+TenderCite code and its explicitly identified synthetic evaluation fixture use Apache-2.0.
+This does not license third-party model weights, dependencies or uploaded documents.
+The default E5 model is separately MIT-licensed; verify the exact revision before redistribution.
+See [third-party notices](THIRD_PARTY_NOTICES.md), [contribution guide](CONTRIBUTING.md),
+[changelog](CHANGELOG.md) and [remaining roadmap](docs/roadmap.md).
