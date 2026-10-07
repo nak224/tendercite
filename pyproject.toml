@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tendercite"
+version = "0.1.0"
+description = "Evidence-grounded AI for public procurement documents"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "Apache-2.0"}
+authors = [{name = "TenderCite contributors"}]
+dependencies = [
+  "fastapi>=0.115,<1.0",
+  "httpx>=0.27,<1.0",
+  "pydantic>=2.9,<3.0",
+  "pydantic-settings>=2.5,<3.0",
+  "pypdf>=6.0,<7.0",
+  "python-multipart>=0.0.12,<1.0",
+  "uvicorn[standard]>=0.30,<1.0",
+]
+
+[project.optional-dependencies]
+retrieval = [
+  "chromadb>=1.0,<2.0",
+  "sentence-transformers>=5.0,<7.0",
+]
+ui = [
+  "streamlit>=1.50,<2.0",
+]
+dev = [
+  "pytest>=8.3,<9.0",
+  "pytest-cov>=6.0,<8.0",
+  "ruff>=0.13,<1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/nak224/tendercite"
+Repository = "https://github.com/nak224/tendercite"
+Issues = "https://github.com/nak224/tendercite/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
