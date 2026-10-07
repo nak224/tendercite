@@ -141,6 +141,8 @@ def delete_document(
 ) -> None:
     if repository.get_document(document_id) is None:
         raise HTTPException(404, "Document not found")
+    if repository.document_has_analyses(document_id):
+        raise HTTPException(409, "Document is referenced by an analysis; retained for audit")
     if settings.retrieval_enabled:
         try:
             get_retrieval().store.delete_document(document_id)

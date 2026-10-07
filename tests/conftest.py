@@ -45,3 +45,22 @@ def client(tmp_path, monkeypatch):
             yield client
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def retrieval(client, tmp_path, monkeypatch):
+    from test_retrieval import FakeEmbeddings
+
+    from tendercite.api.dependencies import get_retrieval
+    from tendercite.api.routes import documents
+    from tendercite.services.retrieval.chroma import ChromaVectorStore
+    from tendercite.services.retrieval.service import RetrievalService
+
+    pytest.importorskip("chromadb")
+    repo = app.dependency_overrides[get_repository]()
+    store = ChromaVectorStore(tmp_path / "vectors", "test-chunks")
+    service = RetrievalService(repo, FakeEmbeddings(), store)
+    app.dependency_overrides[get_retrieval] = lambda: service
+    monkeypatch.setattr(documents, "get_retrieval", lambda: service)
+    monkeypatch.setattr(settings, "retrieval_enabled", True)
+    return service

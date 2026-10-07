@@ -4,14 +4,10 @@ from types import SimpleNamespace
 import pytest
 from conftest import make_pdf
 
-from tendercite.api.dependencies import get_repository, get_retrieval
-from tendercite.api.routes import documents
 from tendercite.core.config import settings
-from tendercite.main import app
 from tendercite.services.retrieval.base import SearchRequest
 from tendercite.services.retrieval.chroma import ChromaVectorStore
 from tendercite.services.retrieval.embeddings import SentenceTransformerEmbeddingProvider
-from tendercite.services.retrieval.service import RetrievalService
 
 
 class FakeEmbeddings:
@@ -22,18 +18,6 @@ class FakeEmbeddings:
 
     def embed_query(self, text):
         return [float("reference" in text.lower()), float("insurance" in text.lower()), 0.01]
-
-
-@pytest.fixture
-def retrieval(client, tmp_path, monkeypatch):
-    pytest.importorskip("chromadb")
-    repo = app.dependency_overrides[get_repository]()
-    store = ChromaVectorStore(tmp_path / "vectors", "test-chunks")
-    service = RetrievalService(repo, FakeEmbeddings(), store)
-    app.dependency_overrides[get_retrieval] = lambda: service
-    monkeypatch.setattr(documents, "get_retrieval", lambda: service)
-    monkeypatch.setattr(settings, "retrieval_enabled", True)
-    return service
 
 
 def test_index_search_filter_deduplicate_and_delete(client, retrieval, tmp_path):

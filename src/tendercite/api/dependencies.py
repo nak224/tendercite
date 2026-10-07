@@ -36,3 +36,17 @@ def get_retrieval():
 
 
 _retrievals = {}
+
+
+def get_llm():
+    from fastapi import HTTPException
+
+    from tendercite.services.llm.openai_compatible import OpenAICompatibleLLM
+
+    if not settings.llm_base_url or not settings.llm_model:
+        raise HTTPException(503, "Configure TENDERCITE_LLM_BASE_URL and TENDERCITE_LLM_MODEL")
+    return OpenAICompatibleLLM(
+        base_url=settings.llm_base_url,
+        model=settings.llm_model,
+        api_key=settings.llm_api_key.get_secret_value() if settings.llm_api_key else None,
+    )

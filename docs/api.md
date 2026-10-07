@@ -43,3 +43,17 @@ Uploads index automatically; identical PDF bytes reuse the existing document and
 On indexing failure the source remains stored; retry upload or the index endpoint.
 Install `.[retrieval]` and allow the first E5 model download, or use a prepopulated cache.
 `TENDERCITE_RETRIEVAL_ENABLED=false` supports ingestion-only development.
+
+## Grounded analysis
+
+`POST /api/v1/analyses` takes explicit `document_ids`, optional `query` and `top_k`.
+Configure `TENDERCITE_LLM_BASE_URL`, `TENDERCITE_LLM_MODEL` and, when needed,
+`TENDERCITE_LLM_API_KEY` in the process environment. The provider must support
+OpenAI-compatible chat completions with JSON schema output.
+Only retrieved chunks from the selected documents are sent to that provider.
+Each citation must match a retrieved chunk, its document, page and stored page text.
+Invalid/missing evidence remains explicitly marked; quote validity does not establish
+that the statement logically follows from the quote. Human review is still required.
+`GET /api/v1/analyses/{id}`, `GET /api/v1/findings?analysis_run_id=...` and
+`GET /api/v1/findings/{id}` expose persisted results and run metadata.
+Source documents referenced by analyses cannot be deleted (409), preserving the audit trail.

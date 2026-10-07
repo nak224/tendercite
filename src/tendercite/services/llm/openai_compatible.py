@@ -14,6 +14,8 @@ class OpenAICompatibleLLM:
     servers (for example Ollama/vLLM deployments exposing the same endpoint shape).
     """
 
+    provider = "openai-compatible"
+
     def __init__(self, *, base_url: str, model: str, api_key: str | None = None) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
@@ -43,6 +45,10 @@ class OpenAICompatibleLLM:
                 },
             ],
             "temperature": 0,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {"name": "tender_findings", "schema": schema},
+            },
         }
         async with httpx.AsyncClient(timeout=90) as client:
             response = await client.post(

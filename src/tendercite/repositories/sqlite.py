@@ -50,6 +50,15 @@ class SqliteRepository:
                     FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
                 );
 
+                CREATE TABLE IF NOT EXISTS analyses (
+                    id TEXT PRIMARY KEY,
+                    payload TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS findings (
+                    id TEXT PRIMARY KEY,
+                    analysis_run_id TEXT NOT NULL REFERENCES analyses(id),
+                    payload TEXT NOT NULL
+                );
                 CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
                 CREATE INDEX IF NOT EXISTS idx_chunks_page ON chunks(document_id, page_number);
                 """
@@ -165,3 +174,49 @@ class SqliteRepository:
                 "SELECT * FROM documents WHERE sha256 = ? LIMIT 1", (sha256,)
             ).fetchone()
         return DocumentRead(**dict(row)) if row else None
+
+    def save_analysis(self, run) -> None:
+        with self._connect() as conn:
+            conn.execute("INSERT INTO analyses VALUES (?, ?)", (run.id, run.model_dump_json()))
+            conn.executemany(
+                "INSERT INTO findings VALUES (?, ?, ?)",
+                [(f.id, run.id, f.model_dump_json()) for f in run.findings],
+            )
+
+    def get_analysis(self, analysis_id: str):
+        from tendercite.domain.analysis import AnalysisRun
+
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT payload FROM analyses WHERE id = ?", (analysis_id,)
+            ).fetchone()
+        return AnalysisRun.model_validate_json(row["payload"]) if row else None
+
+    def list_findings(self, analysis_run_id: str | None = None):
+        from tendercite.domain.models import Finding
+
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT payload FROM findings WHERE (? IS NULL OR analysis_run_id=?) "
+                "ORDER BY rowid",
+                (analysis_run_id, analysis_run_id),
+            ).fetchall()
+        return [Finding.model_validate_json(row["payload"]) for row in rows]
+
+    def get_finding(self, finding_id: str):
+        from tendercite.domain.models import Finding
+
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT payload FROM findings WHERE id = ?", (finding_id,)
+            ).fetchone()
+        return Finding.model_validate_json(row["payload"]) if row else None
+
+    def document_has_analyses(self, document_id: str) -> bool:
+        import json
+
+        with self._connect() as conn:
+            rows = conn.execute("SELECT payload FROM analyses").fetchall()
+        return any(
+            document_id in json.loads(row["payload"])["request"]["document_ids"] for row in rows
+        )
