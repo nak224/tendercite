@@ -14,7 +14,7 @@ gate; this repository is **not yet declared v1.0.0**. See [release checks](docs/
 
 - Multi-PDF upload, page-aware pypdf parsing, bounded chunks and exact source offsets.
 - SQLite persistence and duplicate-upload detection by SHA-256.
-- Replaceable local embeddings (default `intfloat/e5-small-v2`) and persistent Chroma search.
+- Replaceable local embeddings (default `intfloat/multilingual-e5-small`) and persistent Chroma search.
 - Document-scoped retrieval with source metadata; idempotent reindexing.
 - OpenAI-compatible structured extraction with Pydantic validation and per-citation checks.
 - Explicit VERIFIED_QUOTE / INVALID_QUOTE / MISSING_EVIDENCE states.
@@ -64,7 +64,9 @@ uvicorn tendercite.main:app --host 127.0.0.1 --port 8000
 streamlit run frontend/app.py --server.address=127.0.0.1
 ```
 
-The first text upload/search downloads E5 model files from Hugging Face. Allow sufficient
+The first text upload/search downloads E5 model files from Hugging Face. Before live
+evaluation or v1.0.0, pin a concrete, verified embedding-model commit with
+`TENDERCITE_EMBEDDING_REVISION`; no revision is pinned or claimed tested yet. Allow sufficient
 network access and a writable Hugging Face cache; set `HF_HOME` if necessary. If unavailable,
 the source remains stored and upload returns 503: fix model access and retry upload or
 `POST /api/v1/documents/{id}/index`. To work on ingestion alone, explicitly set
@@ -111,7 +113,7 @@ python -m evaluation.run --analysis --output /tmp/full-evaluation.json
 ```
 
 Tests exercise real SQLite/Chroma and the API/UI with deterministic embedding/LLM doubles.
-The [six-case evaluation](evaluation/README.md) measures retrieval Hit@k, exact source-span/type
+The [12-case English/German evaluation](evaluation/README.md) measures retrieval Hit@k, exact source-span/type
 precision/recall/F1 and evidence rates. It does not establish broad tender-analysis accuracy.
 
 ## Docker
@@ -135,9 +137,13 @@ Examples and error semantics: [API documentation](docs/api.md).
 - Not legal or procurement advice. Findings and bidder assessments require human review.
 - Confidence is an uncalibrated model signal, not a probability of correctness.
 - Quote validation proves text occurrence and source identity, not logical entailment.
-- Retrieval covers selected top-k chunks, not necessarily every requirement in a tender.
+- Analysis currently uses one broad query and top-k retrieval. It is not guaranteed to retrieve
+  every requirement in long or multi-document tender packages; extraction is not exhaustive.
+  The planned follow-up is deterministic category-specific queries followed by chunk deduplication
+  ([RET-1](docs/roadmap.md#ret-1--analysis-retrieval-coverage)).
 - No OCR; scans, complex layouts/tables and encrypted PDFs are not reliably supported.
-- E5-small-v2 primarily targets English. German-language quality is not validated.
+- The multilingual model choice enables German/English support; German retrieval quality still
+  requires evaluation. No German retrieval-quality score is claimed.
 - No authentication, multi-tenancy, bidder capability inference or legal automation.
 - Local documents are confidential data. Use a trusted single-user deployment; see
   [SECURITY.md](SECURITY.md) and the [dependency audit](docs/security-review.md).
@@ -147,6 +153,7 @@ Examples and error semantics: [API documentation](docs/api.md).
 
 TenderCite code and its explicitly identified synthetic evaluation fixture use Apache-2.0.
 This does not license third-party model weights, dependencies or uploaded documents.
-The default E5 model is separately MIT-licensed; verify the exact revision before redistribution.
+The default multilingual E5 model is separately MIT-licensed; review and pin a concrete revision
+before live evaluation or v1.0.0, and verify its license before redistributing weights.
 See [third-party notices](THIRD_PARTY_NOTICES.md), [contribution guide](CONTRIBUTING.md),
 [changelog](CHANGELOG.md) and [remaining roadmap](docs/roadmap.md).

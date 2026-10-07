@@ -27,7 +27,7 @@ def main():
             files={
                 "file": (
                     "synthetic-tender.pdf",
-                    make_pdf([c["quote"] for c in gold["cases"]]),
+                    make_pdf(gold["pages"]),
                     "application/pdf",
                 )
             },

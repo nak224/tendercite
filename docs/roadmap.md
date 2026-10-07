@@ -6,7 +6,10 @@ implemented paths do not by themselves establish v0.5/v1 production readiness.
 
 ## Required before a v1.0.0 tag
 
-- Download/pin the E5 model and run semantic retrieval against the synthetic fixture.
+- Download and verify a concrete `intfloat/multilingual-e5-small` revision; pin its commit in
+  `TENDERCITE_EMBEDDING_REVISION` before live evaluation or v1.0.0. No revision is verified yet.
+- Run real retrieval on both the English and German synthetic cases; model choice enables
+  multilingual support but German retrieval quality still requires evaluation.
 - Configure an actual OpenAI-compatible provider and run structured extraction/evidence evaluation.
 - Inspect failed/unsupported findings manually; publish narrow, reproducible measurements.
 - Verify Docker model/provider access, not only ingestion and liveness.
@@ -14,10 +17,22 @@ implemented paths do not by themselves establish v0.5/v1 production readiness.
 - Confirm clean-clone instructions, licenses, documentation and changelog after final changes.
 - Complete [the release checklist](release-check.md); tag only when gates pass.
 
+## RET-1 — Analysis retrieval coverage
+
+**Open limitation:** the current analysis pipeline uses a single broad query and top-k retrieval.
+It is not guaranteed to retrieve every requirement from long or multi-document tender packages.
+TenderCite must not claim exhaustive tender extraction.
+
+**Intended next improvement:** issue deterministic category-specific retrieval queries for
+requirement categories, then deduplicate chunks by chunk ID before extraction. Evaluate coverage
+on long and multi-document fixtures while retaining document/page identity. This improvement is
+planned only; this PR follow-up does not change the retrieval pipeline or claim coverage gains.
+
 ## Follow-up quality work
 
-Expand the corpus beyond six English synthetic examples, measure German/multilingual retrieval,
-test ambiguity, long documents and tables, and consider a multilingual embedding adapter.
+Expand beyond the 12 English/German synthetic cases with shared requirement pages and noise;
+measure German retrieval quality and test ambiguity, long documents and tables. The default
+model now enables multilingual support; its quality remains to be measured.
 Add selective workspace/analysis deletion with explicit audit/privacy semantics, pagination,
 background indexing and optimistic concurrency if real usage requires them. Consider Docling/OCR
 only after a measured parser need. Add screenshots from a verified demonstration.

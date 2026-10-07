@@ -1,7 +1,9 @@
 class SentenceTransformerEmbeddingProvider:
     """E5 uses separate query/passage prefixes and unit-length vectors on CPU."""
 
-    def __init__(self, model_id: str = "intfloat/e5-small-v2", revision: str | None = None):
+    def __init__(
+        self, model_id: str = "intfloat/multilingual-e5-small", revision: str | None = None
+    ):
         self.model_id = model_id
         self.revision = revision
         self._model = None

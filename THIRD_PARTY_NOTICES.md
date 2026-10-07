@@ -15,15 +15,17 @@ provider services, user uploads or external datasets.
 | sentence-transformers / Transformers | Embeddings/runtime | Apache-2.0 |
 | PyTorch | CPU tensor runtime | BSD-3-Clause (see bundled third-party notices) |
 | NumPy / SciPy / scikit-learn | Numerical dependencies | BSD-3-Clause |
-| intfloat/e5-small-v2 | Default separately downloaded model | MIT according to model card |
+| intfloat/multilingual-e5-small | Default separately downloaded model | MIT according to model card |
 | pytest | Tests | MIT |
 | Ruff | Lint/format | MIT |
 | uv | Installation/build tooling | MIT OR Apache-2.0 |
 
-Model source and license: https://huggingface.co/intfloat/e5-small-v2 . Pin and review the exact
-revision before shipping weights. The onboarding environment could not download the model due
-to its network policy; inspection of a downloaded weight artifact is not claimed. E5-small-v2
-is primarily English; licensing does not establish suitability or accuracy.
+Model source and declared license: https://huggingface.co/intfloat/multilingual-e5-small .
+Pin a concrete embedding-model commit and verify its downloaded artifacts/license before live
+evaluation or v1.0.0. No revision has been pinned or verified in this offline follow-up.
+Model downloads were blocked by the onboarding network policy; no downloaded-weight inspection
+is claimed. The model choice enables multilingual support, including German and English,
+but German retrieval quality still requires evaluation. Licensing does not establish accuracy.
 
 Runtime/development lockfiles record exact dependency versions and package hashes. The table
 covers principal components, not every transitive bundled artifact. Retain dependency notices

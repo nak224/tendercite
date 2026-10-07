@@ -17,9 +17,15 @@ streamlit run frontend/app.py --server.address=127.0.0.1 --server.port=8501
 adds tests/lint. Both target Python 3.12 Linux CPU and include artifact hashes. Installing only
 `.[dev]` omits optional retrieval/UI integration dependencies; full validation needs the dev lock.
 The first model use downloads separately licensed E5 weights. Set writable `HF_HOME` when
-required. Model files are not in the image or package lock. Pin `TENDERCITE_EMBEDDING_REVISION`
-to an audited model commit for repeatable live evaluation. Reindex every document after changing
+required. Model files are not in the image or package lock. Before any live evaluation or
+v1.0.0, `TENDERCITE_EMBEDDING_REVISION` must identify a concrete model commit whose downloaded
+artifacts have been verified. It remains unset until such a revision is tested; no unverified
+revision is supplied here. Reindex every document after changing
 model/revision configuration. `HF_HUB_OFFLINE=1` requires a populated compatible cache.
+
+The default `intfloat/multilingual-e5-small` enables multilingual support by model choice.
+German retrieval quality remains unevaluated. Existing deployments of the English model must
+reindex their documents after switching; the model-specific Chroma collection changes.
 
 ## Environment variables
 
@@ -30,8 +36,8 @@ model/revision configuration. `HF_HUB_OFFLINE=1` requires a populated compatible
 | TENDERCITE_MAX_PDF_PAGES | 500 |
 | TENDERCITE_MAX_EXTRACTED_CHARS | 2000000 |
 | TENDERCITE_RETRIEVAL_ENABLED | true; false explicitly selects ingestion-only mode |
-| TENDERCITE_EMBEDDING_MODEL | intfloat/e5-small-v2 |
-| TENDERCITE_EMBEDDING_REVISION | unset; set for a pinned model revision |
+| TENDERCITE_EMBEDDING_MODEL | intfloat/multilingual-e5-small |
+| TENDERCITE_EMBEDDING_REVISION | unset; concrete verified commit required before live evaluation / v1.0.0 |
 | TENDERCITE_LLM_BASE_URL | unset; operator-configured local or hosted OpenAI-compatible `/v1` base |
 | TENDERCITE_LLM_MODEL | unset; served model identifier |
 | TENDERCITE_LLM_API_KEY | optional secret required only by some providers |

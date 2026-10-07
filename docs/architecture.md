@@ -25,7 +25,9 @@ an embedded, replaceable retrieval index. There is no Chroma HTTP server or agen
 PDFs receive generated storage names. SHA-256 identifies byte-identical uploads; a serialized
 SQLite write rechecks duplicates. Page numbering is 1-based PDF page sequence, not printed
 page labels. Chunks never span pages. Chunk offsets identify exact slices of stored page text.
-E5 receives `passage: ` and `query: ` prefixes, normalized vectors and CPU execution.
+The default `intfloat/multilingual-e5-small` receives `passage: ` and `query: ` prefixes,
+normalized vectors and CPU execution. The provider abstraction is unchanged; the model choice
+enables multilingual support but does not establish German retrieval quality.
 Collection identity includes model/revision configuration. Changing models requires reindexing.
 Upserts use stable chunk IDs; reindexing does not duplicate vectors. Search returns cosine
 similarity, not a calibrated probability. SQLite rehydrates hits, excluding deleted sources.
@@ -47,7 +49,17 @@ and never executed. Provider failures do not persist partial analysis runs.
 Analysis/finding insertion is atomic and rechecks that source documents still exist.
 Analysis snapshots preserve original output, retrieved IDs, model identifiers, request,
 prompt/schema version and time, never API keys. Model outputs are not guaranteed reproducible
-bit-for-bit, even at temperature zero. Pin model revisions and preserve live evaluation reports.
+bit-for-bit, even at temperature zero. A concrete, verified embedding-model revision must be
+pinned before live evaluation or v1.0.0; the configurable revision remains unset until tested.
+Preserve that revision with live evaluation reports.
+
+### Current analysis coverage limitation (RET-1)
+
+The analysis pipeline uses a single broad query with top-k retrieval, so it is not guaranteed
+to retrieve every requirement from long or multi-document tender packages. Extraction is not
+exhaustive. The intended next improvement is deterministic category-specific retrieval queries
+followed by chunk deduplication before extraction. This is a documented follow-up, not an
+implemented behavior; see [RET-1](roadmap.md#ret-1--analysis-retrieval-coverage).
 
 ## Reviews and decisions
 

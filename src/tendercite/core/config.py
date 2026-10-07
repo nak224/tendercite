@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     llm_model: str | None = None
     llm_api_key: SecretStr | None = None
     retrieval_enabled: bool = True
-    embedding_model: str = "intfloat/e5-small-v2"
+    embedding_model: str = "intfloat/multilingual-e5-small"
     embedding_revision: str | None = None
 
     @field_validator("llm_base_url")

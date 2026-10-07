@@ -1,4 +1,5 @@
 from io import BytesIO
+from textwrap import wrap
 
 from pypdf import PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
@@ -13,14 +14,20 @@ def make_pdf(pages):
                 NameObject("/Type"): NameObject("/Font"),
                 NameObject("/Subtype"): NameObject("/Type1"),
                 NameObject("/BaseFont"): NameObject("/Helvetica"),
+                NameObject("/Encoding"): NameObject("/WinAnsiEncoding"),
             }
         )
         page[NameObject("/Resources")] = DictionaryObject(
             {NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)})}
         )
         stream = DecodedStreamObject()
-        escaped = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-        stream.set_data(f"BT /F1 12 Tf 50 700 Td ({escaped}) Tj ET".encode("latin-1"))
+        lines = [line for paragraph in text.splitlines() for line in wrap(paragraph, width=80)]
+        commands = ["BT /F1 12 Tf 14 TL 50 742 Td"]
+        for line in lines:
+            escaped = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+            commands.append(f"({escaped}) Tj T*")
+        commands.append("ET")
+        stream.set_data("\n".join(commands).encode("cp1252"))
         page[NameObject("/Contents")] = writer._add_object(stream)
     buf = BytesIO()
     writer.write(buf)

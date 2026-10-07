@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 from conftest import make_pdf
 
-from tendercite.core.config import settings
+from tendercite.core.config import Settings, settings
 from tendercite.services.retrieval.base import SearchRequest
 from tendercite.services.retrieval.chroma import ChromaVectorStore
 from tendercite.services.retrieval.embeddings import SentenceTransformerEmbeddingProvider
@@ -51,11 +51,14 @@ def test_index_search_filter_deduplicate_and_delete(client, retrieval, tmp_path)
     assert not (settings.upload_dir / (first["id"] + ".pdf")).exists()
 
 
-def test_e5_prefixes_and_normalization(monkeypatch):
+@pytest.mark.parametrize("revision", [None, "test-only-revision"])
+def test_e5_prefixes_and_normalization(monkeypatch, revision):
     calls = []
 
     class Model:
         def __init__(self, *args, **kwargs):
+            assert args == ("intfloat/multilingual-e5-small",)
+            assert kwargs["revision"] == revision
             assert kwargs["trust_remote_code"] is False
 
         def encode(self, texts, **kwargs):
@@ -65,7 +68,7 @@ def test_e5_prefixes_and_normalization(monkeypatch):
     monkeypatch.setitem(
         sys.modules, "sentence_transformers", SimpleNamespace(SentenceTransformer=Model)
     )
-    provider = SentenceTransformerEmbeddingProvider()
+    provider = SentenceTransformerEmbeddingProvider(revision=revision)
     provider.embed_documents(["source"])
     provider.embed_query("question")
     assert calls[0][0] == ["passage: source"]
@@ -80,3 +83,13 @@ def test_search_validation(client):
     for data in [{"query": " "}, {"query": "x", "top_k": 0}]:
         with pytest.raises(ValidationError):
             SearchRequest(**data)
+
+
+def test_multilingual_settings_default_and_revision_override(monkeypatch):
+    monkeypatch.delenv("TENDERCITE_EMBEDDING_MODEL", raising=False)
+    monkeypatch.delenv("TENDERCITE_EMBEDDING_REVISION", raising=False)
+    configured = Settings(_env_file=None)
+    assert configured.embedding_model == "intfloat/multilingual-e5-small"
+    assert configured.embedding_revision is None
+    monkeypatch.setenv("TENDERCITE_EMBEDDING_REVISION", "test-only-revision")
+    assert Settings(_env_file=None).embedding_revision == "test-only-revision"

@@ -45,7 +45,10 @@ Analysis request:
 ```
 
 Analysis requires a nonempty explicit document selection and a configured provider. Only retrieved
-passages are sent. Findings carry category/type/confidence and evidence with server-assigned
+passages are sent. The current pipeline runs one broad query with top-k retrieval; it does not
+guarantee retrieval of every requirement in long or multi-document packages. See the planned
+[category-specific retrieval and deduplication follow-up](roadmap.md#ret-1--analysis-retrieval-coverage).
+Findings carry category/type/confidence and evidence with server-assigned
 VERIFIED_QUOTE/INVALID_QUOTE/MISSING_EVIDENCE. Invalid/missing findings remain visible for review.
 A valid quote is not proof of logical entailment or completeness. No bidder facts are inferred.
 
