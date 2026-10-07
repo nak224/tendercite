@@ -76,3 +76,11 @@ Statuses are FULFILLED, PARTIAL, MISSING, CLARIFICATION_NEEDED, NOT_APPLICABLE.
 No bidder capability is inferred. New rows default to CLARIFICATION_NEEDED.
 Any later review invalidates the effective assignment; reassess after reviewing.
 Rejected findings leave the matrix. Previous assignments remain stored for audit.
+
+## Exports
+
+`GET /api/v1/exports?format=json|csv|markdown&analysis_run_id=...` downloads results.
+JSON includes original/effective findings, evidence, review history and current assessments.
+CSV/Markdown use one row per evidence reference; missing evidence still produces a row.
+Unreviewed/rejected findings remain labeled and have no matrix assignment.
+CSV neutralizes spreadsheet formula prefixes; Markdown escapes source-controlled markup.
