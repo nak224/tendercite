@@ -16,3 +16,9 @@ All notable changes to this project will be documented here.
 ## [0.1.0] - 2026-10-07
 
 Initial vertical slice for document ingestion and verifiable source references.
+
+## Unreleased
+
+- Correct chunk offsets after trimming whitespace.
+- Verify text-bearing, two-page PDF ingestion and deterministic evidence validation.
+- Fix baseline Ruff violations using annotated FastAPI dependencies.

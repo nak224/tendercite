@@ -1,6 +1,7 @@
 import hashlib
 import uuid
 from pathlib import Path, PurePath
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
@@ -22,8 +23,8 @@ def _safe_filename(filename: str | None) -> str:
 
 @router.post("", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
 async def upload_document(
-    file: UploadFile = File(...),
-    repository: SqliteRepository = Depends(get_repository),
+    file: Annotated[UploadFile, File()],
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> DocumentRead:
     filename = _safe_filename(file.filename)
     if not filename.lower().endswith(".pdf"):
@@ -77,7 +78,7 @@ async def upload_document(
 
 @router.get("", response_model=list[DocumentRead])
 def list_documents(
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> list[DocumentRead]:
     return repository.list_documents()
 
@@ -85,7 +86,7 @@ def list_documents(
 @router.get("/{document_id}", response_model=DocumentRead)
 def get_document(
     document_id: str,
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> DocumentRead:
     document = repository.get_document(document_id)
     if document is None:
@@ -97,7 +98,7 @@ def get_document(
 def get_page(
     document_id: str,
     page_number: int,
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> PageRead:
     page = repository.get_page(document_id, page_number)
     if page is None:
@@ -108,7 +109,7 @@ def get_page(
 @router.get("/{document_id}/chunks", response_model=list[ChunkRead])
 def list_chunks(
     document_id: str,
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> list[ChunkRead]:
     if repository.get_document(document_id) is None:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -118,7 +119,7 @@ def list_chunks(
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_document(
     document_id: str,
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> None:
     deleted = repository.delete_document(document_id)
     if not deleted:

@@ -15,3 +15,9 @@ def test_chunks_never_cross_page_boundary() -> None:
 def test_chunking_rejects_invalid_overlap() -> None:
     with pytest.raises(ValueError):
         chunk_page(1, "text", chunk_size=100, overlap=100)
+
+
+def test_offsets_identify_exact_chunk_text():
+    text = "  first sentence.  \n next sentence.   " * 20
+    for chunk in chunk_page(1, text, chunk_size=40, overlap=5):
+        assert text[chunk.char_start : chunk.char_end] == chunk.text

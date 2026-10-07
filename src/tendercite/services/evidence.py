@@ -4,7 +4,9 @@ from tendercite.domain.models import EvidenceRef, GroundingStatus
 from tendercite.services.text import normalize_quote
 
 
-def validate_evidence(*, document_id: str, page_number: int, page_text: str, quote: str) -> EvidenceRef:
+def validate_evidence(
+    *, document_id: str, page_number: int, page_text: str, quote: str
+) -> EvidenceRef:
     """Validate that a cited quote occurs on the declared page.
 
     Validation uses whitespace-normalized text to absorb common PDF extraction spacing

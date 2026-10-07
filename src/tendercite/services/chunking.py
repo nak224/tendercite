@@ -43,7 +43,9 @@ def chunk_page(
             ]
             best = max(candidates)
             if best > start:
-                end = best + (1 if text[best] == "\n" else 2 if text[best : best + 2] == ". " else 1)
+                end = best + (
+                    1 if text[best] == "\n" else 2 if text[best : best + 2] == ". " else 1
+                )
 
         chunk_text = text[start:end].strip()
         if chunk_text:
@@ -52,8 +54,8 @@ def chunk_page(
                     page_number=page_number,
                     ordinal=ordinal,
                     text=chunk_text,
-                    char_start=start,
-                    char_end=end,
+                    char_start=start + len(text[start:end]) - len(text[start:end].lstrip()),
+                    char_end=end - (len(text[start:end]) - len(text[start:end].rstrip())),
                 )
             )
             ordinal += 1

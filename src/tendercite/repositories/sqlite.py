@@ -69,7 +69,9 @@ class SqliteRepository:
         with self._connect() as conn:
             conn.execute(
                 """
-                INSERT INTO documents(id, filename, media_type, sha256, page_count, chunk_count, created_at)
+                INSERT INTO documents(
+                    id, filename, media_type, sha256, page_count, chunk_count, created_at
+                )
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
@@ -88,7 +90,9 @@ class SqliteRepository:
             )
             conn.executemany(
                 """
-                INSERT INTO chunks(id, document_id, page_number, ordinal, text, char_start, char_end)
+                INSERT INTO chunks(
+                    id, document_id, page_number, ordinal, text, char_start, char_end
+                )
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
@@ -117,16 +121,12 @@ class SqliteRepository:
 
     def list_documents(self) -> list[DocumentRead]:
         with self._connect() as conn:
-            rows = conn.execute(
-                "SELECT * FROM documents ORDER BY created_at DESC"
-            ).fetchall()
+            rows = conn.execute("SELECT * FROM documents ORDER BY created_at DESC").fetchall()
         return [DocumentRead(**dict(row)) for row in rows]
 
     def get_document(self, document_id: str) -> DocumentRead | None:
         with self._connect() as conn:
-            row = conn.execute(
-                "SELECT * FROM documents WHERE id = ?", (document_id,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM documents WHERE id = ?", (document_id,)).fetchone()
         return DocumentRead(**dict(row)) if row else None
 
     def get_page(self, document_id: str, page_number: int) -> PageRead | None:
