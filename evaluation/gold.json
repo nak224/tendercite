@@ -1,0 +1,13 @@
+{
+  "dataset_version": "synthetic-tender-1",
+  "license": "Apache-2.0",
+  "provenance": "Original synthetic examples authored for TenderCite; no real procurement documents.",
+  "cases": [
+    {"id": "deadline", "page": 1, "query": "When must bids be submitted?", "category": "MUST", "requirement_type": "DEADLINE", "quote": "Bids must be submitted by 30 November 2026 at 12:00 UTC."},
+    {"id": "references", "page": 2, "query": "How many comparable reference projects are required?", "category": "MUST", "requirement_type": "REFERENCE", "quote": "The bidder must provide two comparable reference projects completed in the last three years."},
+    {"id": "insurance", "page": 3, "query": "What liability insurance coverage is required?", "category": "MUST", "requirement_type": "INSURANCE", "quote": "Professional liability insurance must provide coverage of at least EUR 1000000 per claim."},
+    {"id": "certificate", "page": 4, "query": "Which quality management certificate is required?", "category": "MUST", "requirement_type": "CERTIFICATE", "quote": "A valid ISO 9001 quality management certificate or equivalent proof is required."},
+    {"id": "price", "page": 5, "query": "What weighting is assigned to price in award scoring?", "category": "SCORING", "requirement_type": "PRICE", "quote": "The award score assigns a weighting of 40 percent to price and 60 percent to quality."},
+    {"id": "privacy", "page": 6, "query": "Where must personal data be stored?", "category": "MUST", "requirement_type": "PRIVACY", "quote": "Personal data must be encrypted at rest and stored exclusively within the European Union."}
+  ]
+}
