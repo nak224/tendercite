@@ -100,6 +100,7 @@ class ReviewedValue(BaseModel):
 
 
 class Finding(BaseModel):
+    original_output: dict | None = None
     reviewed_value: ReviewedValue | None = None
     analysis_run_id: str = ""
     id: str

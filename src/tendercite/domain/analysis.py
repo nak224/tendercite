@@ -44,6 +44,7 @@ class AnalysisRun(BaseModel):
     provider: str
     model: str
     embedding_model: str
+    embedding_revision: str | None = None
     prompt_version: str
     schema_version: str
     request: AnalysisRequest

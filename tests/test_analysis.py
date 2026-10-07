@@ -22,6 +22,8 @@ class FakeLLM:
             evidence["page_number"] = 999
         if self.mode == "wrong_quote":
             evidence["quote"] = "Invented requirement"
+        if self.mode == "whitespace":
+            evidence["quote"] = evidence["quote"].replace(" ", "\n")
         if self.mode == "blank":
             evidence["quote"] = " "
         return response_model.model_validate(
@@ -91,3 +93,13 @@ def test_unconfigured_provider_and_invalid_schema(client):
     assert client.get("/api/v1/analyses/unknown").status_code == 404
     with pytest.raises(ValidationError):
         ExtractionResult.model_validate({"findings": [{"statement": "x", "category": "invented"}]})
+
+
+def test_original_candidate_survives_quote_normalization(client, retrieval):
+    finding = create_run(client, "whitespace").json()["findings"][0]
+    assert finding["grounding_status"] == "VERIFIED_QUOTE"
+    assert "\n" in finding["original_output"]["evidence"][0]["quote"]
+    assert "\n" not in finding["evidence"][0]["quote"]
+    client.post("/api/v1/findings/" + finding["id"] + "/reviews", json={"action": "CONFIRM"})
+    current = client.get("/api/v1/findings/" + finding["id"]).json()
+    assert current["original_output"] == finding["original_output"]

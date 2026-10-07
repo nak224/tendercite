@@ -60,6 +60,7 @@ async def analyze(request: AnalysisRequest, repository, retrieval, llm) -> Analy
         findings.append(
             Finding(
                 id=str(uuid4()),
+                original_output=candidate.model_dump(mode="json"),
                 analysis_run_id=run_id,
                 statement=candidate.statement,
                 category=candidate.category,
@@ -74,6 +75,7 @@ async def analyze(request: AnalysisRequest, repository, retrieval, llm) -> Analy
         provider=getattr(llm, "provider", type(llm).__name__),
         model=llm.model,
         embedding_model=retrieval.embeddings.model_id,
+        embedding_revision=getattr(retrieval.embeddings, "revision", None),
         prompt_version=PROMPT_VERSION,
         schema_version=SCHEMA_VERSION,
         request=request,

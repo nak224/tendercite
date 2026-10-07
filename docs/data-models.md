@@ -30,3 +30,7 @@ legal authenticity. Missing evidence has no source offsets; invalid quotes are n
 Taxonomy is deliberately small: MUST/SCORING/INFORMATION/RISK plus the existing requirement-type
 enum. Review state: UNREVIEWED/CONFIRMED/MODIFIED/REJECTED. Assessment state:
 FULFILLED/PARTIAL/MISSING/CLARIFICATION_NEEDED/NOT_APPLICABLE.
+
+`Finding.original_output` additionally preserves the complete parsed candidate, including the
+original quote whitespace before deterministic normalization. `embedding_revision` records
+the configured revision (null when unpinned); it does not claim a resolved download commit.
