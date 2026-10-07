@@ -18,7 +18,7 @@ RUN --mount=type=secret,id=ca_bundle \
     uv pip install --system --no-cache --torch-backend cpu --require-hashes -r requirements.lock
 COPY pyproject.toml README.md LICENSE NOTICE ./
 COPY src ./src
-COPY frontend ./frontend
+COPY --chown=10001:10001 frontend ./frontend
 RUN --mount=type=secret,id=ca_bundle \
     if [ -f /run/secrets/ca_bundle ]; then \
       export SSL_CERT_FILE=/run/secrets/ca_bundle; \
