@@ -32,3 +32,14 @@ GET  /api/v1/exports?format=json|csv|markdown
 ```
 
 The exact route shape may evolve before v1.0, but evidence objects remain explicit API data rather than presentation-only citation strings.
+
+## Implemented retrieval
+
+`POST /api/v1/search` accepts `query`, `top_k` (1–50) and optional `document_ids`.
+An empty document list searches nothing. Responses include document name, ID, page,
+chunk ID, source text and cosine similarity (not a probability).
+`POST /api/v1/documents/{id}/index` safely reindexes existing chunks.
+Uploads index automatically; identical PDF bytes reuse the existing document and vectors.
+On indexing failure the source remains stored; retry upload or the index endpoint.
+Install `.[retrieval]` and allow the first E5 model download, or use a prepopulated cache.
+`TENDERCITE_RETRIEVAL_ENABLED=false` supports ingestion-only development.

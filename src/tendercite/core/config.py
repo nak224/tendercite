@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     app_name: str = "TenderCite"
     data_dir: Path = Path("./data")
     max_upload_mb: int = 30
+    retrieval_enabled: bool = True
+    embedding_model: str = "intfloat/e5-small-v2"
+    embedding_revision: str | None = None
 
     @property
     def upload_dir(self) -> Path:

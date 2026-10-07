@@ -37,6 +37,7 @@ def make_pdf(pages):
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "data_dir", tmp_path)
+    monkeypatch.setattr(settings, "retrieval_enabled", False)
     repo = SqliteRepository(tmp_path / "test.db")
     app.dependency_overrides[get_repository] = lambda: repo
     try:

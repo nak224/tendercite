@@ -4,8 +4,9 @@ from pathlib import Path, PurePath
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from starlette.concurrency import run_in_threadpool
 
-from tendercite.api.dependencies import get_repository
+from tendercite.api.dependencies import get_repository, get_retrieval
 from tendercite.core.config import settings
 from tendercite.domain.models import ChunkRead, DocumentRead, PageRead
 from tendercite.repositories.sqlite import SqliteRepository
@@ -38,6 +39,10 @@ async def upload_document(
 
     document_id = str(uuid.uuid4())
     sha256 = hashlib.sha256(payload).hexdigest()
+    existing = repository.find_document_by_hash(sha256)
+    if existing:
+        await _index(existing.id)
+        return existing
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     pdf_path = settings.upload_dir / f"{document_id}.pdf"
     pdf_path.write_bytes(payload)
@@ -66,7 +71,7 @@ async def upload_document(
         for c in raw_chunks
     ]
 
-    return repository.save_document(
+    document = repository.save_document(
         document_id=document_id,
         filename=filename,
         media_type=file.content_type or "application/pdf",
@@ -74,6 +79,19 @@ async def upload_document(
         pages=page_models,
         chunks=chunk_models,
     )
+
+    await _index(document_id)
+    return document
+
+
+async def _index(document_id: str) -> None:
+    if settings.retrieval_enabled:
+        try:
+            await run_in_threadpool(get_retrieval().index_document, document_id)
+        except Exception as exc:
+            raise HTTPException(
+                503, "Document retained; retry upload or indexing after configuring retrieval"
+            ) from exc
 
 
 @router.get("", response_model=list[DocumentRead])
@@ -121,6 +139,13 @@ def delete_document(
     document_id: str,
     repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> None:
+    if repository.get_document(document_id) is None:
+        raise HTTPException(404, "Document not found")
+    if settings.retrieval_enabled:
+        try:
+            get_retrieval().store.delete_document(document_id)
+        except Exception as exc:
+            raise HTTPException(503, "Vector cleanup failed; document retained") from exc
     deleted = repository.delete_document(document_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")

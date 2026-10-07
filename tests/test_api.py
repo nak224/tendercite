@@ -26,6 +26,7 @@ def test_health() -> None:
 
 def test_upload_pdf(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(settings, "data_dir", tmp_path)
+    monkeypatch.setattr(settings, "retrieval_enabled", False)
     repo = SqliteRepository(tmp_path / "test.db")
     app.dependency_overrides[get_repository] = lambda: repo
     client = TestClient(app)

@@ -153,3 +153,15 @@ class SqliteRepository:
         with self._connect() as conn:
             cursor = conn.execute("DELETE FROM documents WHERE id = ?", (document_id,))
         return cursor.rowcount > 0
+
+    def get_chunk(self, chunk_id: str) -> ChunkRead | None:
+        with self._connect() as conn:
+            row = conn.execute("SELECT * FROM chunks WHERE id = ?", (chunk_id,)).fetchone()
+        return ChunkRead(**dict(row)) if row else None
+
+    def find_document_by_hash(self, sha256: str) -> DocumentRead | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM documents WHERE sha256 = ? LIMIT 1", (sha256,)
+            ).fetchone()
+        return DocumentRead(**dict(row)) if row else None
