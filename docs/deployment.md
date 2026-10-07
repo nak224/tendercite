@@ -41,3 +41,11 @@ export TENDERCITE_LLM_API_KEY=<optional-key>
 ```
 
 No LLM call is required for the v0.1 ingestion/evidence-validation slice.
+
+## Review UI
+
+Install `.[ui,retrieval]`, run the API, then start `streamlit run frontend/app.py`.
+Set `TENDERCITE_API_URL` for the UI process when the API is elsewhere.
+The sidebar exposes Documents, Search, Analysis & review, Go / No-Go and Export.
+Analysis requires an explicitly configured provider and the send-passages checkbox.
+The UI shows original output, source pages, grounding states and review history.

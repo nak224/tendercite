@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from tendercite import __version__
 from tendercite.api.routes.analyses import router as analyses_router
+from tendercite.api.routes.configuration import router as configuration_router
 from tendercite.api.routes.documents import router as documents_router
 from tendercite.api.routes.evidence import router as evidence_router
 from tendercite.api.routes.exports import router as exports_router
@@ -30,3 +31,5 @@ app.include_router(reviews_router, prefix="/api/v1")
 app.include_router(matrix_router, prefix="/api/v1")
 
 app.include_router(exports_router, prefix="/api/v1")
+
+app.include_router(configuration_router, prefix="/api/v1")
