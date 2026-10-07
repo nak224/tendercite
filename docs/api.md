@@ -67,3 +67,12 @@ and `comment`. `MODIFY` additionally requires `reviewed_value` with `statement`,
 previous/current values and timestamps. Finding fields preserve the original AI output;
 `effective_value` and `review_status` reflect review history. Analysis responses remain
 immutable snapshots. Human confirmation does not change evidence grounding status.
+
+## Decision matrix
+
+`GET /api/v1/go-no-go?analysis_run_id=...` contains confirmed/modified findings only.
+`PATCH /api/v1/go-no-go/{finding_id}` takes `status` and a nonempty `rationale`.
+Statuses are FULFILLED, PARTIAL, MISSING, CLARIFICATION_NEEDED, NOT_APPLICABLE.
+No bidder capability is inferred. New rows default to CLARIFICATION_NEEDED.
+Any later review invalidates the effective assignment; reassess after reviewing.
+Rejected findings leave the matrix. Previous assignments remain stored for audit.

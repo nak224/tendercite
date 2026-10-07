@@ -65,6 +65,13 @@ class SqliteRepository:
                     payload TEXT NOT NULL
                 );
                 CREATE INDEX IF NOT EXISTS idx_reviews_finding ON reviews(finding_id, sequence);
+                CREATE TABLE IF NOT EXISTS assessments (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                    finding_id TEXT NOT NULL REFERENCES findings(id),
+                    review_event_id TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
                 CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
                 CREATE INDEX IF NOT EXISTS idx_chunks_page ON chunks(document_id, page_number);
                 """
@@ -289,3 +296,51 @@ class SqliteRepository:
                 (finding_id, event.model_dump_json()),
             )
         return event
+
+    def matrix_row(self, finding):
+        from tendercite.domain.models import AssessmentRequest, GoNoGoRow, ReviewStatus
+
+        if finding.review_status not in (ReviewStatus.CONFIRMED, ReviewStatus.MODIFIED):
+            return None
+        reviews = self.list_reviews(finding.id)
+        with self._connect() as conn:
+            assignment = conn.execute(
+                "SELECT * FROM assessments WHERE finding_id=? ORDER BY sequence DESC LIMIT 1",
+                (finding.id,),
+            ).fetchone()
+        values = {}
+        if assignment and assignment["review_event_id"] == reviews[-1].id:
+            values = AssessmentRequest.model_validate_json(assignment["payload"]).model_dump()
+        return GoNoGoRow(
+            finding_id=finding.id,
+            criterion=finding.effective_value.statement,
+            category=finding.effective_value.category,
+            requirement_type=finding.effective_value.requirement_type,
+            review_status=finding.review_status,
+            grounding_status=finding.grounding_status,
+            evidence=finding.evidence,
+            **values,
+        )
+
+    def list_matrix(self, analysis_run_id: str | None = None):
+        return [
+            row
+            for finding in self.list_findings(analysis_run_id)
+            if (row := self.matrix_row(finding)) is not None
+        ]
+
+    def set_assessment(self, finding_id: str, request):
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            finding = self.get_finding(finding_id)
+            if finding is None:
+                raise KeyError(finding_id)
+            if self.matrix_row(finding) is None:
+                raise ValueError("Confirm or modify the finding before assessment")
+            review = self.list_reviews(finding_id)[-1]
+            conn.execute(
+                "INSERT INTO assessments(finding_id,review_event_id,payload,created_at) "
+                "VALUES (?,?,?,?)",
+                (finding_id, review.id, request.model_dump_json(), datetime.now(UTC).isoformat()),
+            )
+        return self.matrix_row(self.get_finding(finding_id))

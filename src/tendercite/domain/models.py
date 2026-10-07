@@ -131,7 +131,16 @@ class Finding(BaseModel):
         return GroundingStatus.VERIFIED_QUOTE
 
 
+class AssessmentRequest(BaseModel):
+    status: AssessmentStatus
+    rationale: str = Field(min_length=1, max_length=4000, pattern=r"\S")
+
+
 class GoNoGoRow(BaseModel):
+    category: RequirementCategory
+    requirement_type: RequirementType
+    review_status: ReviewStatus
+    grounding_status: GroundingStatus
     finding_id: str
     criterion: str
     status: AssessmentStatus = AssessmentStatus.CLARIFICATION_NEEDED
