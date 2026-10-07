@@ -1,6 +1,6 @@
 import hashlib
 import uuid
-from pathlib import Path, PurePath
+from pathlib import Path, PurePosixPath
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -18,7 +18,8 @@ _parser = PyPdfParser()
 
 
 def _safe_filename(filename: str | None) -> str:
-    name = PurePath(filename or "document.pdf").name
+    name = PurePosixPath((filename or "document.pdf").replace("\\", "/")).name
+    name = "".join(char for char in name if char.isprintable())[-200:]
     return name or "document.pdf"
 
 
@@ -30,6 +31,9 @@ async def upload_document(
     filename = _safe_filename(file.filename)
     if not filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=415, detail="Only PDF files are supported")
+
+    if file.content_type not in (None, "application/pdf", "application/octet-stream"):
+        raise HTTPException(415, "Unsupported media type")
 
     payload = await file.read(settings.max_upload_mb * 1024 * 1024 + 1)
     if len(payload) > settings.max_upload_mb * 1024 * 1024:
@@ -48,7 +52,12 @@ async def upload_document(
     pdf_path.write_bytes(payload)
 
     try:
-        parsed_pages = _parser.parse(pdf_path)
+        parsed_pages = await run_in_threadpool(
+            _parser.parse,
+            pdf_path,
+            max_pages=settings.max_pdf_pages,
+            max_chars=settings.max_extracted_chars,
+        )
     except PdfParseError as exc:
         pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -71,16 +80,22 @@ async def upload_document(
         for c in raw_chunks
     ]
 
-    document = repository.save_document(
-        document_id=document_id,
-        filename=filename,
-        media_type=file.content_type or "application/pdf",
-        sha256=sha256,
-        pages=page_models,
-        chunks=chunk_models,
-    )
+    try:
+        document = repository.save_document(
+            document_id=document_id,
+            filename=filename,
+            media_type="application/pdf",
+            sha256=sha256,
+            pages=page_models,
+            chunks=chunk_models,
+        )
+    except Exception as exc:
+        pdf_path.unlink(missing_ok=True)
+        raise HTTPException(500, "Document persistence failed") from exc
+    if document.id != document_id:
+        pdf_path.unlink(missing_ok=True)
+    await _index(document.id)
 
-    await _index(document_id)
     return document
 
 
@@ -148,7 +163,10 @@ def delete_document(
             get_retrieval().store.delete_document(document_id)
         except Exception as exc:
             raise HTTPException(503, "Vector cleanup failed; document retained") from exc
-    deleted = repository.delete_document(document_id)
+    try:
+        deleted = repository.delete_document(document_id)
+    except ValueError as exc:
+        raise HTTPException(409, "Source is retained for audit") from exc
     if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")
     Path(settings.upload_dir / f"{document_id}.pdf").unlink(missing_ok=True)

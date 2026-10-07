@@ -2,6 +2,8 @@ import json
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from starlette.concurrency import run_in_threadpool
+
 from tendercite.domain.analysis import AnalysisRequest, AnalysisRun, ExtractionResult
 from tendercite.domain.models import EvidenceRef, Finding, GroundingStatus
 from tendercite.services.evidence import validate_evidence
@@ -19,7 +21,7 @@ This is not legal advice."""
 
 
 async def analyze(request: AnalysisRequest, repository, retrieval, llm) -> AnalysisRun:
-    hits = retrieval.search(SearchRequest(**request.model_dump()))
+    hits = await run_in_threadpool(retrieval.search, SearchRequest(**request.model_dump()))
     if not hits:
         raise ValueError("No indexed text found for the selected documents")
     result = await llm.generate_structured(

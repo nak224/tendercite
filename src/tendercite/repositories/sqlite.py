@@ -1,4 +1,5 @@
 import sqlite3
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -11,11 +12,16 @@ class SqliteRepository:
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
-    def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.database_path)
+    @contextmanager
+    def _connect(self):
+        connection = sqlite3.connect(self.database_path, timeout=30)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
-        return connection
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
 
     def _initialize(self) -> None:
         with self._connect() as conn:
@@ -89,6 +95,12 @@ class SqliteRepository:
     ) -> DocumentRead:
         created_at = datetime.now(UTC)
         with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            existing = conn.execute(
+                "SELECT * FROM documents WHERE sha256=? LIMIT 1", (sha256,)
+            ).fetchone()
+            if existing:
+                return DocumentRead(**dict(existing))
             conn.execute(
                 """
                 INSERT INTO documents(
@@ -173,6 +185,9 @@ class SqliteRepository:
 
     def delete_document(self, document_id: str) -> bool:
         with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            if self.document_has_analyses(document_id):
+                raise ValueError("Document is referenced by an analysis")
             cursor = conn.execute("DELETE FROM documents WHERE id = ?", (document_id,))
         return cursor.rowcount > 0
 
@@ -190,6 +205,13 @@ class SqliteRepository:
 
     def save_analysis(self, run) -> None:
         with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            for document_id in run.request.document_ids:
+                if (
+                    conn.execute("SELECT id FROM documents WHERE id=?", (document_id,)).fetchone()
+                    is None
+                ):
+                    raise ValueError("Source was deleted during analysis")
             conn.execute("INSERT INTO analyses VALUES (?, ?)", (run.id, run.model_dump_json()))
             conn.executemany(
                 "INSERT INTO findings VALUES (?, ?, ?)",

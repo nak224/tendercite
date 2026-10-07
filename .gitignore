@@ -16,3 +16,5 @@ data/uploads/*
 !data/uploads/.gitkeep
 
 data/chroma/
+data/models/
+data/*.db-*

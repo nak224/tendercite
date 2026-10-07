@@ -1,27 +1,42 @@
 services:
   api:
     build: .
+    image: tendercite:local
+    init: true
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       TENDERCITE_DATA_DIR: /app/data
+      TENDERCITE_LLM_BASE_URL: ${TENDERCITE_LLM_BASE_URL:-}
+      TENDERCITE_LLM_MODEL: ${TENDERCITE_LLM_MODEL:-}
+      TENDERCITE_LLM_API_KEY: ${TENDERCITE_LLM_API_KEY:-}
+      TENDERCITE_RETRIEVAL_ENABLED: ${TENDERCITE_RETRIEVAL_ENABLED:-true}
     volumes:
       - tendercite-data:/app/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   ui:
-    image: python:3.12-slim
-    working_dir: /app
-    command: >
-      sh -c "pip install --no-cache-dir streamlit httpx &&
-             streamlit run frontend/app.py --server.address=0.0.0.0 --server.port=8501"
+    build: .
+    image: tendercite:local
+    init: true
+    command: ["streamlit", "run", "frontend/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true"]
     ports:
-      - "8501:8501"
+      - "127.0.0.1:8501:8501"
     environment:
       TENDERCITE_API_URL: http://api:8000
-    volumes:
-      - ./frontend:/app/frontend:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   tendercite-data:
