@@ -1,10 +1,12 @@
 import hashlib
 import uuid
-from pathlib import Path, PurePath
+from pathlib import Path, PurePosixPath
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from starlette.concurrency import run_in_threadpool
 
-from tendercite.api.dependencies import get_repository
+from tendercite.api.dependencies import get_repository, get_retrieval
 from tendercite.core.config import settings
 from tendercite.domain.models import ChunkRead, DocumentRead, PageRead
 from tendercite.repositories.sqlite import SqliteRepository
@@ -16,18 +18,22 @@ _parser = PyPdfParser()
 
 
 def _safe_filename(filename: str | None) -> str:
-    name = PurePath(filename or "document.pdf").name
+    name = PurePosixPath((filename or "document.pdf").replace("\\", "/")).name
+    name = "".join(char for char in name if char.isprintable())[-200:]
     return name or "document.pdf"
 
 
 @router.post("", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
 async def upload_document(
-    file: UploadFile = File(...),
-    repository: SqliteRepository = Depends(get_repository),
+    file: Annotated[UploadFile, File()],
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> DocumentRead:
     filename = _safe_filename(file.filename)
     if not filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=415, detail="Only PDF files are supported")
+
+    if file.content_type not in (None, "application/pdf", "application/octet-stream"):
+        raise HTTPException(415, "Unsupported media type")
 
     payload = await file.read(settings.max_upload_mb * 1024 * 1024 + 1)
     if len(payload) > settings.max_upload_mb * 1024 * 1024:
@@ -37,12 +43,21 @@ async def upload_document(
 
     document_id = str(uuid.uuid4())
     sha256 = hashlib.sha256(payload).hexdigest()
+    existing = repository.find_document_by_hash(sha256)
+    if existing:
+        await _index(existing.id)
+        return existing
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     pdf_path = settings.upload_dir / f"{document_id}.pdf"
     pdf_path.write_bytes(payload)
 
     try:
-        parsed_pages = _parser.parse(pdf_path)
+        parsed_pages = await run_in_threadpool(
+            _parser.parse,
+            pdf_path,
+            max_pages=settings.max_pdf_pages,
+            max_chars=settings.max_extracted_chars,
+        )
     except PdfParseError as exc:
         pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -65,19 +80,38 @@ async def upload_document(
         for c in raw_chunks
     ]
 
-    return repository.save_document(
-        document_id=document_id,
-        filename=filename,
-        media_type=file.content_type or "application/pdf",
-        sha256=sha256,
-        pages=page_models,
-        chunks=chunk_models,
-    )
+    try:
+        document = repository.save_document(
+            document_id=document_id,
+            filename=filename,
+            media_type="application/pdf",
+            sha256=sha256,
+            pages=page_models,
+            chunks=chunk_models,
+        )
+    except Exception as exc:
+        pdf_path.unlink(missing_ok=True)
+        raise HTTPException(500, "Document persistence failed") from exc
+    if document.id != document_id:
+        pdf_path.unlink(missing_ok=True)
+    await _index(document.id)
+
+    return document
+
+
+async def _index(document_id: str) -> None:
+    if settings.retrieval_enabled:
+        try:
+            await run_in_threadpool(get_retrieval().index_document, document_id)
+        except Exception as exc:
+            raise HTTPException(
+                503, "Document retained; retry upload or indexing after configuring retrieval"
+            ) from exc
 
 
 @router.get("", response_model=list[DocumentRead])
 def list_documents(
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> list[DocumentRead]:
     return repository.list_documents()
 
@@ -85,7 +119,7 @@ def list_documents(
 @router.get("/{document_id}", response_model=DocumentRead)
 def get_document(
     document_id: str,
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> DocumentRead:
     document = repository.get_document(document_id)
     if document is None:
@@ -97,7 +131,7 @@ def get_document(
 def get_page(
     document_id: str,
     page_number: int,
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> PageRead:
     page = repository.get_page(document_id, page_number)
     if page is None:
@@ -108,7 +142,7 @@ def get_page(
 @router.get("/{document_id}/chunks", response_model=list[ChunkRead])
 def list_chunks(
     document_id: str,
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> list[ChunkRead]:
     if repository.get_document(document_id) is None:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -118,9 +152,21 @@ def list_chunks(
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_document(
     document_id: str,
-    repository: SqliteRepository = Depends(get_repository),
+    repository: Annotated[SqliteRepository, Depends(get_repository)],
 ) -> None:
-    deleted = repository.delete_document(document_id)
+    if repository.get_document(document_id) is None:
+        raise HTTPException(404, "Document not found")
+    if repository.document_has_analyses(document_id):
+        raise HTTPException(409, "Document is referenced by an analysis; retained for audit")
+    if settings.retrieval_enabled:
+        try:
+            get_retrieval().store.delete_document(document_id)
+        except Exception as exc:
+            raise HTTPException(503, "Vector cleanup failed; document retained") from exc
+    try:
+        deleted = repository.delete_document(document_id)
+    except ValueError as exc:
+        raise HTTPException(409, "Source is retained for audit") from exc
     if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")
     Path(settings.upload_dir / f"{document_id}.pdf").unlink(missing_ok=True)

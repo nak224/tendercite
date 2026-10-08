@@ -26,6 +26,7 @@ def test_health() -> None:
 
 def test_upload_pdf(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(settings, "data_dir", tmp_path)
+    monkeypatch.setattr(settings, "retrieval_enabled", False)
     repo = SqliteRepository(tmp_path / "test.db")
     app.dependency_overrides[get_repository] = lambda: repo
     client = TestClient(app)
@@ -41,3 +42,28 @@ def test_upload_pdf(tmp_path, monkeypatch) -> None:
     assert payload["filename"] == "example.pdf"
     assert payload["page_count"] == 1
     assert payload["chunk_count"] == 0
+
+
+def test_text_pdf_provenance(client, tmp_path):
+    from conftest import make_pdf
+
+    texts = ["Two reference projects are required.", "Insurance must cover EUR 1000000."]
+    response = client.post(
+        "/api/v1/documents", files={"file": ("tender.pdf", make_pdf(texts), "application/pdf")}
+    )
+    assert response.status_code == 201
+    doc = response.json()
+    assert doc["page_count"] == 2
+    assert doc["chunk_count"] == 2
+    repo = SqliteRepository(tmp_path / "test.db")
+    assert repo.get_document(doc["id"]).sha256 == doc["sha256"]
+    for chunk in repo.list_chunks(doc["id"]):
+        page = repo.get_page(doc["id"], chunk.page_number)
+        assert page.text == texts[chunk.page_number - 1]
+        assert page.text[chunk.char_start : chunk.char_end] == chunk.text
+    for quote, expected in [(texts[0], "VERIFIED_QUOTE"), ("Invented criterion", "INVALID_QUOTE")]:
+        result = client.post(
+            "/api/v1/evidence/validate",
+            json={"document_id": doc["id"], "page_number": 1, "quote": quote},
+        )
+        assert result.json()["grounding_status"] == expected

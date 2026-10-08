@@ -1,121 +1,81 @@
 # Architecture
 
-## Design goals
+TenderCite is a modular monolith. FastAPI coordinates explicit application services;
+Streamlit is an HTTP client. SQLite owns source content and application state. Chroma is
+an embedded, replaceable retrieval index. There is no Chroma HTTP server or agent framework.
 
-TenderCite is an evidence-grounded document-intelligence application for public procurement documents. The central design requirement is that an extracted finding can be traced back to a specific source document, page and quoted passage. AI output is reviewable data, not an autonomous procurement decision.
-
-## Architectural style
-
-TenderCite uses a **modular monolith** for v1.0. This keeps deployment simple while preserving boundaries that can later be split if needed.
-
-```text
-Browser / Streamlit
-       |
-       v
-    FastAPI
-       |
-       +-- document ingestion ----> PDF parser
-       |                              |
-       |                              v
-       |                         page records
-       |                              |
-       |                              v
-       |                         page-bounded chunks
-       |
-       +-- retrieval -----------> embeddings -> Chroma
-       |
-       +-- extraction ----------> StructuredLLM adapter
-       |                              |
-       |                              v
-       |                         Pydantic validation
-       |                              |
-       |                              v
-       +-- evidence validator <--- quoted source spans
-       |
-       +-- review workflow ------> SQLite
-       |
-       +-- Go/No-Go view --------> reviewed findings
-       |
-       +-- export ---------------> JSON / CSV / Markdown
-```
-
-## Module boundaries
+## Modules
 
 | Module | Responsibility |
-|---|---|
-| `services/pdf_parser.py` | Parse PDF pages and preserve page identity. |
-| `services/chunking.py` | Create retrieval chunks that never cross a page boundary. |
-| `services/retrieval/` | Embedding and vector-store abstractions. |
-| `services/llm/` | Provider-neutral structured generation interface. |
-| `services/evidence.py` | Verify source quotes against stored page text. |
-| `repositories/` | Persistence for documents, pages, chunks, findings and reviews. |
-| `api/routes/` | Stable REST surface. |
-| `frontend/` | Thin review UI; business logic stays in the API/domain layer. |
+| --- | --- |
+| `api/routes/documents.py` | Upload validation, source lifecycle, ingestion orchestration |
+| `services/pdf_parser.py` | Bounded page-aware pypdf extraction |
+| `services/chunking.py` | Overlapping, page-bounded chunks and stored-page offsets |
+| `services/retrieval/` | EmbeddingProvider, VectorStore, E5/Chroma adapters, search service |
+| `services/llm/` | StructuredLLM protocol and OpenAI-compatible HTTP adapter |
+| `services/analysis.py` | Retrieval, prompt/schema versions, evidence validation and persistence |
+| `services/evidence.py` | Deterministic whitespace-normalized source quote matching |
+| `repositories/sqlite.py` | Transactional documents, analyses, findings, reviews, assessments |
+| `services/export.py` | Structured and safely escaped portable exports |
+| `frontend/app.py` | Upload/search/review/matrix/export UI; no persistence logic |
+| `evaluation/` | Synthetic gold corpus, PDF generator, metrics and live API runner |
 
-## Concrete v1 stack
+## Source and retrieval invariants
 
-- Python 3.12
-- FastAPI + Pydantic v2
-- pypdf as the default MVP PDF parser for digitally generated PDFs
-- optional Docling adapter after the vertical slice for harder layouts/tables
-- sentence-transformers with `intfloat/e5-small-v2` as the initial local embedding model
-- Chroma in embedded/local mode as the vector store
-- SQLite for application state, review history and metadata
-- a small `StructuredLLM` protocol plus an OpenAI-compatible HTTP adapter rather than a large orchestration framework
-- Streamlit as a thin UI for v1.0
-- pytest + Ruff + GitHub Actions
-- Docker / Docker Compose
+PDFs receive generated storage names. SHA-256 identifies byte-identical uploads; a serialized
+SQLite write rechecks duplicates. Page numbering is 1-based PDF page sequence, not printed
+page labels. Chunks never span pages. Chunk offsets identify exact slices of stored page text.
+The default `intfloat/multilingual-e5-small` receives `passage: ` and `query: ` prefixes,
+normalized vectors and CPU execution. The provider abstraction is unchanged; the model choice
+enables multilingual support but does not establish German retrieval quality.
+Collection identity includes model/revision configuration. Changing models requires reindexing.
+Upserts use stable chunk IDs; reindexing does not duplicate vectors. Search returns cosine
+similarity, not a calibrated probability. SQLite rehydrates hits, excluding deleted sources.
 
-## Why not a large RAG framework?
+SQLite and Chroma do not share a transaction. On indexing failure, the source is retained
+and the API returns 503; retry upload or the reindex endpoint. There is no automatic background
+job queue. A single API worker is the supported embedded-store deployment.
 
-TenderCite intentionally keeps retrieval, extraction and citation validation as explicit application code. This makes the provenance path inspectable, keeps provider replacement straightforward and avoids hiding core behavior behind framework-specific abstractions.
+## Evidence and extraction
 
-## Evidence and citation invariant
+The model receives only selected retrieved chunks. A candidate citation must reference a
+retrieved chunk, agree with its document/page, and quote text in that chunk and stored page.
+All evidence items are validated; a mixed valid/invalid finding is aggregate INVALID_QUOTE.
+Missing/blank evidence remains MISSING_EVIDENCE. Only quote matching is deterministic:
+statement interpretation, classification and completeness still require human review.
+Prompts label source documents as untrusted data. Model output is schema checked, bounded
+and never executed. Provider failures do not persist partial analysis runs.
 
-The evidence model is the most important architectural constraint.
+Analysis/finding insertion is atomic and rechecks that source documents still exist.
+Analysis snapshots preserve original output, retrieved IDs, model identifiers, request,
+prompt/schema version and time, never API keys. Model outputs are not guaranteed reproducible
+bit-for-bit, even at temperature zero. A concrete, verified embedding-model revision must be
+pinned before live evaluation or v1.0.0; the configurable revision remains unset until tested.
+Preserve that revision with live evaluation reports.
 
-1. A PDF is parsed page by page.
-2. Page numbers are stored as first-class metadata.
-3. Retrieval chunks are generated **within a single page only**.
-4. Retrieval returns chunk IDs together with document ID and page number.
-5. The extraction prompt receives retrieved chunks with stable source IDs.
-6. An extracted finding must return one or more evidence quotes and source IDs.
-7. The API validates each quote against the stored text of the declared page.
-8. A quote that cannot be found is marked `INVALID_QUOTE`; missing evidence is marked `MISSING_EVIDENCE`.
-9. Only `VERIFIED_QUOTE` evidence is rendered as a verified citation.
-10. Manual edits create a new reviewed value while preserving the original machine output.
+### Current analysis coverage limitation (RET-1)
 
-This makes citation correctness partly deterministic rather than relying on model self-reporting.
+The analysis pipeline uses a single broad query with top-k retrieval, so it is not guaranteed
+to retrieve every requirement from long or multi-document tender packages. Extraction is not
+exhaustive. The intended next improvement is deterministic category-specific retrieval queries
+followed by chunk deduplication before extraction. This is a documented follow-up, not an
+implemented behavior; see [RET-1](roadmap.md#ret-1--analysis-retrieval-coverage).
 
-### Why page-bounded chunks?
+## Reviews and decisions
 
-A chunk that spans two pages makes a citation ambiguous. Page-bounded chunks trade a small amount of retrieval context for a much stronger provenance guarantee. Neighboring page chunks can still be retrieved independently when additional context is needed.
+Finding statement/category/type always remain the original AI output. `effective_value` is
+derived from the latest append-only review event. Events preserve original and previous values,
+action, comment and timestamp. Analysis GET returns the immutable initial snapshot; findings
+GET reflects current review state. Confirmation does not change grounding status.
 
-## Human-review state model
+Only CONFIRMED/MODIFIED findings enter the matrix. Defaults are CLARIFICATION_NEEDED.
+User assignments retain rationale and the review event they assess. Any subsequent review
+makes an old assignment ineffective until reassessed; rejected findings leave the matrix.
+There is no automatic inference about bidder capabilities. Assessments remain stored for audit.
 
-A finding begins as `UNREVIEWED` and may transition to:
+## Operational limits
 
-- `CONFIRMED`: reviewer accepts the extracted statement and evidence.
-- `MODIFIED`: reviewer changes the statement/classification; original AI output remains stored.
-- `REJECTED`: reviewer marks the finding unusable or incorrect.
-
-Every review event should later store timestamp, reviewer identifier (when authentication exists), comment and before/after values. v1.0 does not require multi-user authentication; the data model should not block adding it later.
-
-## Go/No-Go safety rule
-
-TenderCite does not infer that a bidder fulfills a requirement merely because the requirement was extracted. Matrix rows default to `CLARIFICATION_NEEDED` until a human (or a future explicitly supplied capability profile) provides the bidder-side fact needed for assessment.
-
-## Security and privacy
-
-- Treat PDF content as untrusted data.
-- Never execute embedded PDF content.
-- Enforce upload size and file-type checks.
-- Store secrets only in environment variables.
-- Keep uploaded documents under a git-ignored data directory.
-- Make remote-vs-local LLM usage visible in configuration/UI.
-- Do not send documents to a remote provider unless the user has configured that provider.
-- Prompts must state that document text is content to analyze, not instructions to follow.
-
-## Future parser path
-
-pypdf is deliberately used first because it is lightweight and reliable for ordinary text PDFs. Docling is the first advanced-parser candidate for tables, layout and OCR-oriented workflows. The parser interface isolates this choice so the MVP is not blocked by heavyweight document-processing dependencies.
+No authentication or tamper-proof audit trail; use one trusted local operator. Sources referenced
+by analyses cannot be deleted through the API. Back up/erase the full data directory deliberately.
+No OCR, distributed transactions, queue, background model server or multi-user conflict UI.
+Current evaluation does not establish German-language or real-procurement accuracy.

@@ -17,23 +17,28 @@ class PdfParseError(RuntimeError):
 
 
 class PyPdfParser:
-    """Lightweight parser for digitally generated PDFs.
+    """Text PDFs only; limits reduce accidental resource use but are not a parser sandbox."""
 
-    OCR and advanced layout reconstruction are intentionally outside the v0.1 path.
-    The parser interface can later be backed by Docling without changing API models.
-    """
-
-    def parse(self, path: Path) -> list[ParsedPage]:
+    def parse(
+        self, path: Path, *, max_pages: int = 500, max_chars: int = 2_000_000
+    ) -> list[ParsedPage]:
         try:
-            reader = PdfReader(str(path))
-        except Exception as exc:  # pypdf exposes multiple parse exception types
-            raise PdfParseError(f"Could not open PDF: {exc}") from exc
-
-        pages: list[ParsedPage] = []
-        for index, page in enumerate(reader.pages, start=1):
-            try:
-                text = page.extract_text() or ""
-            except Exception as exc:
-                raise PdfParseError(f"Could not extract page {index}: {exc}") from exc
-            pages.append(ParsedPage(page_number=index, text=normalize_page_text(text)))
-        return pages
+            with path.open("rb") as source:
+                reader = PdfReader(source)
+                if reader.is_encrypted:
+                    raise PdfParseError("Encrypted PDFs are not supported")
+                if not 1 <= len(reader.pages) <= max_pages:
+                    raise PdfParseError("PDF page count exceeds supported limits")
+                pages = []
+                total = 0
+                for index, page in enumerate(reader.pages, start=1):
+                    text = normalize_page_text(page.extract_text() or "")
+                    total += len(text)
+                    if total > max_chars:
+                        raise PdfParseError("Extracted text exceeds configured limit")
+                    pages.append(ParsedPage(page_number=index, text=text))
+                return pages
+        except PdfParseError:
+            raise
+        except Exception as exc:
+            raise PdfParseError("Could not parse PDF; malformed or unsupported document") from exc

@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class RequirementCategory(StrEnum):
@@ -83,6 +83,7 @@ class EvidenceRequest(BaseModel):
 
 
 class EvidenceRef(BaseModel):
+    chunk_id: str | None = None
     document_id: str
     page_number: int
     quote: str
@@ -92,7 +93,16 @@ class EvidenceRef(BaseModel):
     grounding_status: GroundingStatus
 
 
+class ReviewedValue(BaseModel):
+    statement: str = Field(min_length=1, max_length=4000, pattern=r"\S")
+    category: RequirementCategory
+    requirement_type: RequirementType
+
+
 class Finding(BaseModel):
+    original_output: dict | None = None
+    reviewed_value: ReviewedValue | None = None
+    analysis_run_id: str = ""
     id: str
     statement: str
     category: RequirementCategory
@@ -103,8 +113,35 @@ class Finding(BaseModel):
     review_status: ReviewStatus = ReviewStatus.UNREVIEWED
     created_at: datetime
 
+    @computed_field
+    @property
+    def effective_value(self) -> ReviewedValue:
+        return self.reviewed_value or ReviewedValue(
+            statement=self.statement, category=self.category, requirement_type=self.requirement_type
+        )
+
+    @computed_field
+    @property
+    def grounding_status(self) -> GroundingStatus:
+        if not self.evidence:
+            return GroundingStatus.MISSING_EVIDENCE
+        if any(e.grounding_status == GroundingStatus.INVALID_QUOTE for e in self.evidence):
+            return GroundingStatus.INVALID_QUOTE
+        if any(e.grounding_status == GroundingStatus.MISSING_EVIDENCE for e in self.evidence):
+            return GroundingStatus.MISSING_EVIDENCE
+        return GroundingStatus.VERIFIED_QUOTE
+
+
+class AssessmentRequest(BaseModel):
+    status: AssessmentStatus
+    rationale: str = Field(min_length=1, max_length=4000, pattern=r"\S")
+
 
 class GoNoGoRow(BaseModel):
+    category: RequirementCategory
+    requirement_type: RequirementType
+    review_status: ReviewStatus
+    grounding_status: GroundingStatus
     finding_id: str
     criterion: str
     status: AssessmentStatus = AssessmentStatus.CLARIFICATION_NEEDED

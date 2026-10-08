@@ -1,13 +1,10 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
-
 permissions:
   contents: read
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,10 +13,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
-      - name: Install
-        run: pip install -e ".[dev]"
-      - name: Lint
-        run: ruff check .
-      - name: Test
-        run: pytest --cov=tendercite --cov-report=term-missing
+      - name: Install pinned CPU dependencies
+        run: |
+          python -m pip install uv==0.12.19
+          uv venv .venv
+          uv pip install --python .venv/bin/python --torch-backend cpu --require-hashes -r requirements-dev.lock
+          uv pip install --python .venv/bin/python --no-deps -e .
+      - name: Lint and format
+        run: |
+          .venv/bin/ruff check .
+          .venv/bin/ruff format --check .
+      - name: Offline tests (no model download or provider credentials)
+        env:
+          HF_HUB_OFFLINE: "1"
+        run: .venv/bin/pytest --cov=tendercite --cov-report=term-missing
+      - name: Docker build
+        run: docker build -t tendercite:ci .
