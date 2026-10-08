@@ -52,8 +52,9 @@ Analysis snapshots preserve original output, the retrieval strategy/version, ord
 per-query candidate IDs, final context IDs, model identifiers, request, prompt/schema version
 and time, never provider credentials or API keys. Model outputs are not guaranteed reproducible
 bit-for-bit, even at temperature zero. A concrete, verified embedding-model revision must be
-pinned before live evaluation or v1.0.0; the configurable revision remains unset until tested.
-Preserve that revision with live evaluation reports.
+pinned before live evaluation or v1.0.0. The tested default is now
+`614241f622f53c4eeff9890bdc4f31cfecc418b3`; overrides remain configurable.
+Preserve the selected revision with live evaluation reports.
 
 ### Category-aware analysis retrieval (RET-1)
 
@@ -83,7 +84,9 @@ The effective plan cap is `min(top_k, 21)`, never seven times the requested cont
 below seven cannot offer every query a distinct context slot; fixed query order then determines
 priority. No per-document coverage or exhaustive requirement extraction is guaranteed, even with
 larger budgets. Category queries can still return noise, omit subtopics or favor one document.
-Multilingual E5 enables cross-lingual retrieval; German/English quality remains unmeasured.
+The first [real synthetic evaluation](evaluation/multilingual-e5-synthetic-tender-3.md) covered
+11/14 spans with this plan versus 12/14 with the previous broad query. Broader German/English
+quality and exhaustive coverage remain unestablished; this result did not trigger query tuning.
 
 The stored plan includes strategy/version, query keys/text, per-query limit and effective context
 cap. `retrieval_query_results` records each query's candidate chunk IDs in rank order, including
@@ -109,4 +112,4 @@ There is no automatic inference about bidder capabilities. Assessments remain st
 No authentication or tamper-proof audit trail; use one trusted local operator. Sources referenced
 by analyses cannot be deleted through the API. Back up/erase the full data directory deliberately.
 No OCR, distributed transactions, queue, background model server or multi-user conflict UI.
-Current evaluation does not establish German-language or real-procurement accuracy.
+Current evaluation measures seven synthetic cases per language, not real-procurement accuracy.

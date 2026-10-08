@@ -19,12 +19,15 @@ adds tests/lint. Both target Python 3.12 Linux CPU and include artifact hashes. 
 The first model use downloads separately licensed E5 weights. Set writable `HF_HOME` when
 required. Model files are not in the image or package lock. Before any live evaluation or
 v1.0.0, `TENDERCITE_EMBEDDING_REVISION` must identify a concrete model commit whose downloaded
-artifacts have been verified. It remains unset until such a revision is tested; no unverified
-revision is supplied here. Reindex every document after changing
-model/revision configuration. `HF_HUB_OFFLINE=1` requires a populated compatible cache.
+artifacts have been verified. The runtime and Compose default now use tested revision
+`614241f622f53c4eeff9890bdc4f31cfecc418b3`; the environment variable can override it.
+See the [real evaluation](evaluation/multilingual-e5-synthetic-tender-3.md). Reindex after changing
+model/revision configuration. When overriding the model, choose a revision from that model's
+repository too; the E5 default SHA does not identify other models. `HF_HUB_OFFLINE=1` requires
+a populated compatible cache.
 
 The default `intfloat/multilingual-e5-small` enables multilingual support by model choice.
-German retrieval quality remains unevaluated. Existing deployments of the English model must
+German retrieval has been measured on seven synthetic cases only. Existing deployments of the English model must
 reindex their documents after switching; the model-specific Chroma collection changes.
 
 ## Environment variables
@@ -37,7 +40,7 @@ reindex their documents after switching; the model-specific Chroma collection ch
 | TENDERCITE_MAX_EXTRACTED_CHARS | 2000000 |
 | TENDERCITE_RETRIEVAL_ENABLED | true; false explicitly selects ingestion-only mode |
 | TENDERCITE_EMBEDDING_MODEL | intfloat/multilingual-e5-small |
-| TENDERCITE_EMBEDDING_REVISION | unset; concrete verified commit required before live evaluation / v1.0.0 |
+| TENDERCITE_EMBEDDING_REVISION | `614241f622f53c4eeff9890bdc4f31cfecc418b3`; tested default, configurable |
 | TENDERCITE_LLM_BASE_URL | unset; operator-configured local or hosted OpenAI-compatible `/v1` base |
 | TENDERCITE_LLM_MODEL | unset; served model identifier |
 | TENDERCITE_LLM_API_KEY | optional secret required only by some providers |

@@ -28,7 +28,8 @@ WinAnsi with line wrapping that preserves words; it does not provide general Uni
 The default `intfloat/multilingual-e5-small` enables cross-lingual German/English retrieval;
 model choice alone does not establish retrieval quality in either language. Before live
 evaluation or v1.0.0, download and verify a concrete embedding-model revision and pin that commit
-using `TENDERCITE_EMBEDDING_REVISION`. No revision has been tested or pinned here. Reindex after
+using `TENDERCITE_EMBEDDING_REVISION`. The tested default is now
+`614241f622f53c4eeff9890bdc4f31cfecc418b3`; see the [real results](../docs/evaluation/multilingual-e5-synthetic-tender-3.md). Reindex after
 changing models/revisions and retain the revision with the evaluation report. Then run against
 an API using the pinned model:
 
@@ -82,8 +83,10 @@ These are controlled behavioral regressions, **not measured multilingual E5 qual
 can still miss requirements, subtopics or entire documents. TenderCite does not claim exhaustive
 extraction. Eight synthetic pages cannot establish real-tender accuracy, table/OCR handling or
 robustness to ambiguity. German retrieval quality, real-model category coverage and real LLM
-extraction remain unmeasured release gates; no evaluation scores are fabricated.
+extraction require further release work. Synthetic retrieval and context coverage have now been
+measured on the pinned model; live LLM extraction remains unrun.
 
-The [2026-10-08 real-model attempt](../docs/evaluation/multilingual-e5-synthetic-tender-3-blocked.md)
-resolved the official model SHA and inspected its metadata but was blocked downloading weights.
-Its JSON report explicitly records unrun metrics as null; it is not a successful evaluation.
+The [completed real-model evaluation](../docs/evaluation/multilingual-e5-synthetic-tender-3.md)
+includes per-language query metrics, category-plan versus broad-query coverage, per-case hits,
+performance and reproduction commands using `python -m evaluation.real_retrieval`. It supersedes
+the historical blocked attempt. That opt-in runner uses no LLM and is not executed by CI.

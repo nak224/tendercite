@@ -1,6 +1,8 @@
 # First multilingual E5 retrieval evaluation attempt
 
-**Status: blocked before model loading; no real retrieval metrics or timings.**
+**Historical status: blocked before model loading.** Resolved on 2026-10-08; see the
+[completed evaluation](multilingual-e5-synthetic-tender-3.md). The diagnostic JSON below preserves
+the original failed attempt and is not the current result.
 Attempted on 2026-10-08 from merged PR #2 / main
 `c85f3254e8a665fd7a6aac76986aba751ce12201`, on branch `eval/multilingual-e5`.
 [Machine-readable record](multilingual-e5-synthetic-tender-3-blocked.json) includes all 14

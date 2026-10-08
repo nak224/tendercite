@@ -7,8 +7,9 @@ and use in a Go / No-Go matrix. Every claimed citation is checked against a stor
 page and text passage. A valid quotation does **not** prove the model's interpretation is correct.
 
 **Status:** unreleased development work built on v0.1. The complete workflow is implemented
-and tested with deterministic model doubles. Live E5/LLM evaluation is still an open release
-gate; this repository is **not yet declared v1.0.0**. See [release checks](docs/release-check.md).
+and tested with deterministic model doubles. The first real E5 synthetic retrieval evaluation is
+measured; live LLM evaluation and release review remain open. This repository is **not yet
+declared v1.0.0**. See [release checks](docs/release-check.md).
 
 ## What works
 
@@ -66,9 +67,9 @@ uvicorn tendercite.main:app --host 127.0.0.1 --port 8000
 streamlit run frontend/app.py --server.address=127.0.0.1
 ```
 
-The first text upload/search downloads E5 model files from Hugging Face. Before live
-evaluation or v1.0.0, pin a concrete, verified embedding-model commit with
-`TENDERCITE_EMBEDDING_REVISION`; no revision is pinned or claimed tested yet. Allow sufficient
+The first text upload/search downloads E5 model files from Hugging Face. The tested default
+`TENDERCITE_EMBEDDING_REVISION` is `614241f622f53c4eeff9890bdc4f31cfecc418b3`;
+it remains configurable. Reindex after changing model or revision. Allow sufficient
 network access and a writable Hugging Face cache; set `HF_HOME` if necessary. If unavailable,
 the source remains stored and upload returns 503: fix model access and retry upload or
 `POST /api/v1/documents/{id}/index`. To work on ingestion alone, explicitly set
@@ -122,10 +123,11 @@ extraction source-span/type precision/recall/F1 and evidence rates. Offline regr
 category coverage and citation boundaries; they do not establish real-model retrieval quality
 or broad tender-analysis accuracy.
 
-The [first real-model evaluation attempt](docs/evaluation/multilingual-e5-synthetic-tender-3-blocked.md)
-resolved the official model commit and inspected its card/configuration, but weight downloads
-were denied by the cloud proxy at `cas-server.xethub.hf.co` and `us.aws.cdn.hf.co` (403).
-No real retrieval metrics, performance numbers or successfully loaded revision are claimed.
+The [real E5 evaluation](docs/evaluation/multilingual-e5-synthetic-tender-3.md) measured
+source-span Hit@1 of 6/7 and Hit@3/@5 of 7/7 in each language. At a 12-chunk budget, the category
+plan covered 11/14 requirements (11 unique chunks), versus 12/14 for the broad-query baseline.
+The report includes the misses, raw results, CPU timings and reproduction steps. These 14
+synthetic cases do not establish real-tender accuracy or exhaustive extraction.
 
 ## Docker
 
@@ -153,8 +155,8 @@ Examples and error semantics: [API documentation](docs/api.md).
   Bounded retrieval can still miss requirements in long or multi-document packages; extraction
   is not exhaustive. See [RET-1](docs/roadmap.md#ret-1--analysis-retrieval-coverage).
 - No OCR; scans, complex layouts/tables and encrypted PDFs are not reliably supported.
-- The multilingual model choice enables German/English support; German retrieval quality still
-  requires evaluation. No German retrieval-quality score is claimed.
+- German/English retrieval is measured only on seven synthetic cases per language. The category
+  plan missed three German requirements; representative real-tender evaluation remains necessary.
 - No authentication, multi-tenancy, bidder capability inference or legal automation.
 - Local documents are confidential data. Use a trusted single-user deployment; see
   [SECURITY.md](SECURITY.md) and the [dependency audit](docs/security-review.md).
