@@ -44,10 +44,15 @@ Analysis request:
 {"document_ids":["document-uuid"],"query":"Find mandatory reference requirements","top_k":12}
 ```
 
-Analysis requires a nonempty explicit document selection and a configured provider. Only retrieved
-passages are sent. The current pipeline runs one broad query with top-k retrieval; it does not
-guarantee retrieval of every requirement in long or multi-document packages. See the planned
-[category-specific retrieval and deduplication follow-up](roadmap.md#ret-1--analysis-retrieval-coverage).
+Analysis requires a nonempty explicit document selection and a configured provider. Six fixed
+bilingual category queries plus the unchanged user query each retrieve at most three hits.
+`top_k` (1–50, default 12) caps unique context chunks; the plan further caps them at 21.
+Deduplicated chunks are selected round-robin in query order, keeping their maximum similarity.
+Budgets below seven may exclude some query contributions. Only final context is sent to the LLM.
+The response includes `retrieval_plan` (strategy/version, ordered queries and limits),
+`retrieval_query_results` (candidate chunk IDs per query), and `retrieved_chunk_ids` (final prompt
+order). Historical runs have no plan metadata. Retrieval is not exhaustive; see
+[category-aware retrieval](architecture.md#category-aware-analysis-retrieval-ret-1).
 Findings carry category/type/confidence and evidence with server-assigned
 VERIFIED_QUOTE/INVALID_QUOTE/MISSING_EVIDENCE. Invalid/missing findings remain visible for review.
 A valid quote is not proof of logical entailment or completeness. No bidder facts are inferred.

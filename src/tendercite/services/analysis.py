@@ -7,7 +7,10 @@ from starlette.concurrency import run_in_threadpool
 from tendercite.domain.analysis import AnalysisRequest, AnalysisRun, ExtractionResult
 from tendercite.domain.models import EvidenceRef, Finding, GroundingStatus
 from tendercite.services.evidence import validate_evidence
-from tendercite.services.retrieval.base import SearchRequest
+from tendercite.services.retrieval.analysis import (
+    build_analysis_retrieval_plan,
+    retrieve_analysis_context,
+)
 from tendercite.services.text import normalize_quote
 
 PROMPT_VERSION = "tender-requirements-1"
@@ -21,7 +24,10 @@ This is not legal advice."""
 
 
 async def analyze(request: AnalysisRequest, repository, retrieval, llm) -> AnalysisRun:
-    hits = await run_in_threadpool(retrieval.search, SearchRequest(**request.model_dump()))
+    plan = build_analysis_retrieval_plan(request)
+    hits, query_results = await run_in_threadpool(
+        retrieve_analysis_context, plan, request.document_ids, retrieval
+    )
     if not hits:
         raise ValueError("No indexed text found for the selected documents")
     result = await llm.generate_structured(
@@ -79,6 +85,8 @@ async def analyze(request: AnalysisRequest, repository, retrieval, llm) -> Analy
         prompt_version=PROMPT_VERSION,
         schema_version=SCHEMA_VERSION,
         request=request,
+        retrieval_plan=plan,
+        retrieval_query_results=query_results,
         retrieved_chunk_ids=list(allowed),
         created_at=now,
         findings=findings,

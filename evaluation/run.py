@@ -52,7 +52,7 @@ def main():
             "mode": "live-api",
             "configuration": client.get("/api/v1/configuration").json(),
             "document_id": document["id"],
-            "retrieval": retrieval_metrics(gold["cases"], hits, args.top_k),
+            "retrieval": retrieval_metrics(gold["cases"], hits, args.top_k, document["id"]),
             "retrieval_hits": hits,
             "extraction": None,
             "analysis_run": None,

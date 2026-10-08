@@ -10,7 +10,7 @@ Back up existing databases before upgrades; there is not yet a versioned migrati
 | Page | `pages`: document ID + 1-based PDF page sequence, normalized extracted text |
 | Chunk | `chunks`: UUID, document ID, page, ordinal, text, char_start/end in stored page text |
 | SearchHit | Transient: chunk/document IDs, document name, page, text, cosine similarity |
-| AnalysisRun | `analyses`: ID + validated JSON snapshot of provider/model, embedding model, request, retrieved chunk IDs, prompt/schema versions, UTC time, original findings |
+| AnalysisRun | `analyses`: ID + validated JSON snapshot of provider/model, embedding model/revision, request, retrieval plan/query results, final context chunk IDs, prompt/schema versions, UTC time, original findings |
 | Finding | `findings`: ID, analysis FK, immutable JSON original statement/category/type/confidence/evidence |
 | EvidenceRef | Embedded in Finding: document/page/chunk, quote, offsets, normalized-page hash, deterministic grounding status |
 | ReviewEvent | `reviews`: ordered sequence, finding FK, immutable JSON original/previous/reviewed values, previous status, action, comment, UTC timestamp |
@@ -34,3 +34,9 @@ FULFILLED/PARTIAL/MISSING/CLARIFICATION_NEEDED/NOT_APPLICABLE.
 `Finding.original_output` additionally preserves the complete parsed candidate, including the
 original quote whitespace before deterministic normalization. `embedding_revision` records
 the configured revision (null when unpinned); it does not claim a resolved download commit.
+
+`AnalysisRun.retrieval_plan` stores strategy/version, ordered query keys/text, hits per query
+and maximum context chunks. `retrieval_query_results` stores ranked candidate chunk IDs for each
+query; `retrieved_chunk_ids` is the ordered deduplicated subset actually sent to the model.
+Legacy snapshots default to a null plan and empty query results, preserving their original
+retrieved IDs. These additive JSON fields require no SQLite schema change.
