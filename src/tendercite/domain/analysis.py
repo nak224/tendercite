@@ -36,7 +36,32 @@ class AnalysisRequest(BaseModel):
         max_length=2000,
         pattern=r"\S",
     )
-    top_k: int = Field(default=12, ge=1, le=50)
+    top_k: int = Field(
+        default=12,
+        ge=1,
+        le=50,
+        description="Maximum unique context chunks; the retrieval plan may impose a lower cap.",
+    )
+
+
+class RetrievalQuery(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    key: str
+    query: str
+
+
+class AnalysisRetrievalPlan(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    strategy: str
+    version: str
+    queries: tuple[RetrievalQuery, ...]
+    hits_per_query: int
+    max_chunks: int
+
+
+class RetrievalQueryResult(BaseModel):
+    query_key: str
+    chunk_ids: list[str]
 
 
 class AnalysisRun(BaseModel):
@@ -48,6 +73,9 @@ class AnalysisRun(BaseModel):
     prompt_version: str
     schema_version: str
     request: AnalysisRequest
+    # Old snapshots predate explicit plans; do not label them as category-aware.
+    retrieval_plan: AnalysisRetrievalPlan | None = None
+    retrieval_query_results: list[RetrievalQueryResult] = Field(default_factory=list)
     retrieved_chunk_ids: list[str]
     created_at: datetime
     findings: list[Finding]
