@@ -16,6 +16,7 @@ gate; this repository is **not yet declared v1.0.0**. See [release checks](docs/
 - SQLite persistence and duplicate-upload detection by SHA-256.
 - Replaceable local embeddings (default `intfloat/multilingual-e5-small`) and persistent Chroma search.
 - Document-scoped retrieval with source metadata; idempotent reindexing.
+- Explicit bilingual analysis query plan, bounded category context and retrieval audit metadata.
 - OpenAI-compatible structured extraction with Pydantic validation and per-citation checks.
 - Explicit VERIFIED_QUOTE / INVALID_QUOTE / MISSING_EVIDENCE states.
 - Confirm, modify or reject findings while preserving original AI output and review history.
@@ -32,7 +33,8 @@ flowchart TD
     SQLite --> Chunks[Page-bounded chunks]
     Chunks --> Embeddings[EmbeddingProvider: local E5]
     Embeddings --> Chroma[(Chroma local index)]
-    Chroma --> Retrieval[Document-scoped retrieval]
+    Plan[User query + six fixed bilingual category queries] --> Retrieval
+    Chroma --> Retrieval[Bounded retrieval + deduplication + round-robin selection]
     Retrieval --> LLM[StructuredLLM: OpenAI-compatible adapter]
     LLM --> Validation[Schema and deterministic evidence validation]
     SQLite --> Validation
@@ -113,8 +115,12 @@ python -m evaluation.run --analysis --output /tmp/full-evaluation.json
 ```
 
 Tests exercise real SQLite/Chroma and the API/UI with deterministic embedding/LLM doubles.
-The [12-case English/German evaluation](evaluation/README.md) measures retrieval Hit@k, exact source-span/type
-precision/recall/F1 and evidence rates. It does not establish broad tender-analysis accuracy.
+The [14-case English/German evaluation](evaluation/README.md) uses multi-chunk pages with
+procurement distractors and separate SECURITY/PRIVACY cases. It distinguishes `page_hit_at_k`
+from `source_span_hit_at_k` (the retrieved chunk must contain the gold quote), alongside exact
+extraction source-span/type precision/recall/F1 and evidence rates. Offline regressions test
+category coverage and citation boundaries; they do not establish real-model retrieval quality
+or broad tender-analysis accuracy.
 
 ## Docker
 
@@ -137,10 +143,10 @@ Examples and error semantics: [API documentation](docs/api.md).
 - Not legal or procurement advice. Findings and bidder assessments require human review.
 - Confidence is an uncalibrated model signal, not a probability of correctness.
 - Quote validation proves text occurrence and source identity, not logical entailment.
-- Analysis currently uses one broad query and top-k retrieval. It is not guaranteed to retrieve
-  every requirement in long or multi-document tender packages; extraction is not exhaustive.
-  The planned follow-up is deterministic category-specific queries followed by chunk deduplication
-  ([RET-1](docs/roadmap.md#ret-1--analysis-retrieval-coverage)).
+- Analysis uses six fixed bilingual category queries plus the user query, with three hits per
+  query and deduplicated round-robin context selection (default 12, at most 21 chunks).
+  Bounded retrieval can still miss requirements in long or multi-document packages; extraction
+  is not exhaustive. See [RET-1](docs/roadmap.md#ret-1--analysis-retrieval-coverage).
 - No OCR; scans, complex layouts/tables and encrypted PDFs are not reliably supported.
 - The multilingual model choice enables German/English support; German retrieval quality still
   requires evaluation. No German retrieval-quality score is claimed.

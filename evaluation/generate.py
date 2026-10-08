@@ -21,7 +21,11 @@ def make_pdf(pages):
             {NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)})}
         )
         stream = DecodedStreamObject()
-        lines = [line for paragraph in text.splitlines() for line in wrap(paragraph, width=80)]
+        lines = [
+            line
+            for paragraph in text.splitlines()
+            for line in wrap(paragraph, width=80, break_on_hyphens=False, break_long_words=False)
+        ]
         commands = ["BT /F1 12 Tf 14 TL 50 742 Td"]
         for line in lines:
             escaped = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")

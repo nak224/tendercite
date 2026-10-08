@@ -3,12 +3,34 @@
 from tendercite.services.text import normalize_quote
 
 
-def retrieval_metrics(gold, results, k):
-    successes = sum(
-        any(hit["page_number"] == case["page"] for hit in results.get(case["id"], [])[:k])
-        for case in gold
-    )
-    return {"queries": len(gold), "k": k, "hit_at_k": successes / len(gold) if gold else None}
+def retrieval_metrics(gold, results, k, document_id):
+    """Separate page discovery from retrieval of the complete normalized gold span.
+
+    Both metrics require the selected document and page. A source-span hit also
+    requires the full gold quote in one returned chunk, not elsewhere on the page
+    or assembled from multiple chunks. Partial spans count as misses.
+    """
+    if k < 1:
+        raise ValueError("k must be positive")
+    page_hits = 0
+    span_hits = 0
+    for case in gold:
+        page_matches = [
+            hit
+            for hit in results.get(case["id"], [])[:k]
+            if hit["document_id"] == document_id and hit["page_number"] == case["page"]
+        ]
+        quote = normalize_quote(case["quote"])
+        page_hits += bool(page_matches)
+        span_hits += bool(quote) and any(
+            quote in normalize_quote(hit["text"]) for hit in page_matches
+        )
+    return {
+        "queries": len(gold),
+        "k": k,
+        "page_hit_at_k": page_hits / len(gold) if gold else None,
+        "source_span_hit_at_k": span_hits / len(gold) if gold else None,
+    }
 
 
 def extraction_metrics(gold, findings, document_id):

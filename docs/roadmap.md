@@ -19,18 +19,20 @@ implemented paths do not by themselves establish v0.5/v1 production readiness.
 
 ## RET-1 — Analysis retrieval coverage
 
-**Open limitation:** the current analysis pipeline uses a single broad query and top-k retrieval.
-It is not guaranteed to retrieve every requirement from long or multi-document tender packages.
-TenderCite must not claim exhaustive tender extraction.
+**Implemented:** an explicit, versioned plan searches the user query and six fixed bilingual
+category queries separately (three hits each), deduplicates by chunk ID with maximum similarity,
+and selects context round-robin within a bounded budget. Analysis snapshots retain the plan,
+per-query candidate IDs and final context IDs. Offline fake-embedding regressions demonstrate
+category contributions across selected documents where one broad query omits them, and preserve
+all citation checks. See [architecture](architecture.md#category-aware-analysis-retrieval-ret-1).
 
-**Intended next improvement:** issue deterministic category-specific retrieval queries for
-requirement categories, then deduplicate chunks by chunk ID before extraction. Evaluate coverage
-on long and multi-document fixtures while retaining document/page identity. This improvement is
-planned only; this PR follow-up does not change the retrieval pipeline or claim coverage gains.
+**Remaining limitation:** bounded semantic retrieval still does not guarantee every requirement,
+subtopic or document contributes context. Exhaustive tender extraction is not claimed. Real-model
+coverage, including German retrieval quality, still requires a pinned revision and live evaluation.
 
 ## Follow-up quality work
 
-Expand beyond the 12 English/German synthetic cases with shared requirement pages and noise;
+Expand beyond the 14 English/German synthetic cases with multi-chunk pages and procurement noise;
 measure German retrieval quality and test ambiguity, long documents and tables. The default
 model now enables multilingual support; its quality remains to be measured.
 Add selective workspace/analysis deletion with explicit audit/privacy semantics, pagination,

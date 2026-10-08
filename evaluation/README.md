@@ -1,26 +1,36 @@
 # Synthetic evaluation
 
-`gold.json` version `synthetic-tender-2` contains 12 manually specified gold requirements:
-the six original English examples plus six German procurement examples covering Angebotsfrist,
-Referenzanforderungen, Haftpflichtversicherung, Zertifikat, Zuschlags-/Preisgewichtung and
-Datenschutz/IT security. English quotes, queries and labels are retained; their page locations
-change in this dataset version.
+`gold.json` version `synthetic-tender-3` contains 14 manually specified gold requirements:
+all six original English and six German cases, plus a dedicated SECURITY case in each language.
+SECURITY covers privileged access authentication/logging independently of PRIVACY's data
+residency/encryption requirement. Quotes, queries, labels and pages of the existing 12 cases
+are retained. No real procurement documents are redistributed; this original dataset and its
+PDF generator are Apache-2.0 by the TenderCite authors.
 
-The separate `pages` array contains the actual eight-page fixture. Requirements share pages
-with other requirements and irrelevant administrative text; two pages contain only historical
-or descriptive distractors, including similar vocabulary and irrelevant dates/percentages.
-The PDF generator uses Windows-1252/WinAnsi encoding and line wrapping to preserve German
-umlauts/ß in readable source pages. This is a synthetic fixture, not general Unicode PDF support.
-The live runner and offline tests use these full pages, not isolated gold quotes as documents.
+## Corpus and chunking
 
-The dataset and generator are explicitly Apache-2.0 by the TenderCite authors. No third-party
-procurement documents are redistributed. The new model choice, `intfloat/multilingual-e5-small`,
-enables multilingual support; German retrieval quality still requires evaluation.
+The eight-page fixture has six requirement-bearing pages of roughly 1,900–2,300 characters,
+above the production 1,200-character chunk size (150-character overlap). Each mixes requirements
+with administrative background and unrelated procurement vocabulary: historical turnover figures,
+obsolete insurance forms, sample price weights, archived deadlines and security training events.
+Requirements occur in different chunks of a shared page. Two additional pages are distractors.
+The live runner and offline tests use these full pages, with normal chunking settings.
 
-Before live evaluation or v1.0.0, download and verify a concrete embedding-model revision and
-pin that commit using `TENDERCITE_EMBEDDING_REVISION`. No revision has been tested or pinned here.
-Reindex after changing models/revisions and retain the revision with the evaluation report.
-Then run against an API using the pinned model:
+Offline tests assert that actual PDF ingestion creates more chunks than pages, that all six
+relevant pages produce multiple chunks, and that every gold quote exists completely in at least
+one chunk. They also select a real wrong chunk on each gold page: this must fail the source-span
+metric even though it passes the page metric. German umlauts/ß, hyphenated words, distractors and
+exact stored-page chunk offsets are checked after parsing. The generator uses Windows-1252 /
+WinAnsi with line wrapping that preserves words; it does not provide general Unicode PDF support.
+
+## Running real-model evaluation
+
+The default `intfloat/multilingual-e5-small` enables cross-lingual German/English retrieval;
+model choice alone does not establish retrieval quality in either language. Before live
+evaluation or v1.0.0, download and verify a concrete embedding-model revision and pin that commit
+using `TENDERCITE_EMBEDDING_REVISION`. No revision has been tested or pinned here. Reindex after
+changing models/revisions and retain the revision with the evaluation report. Then run against
+an API using the pinned model:
 
 ```bash
 python -m evaluation.run --output /tmp/retrieval-evaluation.json
@@ -28,26 +38,48 @@ python -m evaluation.run --output /tmp/retrieval-evaluation.json
 python -m evaluation.run --analysis --output /tmp/full-evaluation.json
 ```
 
-The report records actual API outputs, configuration, run metadata, timestamp and dataset version.
-Retrieval Hit@k checks the expected source page within the selected synthetic document. Because
-multiple requirements share pages, a page hit alone is not proof of correct requirement retrieval.
-Extraction precision/recall/F1 use exact whitespace-normalized quote + page + category + type
-matches. A prediction can match one gold item; duplicates count against precision. These are
-**source-span/type metrics**, not semantic correctness of paraphrased statements. Partial but
-valid quotes may score as misses. Evidence verification rate measures validated references;
-unsupported finding rate includes findings with no evidence or any invalid/missing reference.
-Undefined evidence rates are null, not perfect scores.
+The report records actual API outputs, configuration, timestamp and dataset version. Retrieval
+probes use each gold case's query through `/search`; these measure query-level retrieval, not
+aggregate category-plan coverage. With `--analysis`, the report also includes the actual
+category-aware `analysis_run`, its complete retrieval plan/audit metadata and extraction metrics.
+The plan uses the user's query plus six fixed bilingual category queries, at most three hits each,
+and deduplicated round-robin selection up to the requested context budget (12 by default, cap 21).
+See [architecture](../docs/architecture.md#category-aware-analysis-retrieval-ret-1).
 
-Offline tests check corpus coverage, real PDF parsing, German text preservation, source grounding
-and metric arithmetic. They require no model download or credentials and produce no model scores.
-No German, English or aggregate retrieval-quality claim follows from passing these tests.
-Eight synthetic pages are insufficient to generalize to real tenders, tables, OCR or ambiguity.
+## Metric definitions
 
-Analysis still uses a single broad query with top-k retrieval; it is not guaranteed to find all
-requirements in long or multi-document packages. [RET-1](../docs/roadmap.md#ret-1--analysis-retrieval-coverage)
-tracks the intended improvement: deterministic category-specific queries followed by chunk
-deduplication. That pipeline change is not implemented in this follow-up.
+For the first `k` returned chunks of each gold query:
 
-The prior onboarding download was blocked by network policy (HTTP 403), and no real LLM provider
-was configured. The multilingual model has not been downloaded or measured in this follow-up;
-real retrieval/extraction evaluation remains a release gate. No evaluation scores are fabricated.
+- `page_hit_at_k`: fraction of cases with at least one chunk from the gold page **and selected
+  document**. This is page discovery only; it may count irrelevant text on the correct page.
+- `source_span_hit_at_k`: fraction with at least one chunk from that document/page containing
+  the **complete whitespace-normalized gold quote**. A quote elsewhere on the page, in another
+  document, beyond rank `k`, or split across chunks does not count. Partial spans are misses.
+  Matching is case-sensitive and does not infer paraphrase equivalence.
+
+Missing results count as misses; both rates are null for an empty gold dataset. A case counts
+at most once regardless of duplicate hits. The old ambiguous `hit_at_k` report key is replaced
+by these two explicit keys. Scores from earlier page-only reports are not source-span scores.
+
+Extraction precision/recall/F1 use exact whitespace-normalized quote + document + page +
+category + type matches. One prediction can match one gold item; duplicates count against
+precision. These are **source-span/type metrics**, not semantic correctness of paraphrased
+statements. Partial but valid quotes may score as misses. Evidence verification rate measures
+validated references; unsupported finding rate includes findings with no evidence or any
+invalid/missing reference. Undefined evidence rates are null, not perfect scores.
+
+## Offline regression and limits
+
+CI uses deterministic fake embeddings and fake/mock LLMs, never Hugging Face model downloads
+or paid APIs. Category-plan regressions use real SQLite/Chroma, English and German texts spread
+across a selected document package, and an unselected document. Deliberately constructed fake
+vectors make a broad query fill its context with generic passages; the plan supplies all six
+requirement groups within the same context budget. Other tests cover bounded selection,
+deduplication, maximum scores, deterministic ties, persisted metadata and all citation boundaries.
+These are controlled behavioral regressions, **not measured multilingual E5 quality scores**.
+
+[RET-1](../docs/roadmap.md#ret-1--analysis-retrieval-coverage) is implemented, but bounded retrieval
+can still miss requirements, subtopics or entire documents. TenderCite does not claim exhaustive
+extraction. Eight synthetic pages cannot establish real-tender accuracy, table/OCR handling or
+robustness to ambiguity. German retrieval quality, real-model category coverage and real LLM
+extraction remain unmeasured release gates; no evaluation scores are fabricated.
