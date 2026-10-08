@@ -83,3 +83,7 @@ can still miss requirements, subtopics or entire documents. TenderCite does not 
 extraction. Eight synthetic pages cannot establish real-tender accuracy, table/OCR handling or
 robustness to ambiguity. German retrieval quality, real-model category coverage and real LLM
 extraction remain unmeasured release gates; no evaluation scores are fabricated.
+
+The [2026-10-08 real-model attempt](../docs/evaluation/multilingual-e5-synthetic-tender-3-blocked.md)
+resolved the official model SHA and inspected its metadata but was blocked downloading weights.
+Its JSON report explicitly records unrun metrics as null; it is not a successful evaluation.

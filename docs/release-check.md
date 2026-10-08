@@ -17,14 +17,14 @@ see `docs/work-log.md` for those phase commits.
 | Dependency install | Fresh local clone and new virtual environment; hashed Python 3.12 CPU install passed |
 | Docker build | Built successfully with trusted cloud proxy CA mounted as BuildKit secret |
 | Docker functionality | Non-root API: PDF upload, pages/chunks, evidence and restart persistence passed; UI AppTest rendered every section against the container API and exposed all three exports |
-| Embedding reproducibility | OPEN: a concrete verified multilingual-e5-small revision must be pinned before live evaluation / v1.0.0; none is verified yet |
-| Live E5 retrieval | NOT RUN for multilingual-e5-small; the prior onboarding model download received HTTP 403 from the cloud proxy |
+| Embedding reproducibility | OPEN: official metadata resolves `614241f622f53c4eeff9890bdc4f31cfecc418b3`; loading remains blocked, so this is not yet a verified/pinned runtime revision |
+| Live E5 retrieval | BLOCKED before model load: Xet `cas-server.xethub.hf.co` and HTTPS CDN `us.aws.cdn.hf.co` return proxy 403; see the [attempt report](evaluation/multilingual-e5-synthetic-tender-3-blocked.md) |
 | German retrieval quality | NOT EVALUATED: multilingual support is enabled by model choice; bilingual fixtures are offline coverage only |
 | Analysis coverage | RET-1 implemented: bounded bilingual category plan, deduplication and audit metadata; offline regressions cover multiple categories/documents. Live coverage remains unmeasured and extraction is not exhaustive |
 | Live structured extraction | NOT RUN: no real provider/model configured |
-| Real-model evaluation | NOT RUN: requires E5 download and configured LLM; no accuracy scores claimed |
+| Real-model evaluation | Retrieval is blocked on weights; structured LLM extraction is a separate unrun gate. No accuracy scores claimed |
 | Audit | Four Chroma server advisories, not exposed by embedded design; torch lookup skipped; see security review |
-| Licenses | Principal dependency licenses documented; model revision/weights not downloaded/reviewed here |
+| Licenses | Official model card and revision metadata inspected: MIT declared. Weight download/load verification remains blocked; principal dependency licenses documented |
 | Remote CI | Hosted CI for the current PR revision must be checked; no result is claimed here |
 | Release tag | Not created; external validation gates remain open |
 
@@ -46,3 +46,11 @@ RET-1 starts from merged main `8c9d293`. The category plan, audit metadata, boun
 and evidence-boundary regressions pass offline. Dataset v3 retains all 12 previous cases and
 adds two independent SECURITY cases, multi-chunk pages and source-span retrieval metrics.
 These tests use fake embeddings/providers; no live quality or new coverage percentage is claimed.
+
+The first real multilingual retrieval evaluation was attempted from merged PR #2 / main
+`c85f325` on 2026-10-08. [Diagnostics and null measurement records](evaluation/multilingual-e5-synthetic-tender-3-blocked.md)
+distinguish resolved metadata from verified loading. No LLM was configured or called. A saved
+network draft requires review, saving and environment publication before retrying the blocked
+downloads. Retrieval scores, failed-case classifications and performance remain unmeasured.
+The unchanged complete offline suite was rerun: 63 passed, none skipped; Ruff lint and formatting
+passed. These checks do not substitute for the blocked real-model evaluation.

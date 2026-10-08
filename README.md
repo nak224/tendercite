@@ -122,6 +122,11 @@ extraction source-span/type precision/recall/F1 and evidence rates. Offline regr
 category coverage and citation boundaries; they do not establish real-model retrieval quality
 or broad tender-analysis accuracy.
 
+The [first real-model evaluation attempt](docs/evaluation/multilingual-e5-synthetic-tender-3-blocked.md)
+resolved the official model commit and inspected its card/configuration, but weight downloads
+were denied by the cloud proxy at `cas-server.xethub.hf.co` and `us.aws.cdn.hf.co` (403).
+No real retrieval metrics, performance numbers or successfully loaded revision are claimed.
+
 ## Docker
 
 ```bash
