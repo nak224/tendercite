@@ -13,6 +13,8 @@ import httpx
 
 SEARCH_URL = "https://api.ted.europa.eu/v3/notices/search"
 MAX_NOTICES = 50
+MAX_DOCUMENT_BYTES = 25 * 1024 * 1024
+REQUEST_INTERVAL_SECONDS = 1.0
 FIELDS = (
     "publication-number",
     "notice-title",
@@ -118,7 +120,7 @@ class SearchFilters:
             parts.append(f"(publication-date <= {self.date_to:%Y%m%d})")
         if self.competition_only:
             parts.append("(form-type = competition)")
-        if self.keyword:
+        if self.keyword is not None:
             # Restrict to a literal phrase; callers cannot inject expert-query operators.
             if len(self.keyword) > 150 or any(c in self.keyword for c in '\\"\r\n()'):
                 raise ValueError("keyword must be a short literal phrase without query delimiters")
@@ -184,7 +186,8 @@ def _notice(raw: object) -> TedNotice:
     except ValueError as exc:
         raise TedResponseError("Invalid or missing publication number") from exc
     warnings = []
-    titles = raw.get("notice-title") or {}
+    titles = raw.get("notice-title")
+    titles = {} if titles is None else titles
     if not isinstance(titles, dict) or not all(isinstance(v, str) for v in titles.values()):
         raise TedResponseError(f"{notice_id}: malformed notice-title")
     titles = {language_code(k): v for k, v in titles.items()}
@@ -195,7 +198,8 @@ def _notice(raw: object) -> TedNotice:
             date.fromisoformat(dates[0][:10])  # TED may append a timezone to a date.
         except ValueError as exc:
             raise TedResponseError(f"{notice_id}: invalid publication-date") from exc
-    links = raw.get("links") or {}
+    links = raw.get("links")
+    links = {} if links is None else links
     if not isinstance(links, dict):
         raise TedResponseError(f"{notice_id}: malformed links")
     safe_links = {}
@@ -209,6 +213,12 @@ def _notice(raw: object) -> TedNotice:
                     validate_download_url(url, notice_id, format)
                 except ValueError:
                     warnings.append(f"Rejected non-document URL in links.{format}.{lang}")
+                    continue
+                if (
+                    format in {"pdf", "pdfs"}
+                    and LANGUAGES.get(language_code(lang)) != (urlsplit(url).path.split("/")[1])
+                ):
+                    warnings.append(f"Rejected language-mismatched URL in links.{format}.{lang}")
                     continue
             safe_links[format][language_code(lang)] = url
     for name, value in [
@@ -257,6 +267,7 @@ class TedClient:
         self._owns_client = client is None
         self.attempts = attempts
         self.sleep = sleep
+        self._last_request = 0.0
 
     def __enter__(self):
         return self
@@ -264,6 +275,57 @@ class TedClient:
     def __exit__(self, *args):
         if self._owns_client:
             self.client.close()
+
+    def _pace(self):
+        # At most one sequential request start per second, including retries and redirects.
+        self.sleep(max(0, REQUEST_INTERVAL_SECONDS - (time.monotonic() - self._last_request)))
+        self._last_request = time.monotonic()
+
+    def download(self, url: str, notice_id: str, format: str) -> bytes:
+        """Bounded streaming; revalidate each redirect before issuing another request."""
+        validate_download_url(url, notice_id, format)
+        original_language = urlsplit(url).path.split("/")[1]
+        for attempt in range(self.attempts):
+            current = url
+            try:
+                for redirect in range(4):
+                    validate_download_url(current, notice_id, format)
+                    if urlsplit(current).path.split("/")[1] != original_language:
+                        raise TedError("TED download redirected to a different language")
+                    self._pace()
+                    with self.client.stream("GET", current, follow_redirects=False) as response:
+                        if response.is_redirect:
+                            if redirect == 3 or not response.headers.get("Location"):
+                                raise TedError("TED download redirect limit or missing Location")
+                            current = str(response.url.join(response.headers["Location"]))
+                            continue
+                        if action := response.headers.get("x-amzn-waf-action"):
+                            raise TedError(
+                                f"{current}: HTTP {response.status_code}; AWS WAF {action}; "
+                                "document access blocked (no challenge bypass)"
+                            )
+                        if response.status_code in {429, 500, 502, 503, 504} and self.retry(
+                            attempt, response
+                        ):
+                            break
+                        if response.status_code != 200:
+                            raise TedError(
+                                f"{current}: HTTP {response.status_code}; download failed"
+                            )
+                        chunks = []
+                        size = 0
+                        for chunk in response.iter_bytes():
+                            size += len(chunk)
+                            if size > MAX_DOCUMENT_BYTES:
+                                raise TedError(f"{current}: document exceeds 25 MiB limit")
+                            chunks.append(chunk)
+                        return b"".join(chunks)
+            except ValueError as exc:
+                raise TedError("Rejected unsafe TED download redirect") from exc
+            except httpx.RequestError as exc:
+                if isinstance(exc, httpx.ProxyError) or not self.retry(attempt):
+                    raise TedError(f"{current}: {type(exc).__name__}: {exc}") from exc
+        raise TedError("TED download retry budget exhausted")
 
     def retry(self, attempt: int, response: httpx.Response | None = None) -> bool:
         if attempt + 1 >= self.attempts:
@@ -307,8 +369,9 @@ class TedClient:
         }
         for attempt in range(self.attempts):
             try:
+                self._pace()
                 response = self.client.post(SEARCH_URL, json=payload, follow_redirects=False)
-            except httpx.TransportError as exc:
+            except httpx.RequestError as exc:
                 if isinstance(exc, httpx.ProxyError) or not self.retry(attempt):
                     raise TedError(f"{SEARCH_URL}: {type(exc).__name__}: {exc}") from exc
                 continue
@@ -320,7 +383,11 @@ class TedClient:
                 body = response.json()
             except ValueError as exc:
                 raise TedResponseError("TED returned invalid JSON") from exc
-            if not isinstance(body, dict) or not isinstance(body.get("notices"), list):
+            if (
+                not isinstance(body, dict)
+                or not isinstance(body.get("notices"), list)
+                or body.get("error")
+            ):
                 raise TedResponseError("TED response has no notices array")
             total = body.get("totalNoticeCount")
             if type(total) is not int or total < len(body["notices"]):

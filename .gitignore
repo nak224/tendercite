@@ -17,4 +17,5 @@ data/uploads/*
 
 data/chroma/
 data/models/
+data/evaluation/
 data/*.db-*
