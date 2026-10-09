@@ -129,6 +129,13 @@ plan covered 11/14 requirements (11 unique chunks), versus 12/14 for the broad-q
 The report includes the misses, raw results, CPU timings and reproduction steps. These 14
 synthetic cases do not establish real-tender accuracy or exhaustive extraction.
 
+The [TED evaluation acquisition pilot](docs/evaluation/ted-pilot.md) adds a bounded official
+Search API client and `python -m evaluation.acquire_ted` CLI. Live search obtained 20 German
+competition-notice metadata records, with 17 provisional candidates. PDF/XML downloads were
+blocked by TED's WAF; parsing and the suitable-document shortlist remain pending. This is
+evaluation preparation for [issue #4](https://github.com/nak224/tendercite/issues/4), with no
+real-tender scores or automatic discovery/analysis claim. Downloaded files stay outside Git.
+
 ## Docker
 
 ```bash

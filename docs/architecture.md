@@ -113,3 +113,15 @@ No authentication or tamper-proof audit trail; use one trusted local operator. S
 by analyses cannot be deleted through the API. Back up/erase the full data directory deliberately.
 No OCR, distributed transactions, queue, background model server or multi-user conflict UI.
 Current evaluation measures seven synthetic cases per language, not real-procurement accuracy.
+
+## TED evaluation acquisition boundary
+
+The [TED pilot](evaluation/ted-pilot.md) uses a small typed HTTPX client in `services/ted.py`
+and an explicit local acquisition CLI under `evaluation/`. It fetches bounded published-notice
+metadata and validated official PDF/XML URLs, then records provenance, content hashes, language
+evidence and parser outcomes in local JSON. It reuses the existing pypdf parser and dependencies.
+There is no new database, scheduler, agent framework or production API/UI flow. Acquired PDFs
+would enter the existing manual upload workflow after review; this pilot does not auto-index or
+analyze them. Current live metadata acquisition works, but TED WAF blocks document downloads.
+Source bytes remain outside Git; manually reviewed annotations and real-tender evaluation are
+separate follow-ups linked to issue #4.
