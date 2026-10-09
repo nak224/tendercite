@@ -1,0 +1,168 @@
+{
+  "$defs": {
+    "HumanAnnotation": {
+      "additionalProperties": false,
+      "properties": {
+        "annotation_id": {
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "title": "Annotation Id",
+          "type": "string"
+        },
+        "tender_id": {
+          "minLength": 1,
+          "title": "Tender Id",
+          "type": "string"
+        },
+        "document_id": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "page_number": {
+          "minimum": 1,
+          "title": "Page Number",
+          "type": "integer"
+        },
+        "source_quote": {
+          "minLength": 1,
+          "title": "Source Quote",
+          "type": "string"
+        },
+        "requirement_statement": {
+          "minLength": 1,
+          "title": "Requirement Statement",
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/RequirementCategory"
+        },
+        "requirement_type": {
+          "$ref": "#/$defs/RequirementType"
+        },
+        "review_status": {
+          "enum": [
+            "DRAFT",
+            "VERIFIED",
+            "REJECTED"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "author_alias": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Author Alias",
+          "type": "string"
+        },
+        "reviewer_alias": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer Alias"
+        },
+        "review_notes": {
+          "title": "Review Notes",
+          "type": "string"
+        },
+        "annotated_at": {
+          "format": "date-time",
+          "title": "Annotated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "annotation_id",
+        "tender_id",
+        "document_id",
+        "sha256",
+        "page_number",
+        "source_quote",
+        "requirement_statement",
+        "category",
+        "requirement_type",
+        "review_status",
+        "author_alias",
+        "review_notes",
+        "annotated_at"
+      ],
+      "title": "HumanAnnotation",
+      "type": "object"
+    },
+    "RequirementCategory": {
+      "enum": [
+        "MUST",
+        "SCORING",
+        "INFORMATION",
+        "RISK"
+      ],
+      "title": "RequirementCategory",
+      "type": "string"
+    },
+    "RequirementType": {
+      "enum": [
+        "DEADLINE",
+        "ELIGIBILITY",
+        "REFERENCE",
+        "FINANCIAL",
+        "INSURANCE",
+        "TECHNICAL",
+        "CERTIFICATE",
+        "EVIDENCE",
+        "AWARD",
+        "PRICE",
+        "CONTRACT",
+        "LIABILITY",
+        "PRIVACY",
+        "SECURITY",
+        "OTHER"
+      ],
+      "title": "RequirementType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Typed format for authors and JSON Schema; validation reports each entry separately.",
+  "properties": {
+    "annotation_schema_version": {
+      "const": "real-tender-annotations-1",
+      "title": "Annotation Schema Version",
+      "type": "string"
+    },
+    "corpus_version": {
+      "minLength": 1,
+      "title": "Corpus Version",
+      "type": "string"
+    },
+    "label_origin": {
+      "const": "curated_human",
+      "title": "Label Origin",
+      "type": "string"
+    },
+    "annotations": {
+      "items": {
+        "$ref": "#/$defs/HumanAnnotation"
+      },
+      "title": "Annotations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "annotation_schema_version",
+    "corpus_version",
+    "label_origin",
+    "annotations"
+  ],
+  "title": "AnnotationFile",
+  "type": "object"
+}

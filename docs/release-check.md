@@ -13,7 +13,7 @@ see `docs/work-log.md` for those phase commits.
 | Reviews, matrix, exports | API integration tests preserve original output/history and source references |
 | UI | Streamlit AppTest against actual API; unsupported evidence styling and save-review action |
 | Hardening | Invalid/encrypted/oversized PDFs, limits, filename paths, cleanup, provider bounds and secret redaction |
-| Test/lint | Real-evaluation follow-up: 65 offline tests passed, none skipped; Ruff/format and Compose configuration passed. Historical core clean-clone baseline: 35 tests, 93% coverage |
+| Test/lint | Annotation milestone: 220 offline tests passed, 1 optional live TED test skipped; 51 targeted annotation tests; Ruff lint/format passed. Historical core clean-clone baseline: 35 tests, 93% coverage |
 | Dependency install | Fresh local clone and new virtual environment; hashed Python 3.12 CPU install passed |
 | Docker build | Built successfully with trusted cloud proxy CA mounted as BuildKit secret |
 | Docker functionality | Non-root API: PDF upload, pages/chunks, evidence and restart persistence passed; UI AppTest rendered every section against the container API and exposed all three exports |
@@ -25,9 +25,10 @@ see `docs/work-log.md` for those phase commits.
 | Real-model evaluation | Retrieval/context coverage measured on unchanged synthetic-tender-3. No LLM configured/called; extraction, evidence quality and real-tender evaluation remain open |
 | Real-notice acquisition pilot | [TED pilot](evaluation/ted-pilot.md): live public API returned 20 German competition-notice metadata records; 17 provisional metadata candidates. All 40 PDF/XML requests hit origin AWS WAF challenges. No real PDF/XML obtained, PDF parsing not attempted, suitable shortlist/manual annotation/scores pending. Issue #4 remains open |
 | Manual PDF corpus registration | [Local importer](evaluation/real-pdf-import.md): hash-addressed PDFs, multi-document tender groups, provenance/rights flags and integrity verification tested with self-generated fixtures. No genuine procurement PDFs supplied/imported; permitted downloads, source/rights review, original-language confirmation and manual annotation remain open |
+| Human annotations | [Schema/validator/export](evaluation/real-tender-annotations.md) tested with generated PDFs: exact page quotes, independent reviewer aliases, duplicate exclusions and deterministic tender-level splits. No genuine human gold annotations or real-document/model evaluation yet |
 | Audit | Four Chroma server advisories, not exposed by embedded design; torch lookup skipped; see security review |
 | Licenses | Official pinned card/API declare MIT; model/configuration inspected and weight hash verified. No weights redistributed. Existing dependency audit/license review still applies |
-| Remote CI | Hosted CI for the current PR revision must be checked; no result is claimed here |
+| Remote CI | [PR #8 CI](https://github.com/nak224/tendercite/actions/runs/37945307489) passed lint, offline tests and Docker build. Check the annotation PR's own revision before merging; prior CI does not establish its result |
 | Release tag | Not created; external validation gates remain open |
 
 A published CI run, real model evaluation and explicit review of remaining findings are required
@@ -74,3 +75,11 @@ live TED test skipped; Ruff lint and formatting pass. Production ingestion, depe
 model/provider configuration are unchanged. No live document download, real-PDF parsing outcome,
 gold labels, benchmark or LLM evaluation is claimed. The acquisition/annotation and existing
 live extraction, coverage, security and release-review gates remain open.
+
+The annotation milestone starts from main `11118a3` after merged PR #8. The schema and CLI
+validate human labels against corpus hashes, tender membership and literal extracted page quotes;
+gold excludes invalid/unverified labels and splits by tender with a fixed seed. All 51 new tests
+use generated PDFs. The full offline suite passes 220 tests with one optional live test skipped,
+plus Ruff lint/format. No real documents, human-reviewed procurement gold or model evaluation
+are claimed; genuine acquisition/rights review, independent annotation and held-out evaluation
+remain open along with the existing live structured-extraction and release-review gates.
