@@ -90,3 +90,12 @@ The [completed real-model evaluation](../docs/evaluation/multilingual-e5-synthet
 includes per-language query metrics, category-plan versus broad-query coverage, per-case hits,
 performance and reproduction commands using `python -m evaluation.real_retrieval`. It supersedes
 the historical blocked attempt. That opt-in runner uses no LLM and is not executed by CI.
+
+## Real-notice acquisition pilot
+
+`python -m evaluation.acquire_ted --help` documents a separate bounded TED Search API/download
+workflow. The [pilot report](../docs/evaluation/ted-pilot.md) contains exact commands and the
+[candidate manifest](ted-pilot/candidates.json) contains real German notice metadata and download
+failures. This is not a gold dataset: 17 metadata candidates remain unannotated, no PDF/XML was
+obtained due to TED WAF challenges, and no real-tender scores exist. Normal CI uses only mocked
+TED responses and generated PDF/XML fixtures; the live smoke test requires explicit opt-in.

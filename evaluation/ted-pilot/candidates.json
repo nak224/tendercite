@@ -1,0 +1,1156 @@
+{
+  "dataset_version": "ted-pilot-1",
+  "status": "metadata_acquired_documents_blocked",
+  "attribution": "Source: TED, Publications Office of the European Union; notice content supplied by contracting authorities.",
+  "source_api": "https://api.ted.europa.eu/v3/notices/search",
+  "base_main_commit": "0c86c486336199052f9cb95e59fe76e293e12039",
+  "official_api_documentation": "https://docs.ted.europa.eu/api/latest/search.html",
+  "official_openapi": {
+    "url": "https://api.ted.europa.eu/api-v3.yaml",
+    "sha256": "e0cfe4e84123c3b62118ca99e07e8b9a09467494846280b8c7e60d700fbd2ff8"
+  },
+  "discovery": {
+    "queries": [
+      "(place-of-performance IN (DEU)) AND (classification-cpv = 72*) AND (publication-date >= 20260701) AND (publication-date <= 20261009) AND (form-type = competition) SORT BY publication-date DESC"
+    ],
+    "filters": {
+      "country": "DEU",
+      "date_from": "2026-07-01",
+      "date_to": "2026-10-09",
+      "cpv": "72",
+      "keyword": null,
+      "limit": 20,
+      "competition_only": true
+    },
+    "started_at": "2026-10-09T12:05:46.114387+00:00",
+    "total_notice_count": 1114,
+    "returned_publication_ids": [
+      "693066-2026",
+      "693559-2026",
+      "695145-2026",
+      "695204-2026",
+      "695595-2026",
+      "696803-2026",
+      "696888-2026",
+      "696999-2026",
+      "697152-2026",
+      "697508-2026",
+      "697856-2026",
+      "697966-2026",
+      "698295-2026",
+      "698350-2026",
+      "698492-2026",
+      "699142-2026",
+      "699278-2026",
+      "699409-2026",
+      "699935-2026",
+      "699958-2026"
+    ]
+  },
+  "keyword_query_check": {
+    "query": "(place-of-performance IN (DEU)) AND (classification-cpv = 72*) AND (publication-date >= 20260701) AND (publication-date <= 20261009) AND (form-type = competition) AND (FT ~ \"Software\") SORT BY publication-date DESC",
+    "http_status": 200,
+    "total_notice_count": 925,
+    "returned_publication_ids": [
+      "696888-2026"
+    ]
+  },
+  "fixed_id_acquisition": {
+    "started_at": "2026-10-09T12:09:28.626601+00:00",
+    "finished_at": "2026-10-09T12:10:04.641824+00:00",
+    "queries": [
+      "publication-number = \"699935-2026\"",
+      "publication-number = \"696888-2026\"",
+      "publication-number = \"698295-2026\"",
+      "publication-number = \"699958-2026\"",
+      "publication-number = \"699278-2026\"",
+      "publication-number = \"697508-2026\"",
+      "publication-number = \"697152-2026\"",
+      "publication-number = \"698350-2026\"",
+      "publication-number = \"697856-2026\"",
+      "publication-number = \"699409-2026\"",
+      "publication-number = \"696999-2026\"",
+      "publication-number = \"698492-2026\"",
+      "publication-number = \"696803-2026\"",
+      "publication-number = \"697966-2026\"",
+      "publication-number = \"699142-2026\"",
+      "publication-number = \"695595-2026\"",
+      "publication-number = \"693066-2026\"",
+      "publication-number = \"695145-2026\"",
+      "publication-number = \"693559-2026\"",
+      "publication-number = \"695204-2026\""
+    ],
+    "status": "partial",
+    "returned_publication_ids": [
+      "693066-2026",
+      "693559-2026",
+      "695145-2026",
+      "695204-2026",
+      "695595-2026",
+      "696803-2026",
+      "696888-2026",
+      "696999-2026",
+      "697152-2026",
+      "697508-2026",
+      "697856-2026",
+      "697966-2026",
+      "698295-2026",
+      "698350-2026",
+      "698492-2026",
+      "699142-2026",
+      "699278-2026",
+      "699409-2026",
+      "699935-2026",
+      "699958-2026"
+    ],
+    "request_interval_seconds": 0.5
+  },
+  "notice_ids": [
+    "699935-2026",
+    "696888-2026",
+    "698295-2026",
+    "699958-2026",
+    "699278-2026",
+    "697508-2026",
+    "697152-2026",
+    "698350-2026",
+    "697856-2026",
+    "699409-2026",
+    "696999-2026",
+    "698492-2026",
+    "696803-2026",
+    "697966-2026",
+    "699142-2026",
+    "695595-2026",
+    "693066-2026",
+    "695145-2026",
+    "693559-2026",
+    "695204-2026"
+  ],
+  "candidate_notice_ids": [
+    "699935-2026",
+    "696888-2026",
+    "698295-2026",
+    "699958-2026",
+    "699278-2026",
+    "697152-2026",
+    "698350-2026",
+    "697856-2026",
+    "696999-2026",
+    "698492-2026",
+    "696803-2026",
+    "697966-2026",
+    "699142-2026",
+    "695595-2026",
+    "693066-2026",
+    "693559-2026",
+    "695204-2026"
+  ],
+  "counts": {
+    "discovered": 20,
+    "metadata_candidates": 17,
+    "pdf_downloaded": 0,
+    "xml_downloaded": 0,
+    "pdf_parsing_passed": 0,
+    "pdf_parsing_failed": 0,
+    "pdf_parsing_not_attempted": 20,
+    "suitable_shortlist": 0
+  },
+  "shortlist": [],
+  "shortlist_status": "Pending document access and manual PDF review",
+  "gold_labels": null,
+  "evaluation_scores": null,
+  "notices": [
+    {
+      "publication_id": "699935-2026",
+      "title": "Deutschland – Softwarepaket und Informationssysteme – UEM OSS/MPC",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/699935-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:45.003878+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/699935-2026/xml",
+          "attempted_at": "2026-10-09T12:09:45.003920+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/699935-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/699935-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:45.464562+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/699935-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "48000000",
+        "72267000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "UEM software procurement with software-service CPV; scope needs PDF review."
+      }
+    },
+    {
+      "publication_id": "696888-2026",
+      "title": "Deutschland – Softwarepaket und Informationssysteme – RV Software Friedhofsmanagement",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/696888-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:45.704762+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/696888-2026/xml",
+          "attempted_at": "2026-10-09T12:09:45.704786+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/696888-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/696888-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:46.312888+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/696888-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "48000000",
+        "48100000",
+        "72268000",
+        "72263000",
+        "72261000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Municipal cemetery-management software and associated software services."
+      }
+    },
+    {
+      "publication_id": "698295-2026",
+      "title": "Deutschland – Bereitstellung von Software – VEEAM Handelspartnervergabe",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/698295-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:46.773410+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/698295-2026/xml",
+          "attempted_at": "2026-10-09T12:09:46.773434+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/698295-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/698295-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:47.200435+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/698295-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72268000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Software provision/retailer procurement; licensing-only scope needs review."
+      }
+    },
+    {
+      "publication_id": "699958-2026",
+      "title": "Deutschland – IT-Dienste: Beratung, Software-Entwicklung, Internet und Hilfestellung – Ausschreibungsmodul für den deutschen Kapazitätsmarkt",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/699958-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:47.774142+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/699958-2026/xml",
+          "attempted_at": "2026-10-09T12:09:47.774164+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/699958-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/699958-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:48.181866+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/699958-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72000000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "IT tendering module for the capacity market."
+      }
+    },
+    {
+      "publication_id": "699278-2026",
+      "title": "Deutschland – IT-Dienste: Beratung, Software-Entwicklung, Internet und Hilfestellung – IT Sicherheitsberatung für das JRC Karlsruhe",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/699278-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:48.796865+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/699278-2026/xml",
+          "attempted_at": "2026-10-09T12:09:48.796891+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/699278-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/699278-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:49.188892+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/699278-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72000000",
+        "71241000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "IT security consulting; prospective security-focused notice, no gold requirement inferred."
+      }
+    },
+    {
+      "publication_id": "697508-2026",
+      "title": "Deutschland – Computerspeichereinheiten – Beschaffung eines SAN-Storagesystems inkl Installation, Migration und Support",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/697508-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:49.756759+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/697508-2026/xml",
+          "attempted_at": "2026-10-09T12:09:49.756787+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/697508-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/697508-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:50.196000+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/697508-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "30233100",
+        "51610000",
+        "72500000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "defer",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Defer: storage hardware is the principal subject; IT support is secondary."
+      }
+    },
+    {
+      "publication_id": "697152-2026",
+      "title": "Deutschland – IT-Dienste: Beratung, Software-Entwicklung, Internet und Hilfestellung – IT-Dienstleistungen für Weiterentwicklung und Betriebsunterstützung des zentralen Microsoft 365 Services - PR1248059-1000-I",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/697152-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:50.648341+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/697152-2026/xml",
+          "attempted_at": "2026-10-09T12:09:50.648369+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/697152-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/697152-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:51.174149+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/697152-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72000000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Microsoft 365 development and operational support."
+      }
+    },
+    {
+      "publication_id": "698350-2026",
+      "title": "Deutschland – IT-Dienste: Beratung, Software-Entwicklung, Internet und Hilfestellung – Digitalisierung LIKA Akten III",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/698350-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:51.769349+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/698350-2026/xml",
+          "attempted_at": "2026-10-09T12:09:51.769375+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/698350-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/698350-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:52.158359+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/698350-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72000000",
+        "71000000",
+        "72313000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "IT/digitization project; document content and exact scope need review."
+      }
+    },
+    {
+      "publication_id": "697856-2026",
+      "title": "Deutschland – IT-Dienste: Beratung, Software-Entwicklung, Internet und Hilfestellung – UC_DL_2026",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/697856-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:52.619049+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/697856-2026/xml",
+          "attempted_at": "2026-10-09T12:09:52.619077+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/697856-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/697856-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:53.156319+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/697856-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72000000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "CPV 72000000 IT services; abbreviated subject UC_DL_2026 needs scope clarification."
+      }
+    },
+    {
+      "publication_id": "699409-2026",
+      "title": "Deutschland – Installation (außer Software) – Netzwerk-Kommunikations-Infrastruktur",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/699409-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:53.625771+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/699409-2026/xml",
+          "attempted_at": "2026-10-09T12:09:53.625812+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/699409-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/699409-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:54.183115+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/699409-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "51000000",
+        "32415000",
+        "32420000",
+        "72315000",
+        "72511000",
+        "72710000",
+        "50000000",
+        "45314320"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "defer",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Defer: network equipment/installation dominates the title and CPV mix."
+      }
+    },
+    {
+      "publication_id": "696999-2026",
+      "title": "Deutschland – IT-Dienste: Beratung, Software-Entwicklung, Internet und Hilfestellung – Streaming Portal und ZDFheute",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/696999-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:54.671107+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/696999-2026/xml",
+          "attempted_at": "2026-10-09T12:09:54.672639+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/696999-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/696999-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:55.179740+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/696999-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72000000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Streaming portal and news website IT services."
+      }
+    },
+    {
+      "publication_id": "698492-2026",
+      "title": "Deutschland – Softwarepaket für die Unternehmensressourcenplanung (ERP) – TNWB: S/4HANA-Beschaffung",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/698492-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:55.646397+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/698492-2026/xml",
+          "attempted_at": "2026-10-09T12:09:55.646422+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/698492-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/698492-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:56.194845+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/698492-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "48451000",
+        "72220000",
+        "72227000",
+        "72261000",
+        "72263000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "ERP/S4HANA procurement with software consulting/support CPVs."
+      }
+    },
+    {
+      "publication_id": "696803-2026",
+      "title": "Deutschland – Systemberatung und technische Beratung – Unterstützung - technische Systemadministration",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/696803-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:56.642523+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/696803-2026/xml",
+          "attempted_at": "2026-10-09T12:09:56.642544+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/696803-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/696803-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:57.110463+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/696803-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72220000",
+        "72261000",
+        "72262000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Technical system administration and software consulting services."
+      }
+    },
+    {
+      "publication_id": "697966-2026",
+      "title": "Deutschland – Dienstleistungen in Verbindung mit Software – Beschaffung einer Software für die Vollstreckung",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/697966-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:57.616554+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/697966-2026/xml",
+          "attempted_at": "2026-10-09T12:09:57.616581+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/697966-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/697966-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:58.114408+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/697966-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72260000",
+        "48000000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Procurement of enforcement software and associated services."
+      }
+    },
+    {
+      "publication_id": "699142-2026",
+      "title": "Deutschland – IT-Dienste: Beratung, Software-Entwicklung, Internet und Hilfestellung – BKK GesundheitsFinder & Co. - Betrieb und Weiterentwicklung von Webanwendungen",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-09+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/699142-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:58.608455+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/699142-2026/xml",
+          "attempted_at": "2026-10-09T12:09:58.608485+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/699142-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/699142-2026/pdf",
+          "attempted_at": "2026-10-09T12:09:59.135996+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/699142-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72000000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Operation and further development of web applications."
+      }
+    },
+    {
+      "publication_id": "695595-2026",
+      "title": "Deutschland – Dienstleistungen in Verbindung mit Software – Ticketsystem",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-08+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/695595-2026",
+      "metadata_retrieved_at": "2026-10-09T12:09:59.640875+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/695595-2026/xml",
+          "attempted_at": "2026-10-09T12:09:59.640898+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/695595-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/695595-2026/pdf",
+          "attempted_at": "2026-10-09T12:10:00.206105+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/695595-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72260000",
+        "48000000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Ticket-system software/services procurement."
+      }
+    },
+    {
+      "publication_id": "693066-2026",
+      "title": "Deutschland – Softwareprogrammierung und -beratung – Rahmenvertrag Personaldienstleistungen für Digital- und IT-Projekte",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-08+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/693066-2026",
+      "metadata_retrieved_at": "2026-10-09T12:10:00.624677+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/693066-2026/xml",
+          "attempted_at": "2026-10-09T12:10:00.624734+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/693066-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/693066-2026/pdf",
+          "attempted_at": "2026-10-09T12:10:01.122442+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/693066-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72200000",
+        "79417000",
+        "72254000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Personnel framework for digital/IT projects; service scope needs review."
+      }
+    },
+    {
+      "publication_id": "695145-2026",
+      "title": "Deutschland – Softwarepaket für die Unternehmensressourcenplanung (ERP) – TNWB: S/4HANA-Beschaffung",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-08+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/695145-2026",
+      "metadata_retrieved_at": "2026-10-09T12:10:01.624866+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/695145-2026/xml",
+          "attempted_at": "2026-10-09T12:10:01.624891+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/695145-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/695145-2026/pdf",
+          "attempted_at": "2026-10-09T12:10:02.139597+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/695145-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "48451000",
+        "72220000",
+        "72227000",
+        "72261000",
+        "72263000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "defer",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Defer for diversity: same ERP title as 698492-2026; procedure/version relation is unverified."
+      }
+    },
+    {
+      "publication_id": "693559-2026",
+      "title": "Deutschland – Dienstleistungen in Verbindung mit Software – Dienstleistung \"M365 - Solution Architect / Integrationsmanager\" für die Weiterentwicklung der M365 Umgebung der Stadt Nürnberg",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-08+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/693559-2026",
+      "metadata_retrieved_at": "2026-10-09T12:10:02.627207+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/693559-2026/xml",
+          "attempted_at": "2026-10-09T12:10:02.627229+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/693559-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/693559-2026/pdf",
+          "attempted_at": "2026-10-09T12:10:03.159766+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/693559-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72260000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Microsoft 365 architecture/integration services."
+      }
+    },
+    {
+      "publication_id": "695204-2026",
+      "title": "Deutschland – IT-Dienste: Beratung, Software-Entwicklung, Internet und Hilfestellung – Bereitstellung und Betrieb digitaler Prüfungs-, Korrektur- und Kommunikationsplattformen für die juristischen Staatsprüfungen in NRW",
+      "official_languages": [
+        "deu"
+      ],
+      "publication_date": "2026-10-08+02:00",
+      "notice_type": "cn-standard",
+      "form_type": "competition",
+      "source_url": "https://ted.europa.eu/de/notice/-/detail/695204-2026",
+      "metadata_retrieved_at": "2026-10-09T12:10:03.702363+00:00",
+      "available_formats": [
+        "html",
+        "htmlDirect",
+        "pdf",
+        "pdfs",
+        "xml"
+      ],
+      "documents": [],
+      "download_attempts": [
+        {
+          "format": "xml",
+          "source_url": "https://ted.europa.eu/en/notice/695204-2026/xml",
+          "attempted_at": "2026-10-09T12:10:03.702387+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/en/notice/695204-2026/xml: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        },
+        {
+          "format": "pdf",
+          "source_url": "https://ted.europa.eu/de/notice/695204-2026/pdf",
+          "attempted_at": "2026-10-09T12:10:04.128031+00:00",
+          "status": "failed",
+          "error": "https://ted.europa.eu/de/notice/695204-2026/pdf: HTTP 202; AWS WAF challenge; document access blocked (no challenge bypass)"
+        }
+      ],
+      "pdf_validation_status": "not_attempted",
+      "xml_validation_status": "not_attempted",
+      "annotation_status": "not_annotated",
+      "cpv_codes": [
+        "72000000"
+      ],
+      "original_language_evidence": "TED API official-language; XML verification not available",
+      "candidate_review": {
+        "decision": "candidate",
+        "basis": "API title/CPV metadata only; no document review",
+        "rationale": "Digital examination, correction and communication platforms."
+      }
+    }
+  ]
+}

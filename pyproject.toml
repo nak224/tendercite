@@ -46,6 +46,7 @@ where = ["src"]
 addopts = "-q"
 testpaths = ["tests"]
 pythonpath = ["src", "."]
+markers = ["live: opt-in public network smoke tests; excluded from offline CI"]
 
 [tool.ruff]
 target-version = "py312"

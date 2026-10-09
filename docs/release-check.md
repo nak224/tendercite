@@ -1,7 +1,7 @@
 # Release gate record
 
 This is an unreleased development build on v0.1, **not v1.0.0**.
-Latest offline validation: 2026-10-08. Historical core checks below were run on 2026-10-07;
+Latest offline validation: 2026-10-09. Historical core checks below were run on 2026-10-07;
 see `docs/work-log.md` for those phase commits.
 
 | Gate | Evidence / status |
@@ -23,6 +23,7 @@ see `docs/work-log.md` for those phase commits.
 | Analysis coverage | MEASURED LIMITATION: budget 12 gives 11 unique category-plan chunks and 11/14 gold spans; broad-query baseline gives 12 chunks and 12/14 spans. Plan misses German deadline, references and security. Not exhaustive |
 | Live structured extraction | NOT RUN: no real provider/model configured |
 | Real-model evaluation | Retrieval/context coverage measured on unchanged synthetic-tender-3. No LLM configured/called; extraction, evidence quality and real-tender evaluation remain open |
+| Real-notice acquisition pilot | [TED pilot](evaluation/ted-pilot.md): live public API returned 20 German competition-notice metadata records; 17 provisional metadata candidates. All 40 PDF/XML requests hit origin AWS WAF challenges. No real PDF/XML obtained, PDF parsing not attempted, suitable shortlist/manual annotation/scores pending. Issue #4 remains open |
 | Audit | Four Chroma server advisories, not exposed by embedded design; torch lookup skipped; see security review |
 | Licenses | Official pinned card/API declare MIT; model/configuration inspected and weight hash verified. No weights redistributed. Existing dependency audit/license review still applies |
 | Remote CI | Hosted CI for the current PR revision must be checked; no result is claimed here |
@@ -57,3 +58,11 @@ external LLM configuration/call, real-tender accuracy claim or v1.0.0 tag follow
 The complete offline suite now passes 65 tests, including recalculation of all recorded query
 and context metrics from raw hits/chunk text. Ruff lint/format and Compose configuration pass.
 No new Docker runtime or model/provider deployment validation is claimed for this follow-up.
+
+The TED acquisition milestone from merged PR #3 / main `0c86c48` passes 141 offline tests,
+with one deliberately skipped opt-in live test, plus Ruff lint and formatting. Separately the
+public TED search smoke passed. No new dependencies, model/provider calls or tender-analysis
+behavior changes were introduced. Download validation is tested offline with generated PDFs;
+the WAF blocker prevents a live document-acquisition or real-tender-quality claim. Hosted CI for
+this branch and the existing v1.0 gates still require review; this pilot does not complete v1.1
+discovery or remove the live structured-extraction/real-tender evaluation blockers.

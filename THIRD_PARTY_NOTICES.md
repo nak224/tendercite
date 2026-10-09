@@ -33,3 +33,13 @@ covers principal components, not every transitive bundled artifact. Retain depen
 when redistributing images/wheels; inspect exact upstream metadata and base-image packages.
 A configured LLM has separate provider/model terms and may impose additional usage conditions.
 No LLM weights or third-party procurement PDFs are distributed here. Docling is not installed.
+
+The [TED pilot](docs/evaluation/ted-pilot.md) uses public notice metadata from TED / the
+Publications Office of the European Union and submitting contracting authorities. The
+[candidate manifest](evaluation/ted-pilot/candidates.json) records official sources, dates,
+languages and original metadata-based curation notes. Notice content is not covered by
+TenderCite's Apache-2.0 grant. Review the [TED legal notice](https://ted.europa.eu/en/legal-notice),
+source attribution, personal-data and third-party rights before redistributing a corpus.
+PDF/XML downloads default to ignored local storage; none was obtained or redistributed in this
+pilot due to TED WAF challenges. Offline TED test fixtures are original synthetic responses and
+generated documents, not copies of real procurement documents.
