@@ -18,4 +18,6 @@ data/uploads/*
 data/chroma/
 data/models/
 data/evaluation/
+# Original procurement PDFs stay local, including custom input/corpus directories.
+*.[pP][dD][fF]
 data/*.db-*

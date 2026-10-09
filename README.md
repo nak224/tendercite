@@ -136,6 +136,12 @@ blocked by TED's WAF; parsing and the suitable-document shortlist remain pending
 evaluation preparation for [issue #4](https://github.com/nak224/tendercite/issues/4), with no
 real-tender scores or automatic discovery/analysis claim. Downloaded files stay outside Git.
 
+For permitted manual downloads, the evaluation-only
+[`python -m evaluation.import_pdfs` workflow](docs/evaluation/real-pdf-import.md) registers local
+PDFs with unchanged bytes, SHA-256 deduplication, tender grouping and a provenance/validation
+manifest. Missing or unverified source and rights information stays explicitly flagged. Tests use
+self-generated PDFs; genuine documents, rights review and manual annotation remain pending.
+
 ## Docker
 
 ```bash

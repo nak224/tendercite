@@ -99,3 +99,16 @@ workflow. The [pilot report](../docs/evaluation/ted-pilot.md) contains exact com
 failures. This is not a gold dataset: 17 metadata candidates remain unannotated, no PDF/XML was
 obtained due to TED WAF challenges, and no real-tender scores exist. Normal CI uses only mocked
 TED responses and generated PDF/XML fixtures; the live smoke test requires explicit opt-in.
+
+## Manually downloaded procurement PDFs
+
+`python -m evaluation.import_pdfs` registers a directory of local PDFs into an ignored,
+hash-addressed corpus, without fetching sources, indexing documents or calling an LLM.
+It preserves original names and source/rights metadata, supports multiple PDFs per tender,
+deduplicates bytes and records validation failures and incomplete provenance. TED IDs are
+optional. See the [manual import workflow](../docs/evaluation/real-pdf-import.md) for exact
+commands, per-file metadata, manifest fields and read-only `--verify` checks.
+
+Automated tests use self-generated PDFs only. No genuine documents were obtained through this
+workflow yet; real procurement PDFs and human provenance/rights review are required before a
+corpus can support subsequent manual annotation and real-tender retrieval evaluation.
