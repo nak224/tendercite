@@ -112,3 +112,13 @@ commands, per-file metadata, manifest fields and read-only `--verify` checks.
 Automated tests use self-generated PDFs only. No genuine documents were obtained through this
 workflow yet; real procurement PDFs and human provenance/rights review are required before a
 corpus can support subsequent manual annotation and real-tender retrieval evaluation.
+
+## Human annotation and gold export
+
+The [annotation guide](../docs/evaluation/real-tender-annotations.md) contains the complete
+synthetic example, manual review steps and CLI commands. [The versioned JSON Schema](annotation-schema.json)
+defines human-authored source quotes, requirement statements/categories/types, aliases and review
+states. `python -m evaluation.validate_annotations` validates each entry against the local corpus
+and optionally exports verified gold with hashes, exclusions and deterministic tender-level splits.
+Exact quote occurrence does not validate the interpretation; distinct reviewer aliases are human
+declarations. No genuine documents have been annotated and no new model evaluation is performed.

@@ -142,6 +142,12 @@ PDFs with unchanged bytes, SHA-256 deduplication, tender grouping and a provenan
 manifest. Missing or unverified source and rights information stays explicitly flagged. Tests use
 self-generated PDFs; genuine documents, rights review and manual annotation remain pending.
 
+The [human annotation workflow](docs/evaluation/real-tender-annotations.md) adds a versioned
+JSON schema and `python -m evaluation.validate_annotations` CLI. It checks source hashes, tender
+association and exact page quotes, reports exclusions, and exports only independently reviewed
+VERIFIED labels with deterministic tender-level train/development/held-out splits. The runnable
+example is synthetic; real human labels and model evaluation remain pending.
+
 ## Docker
 
 ```bash
