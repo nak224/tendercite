@@ -24,6 +24,7 @@ see `docs/work-log.md` for those phase commits.
 | Live structured extraction | NOT RUN: no real provider/model configured |
 | Real-model evaluation | Retrieval/context coverage measured on unchanged synthetic-tender-3. No LLM configured/called; extraction, evidence quality and real-tender evaluation remain open |
 | Real-notice acquisition pilot | [TED pilot](evaluation/ted-pilot.md): live public API returned 20 German competition-notice metadata records; 17 provisional metadata candidates. All 40 PDF/XML requests hit origin AWS WAF challenges. No real PDF/XML obtained, PDF parsing not attempted, suitable shortlist/manual annotation/scores pending. Issue #4 remains open |
+| Manual PDF corpus registration | [Local importer](evaluation/real-pdf-import.md): hash-addressed PDFs, multi-document tender groups, provenance/rights flags and integrity verification tested with self-generated fixtures. No genuine procurement PDFs supplied/imported; permitted downloads, source/rights review, original-language confirmation and manual annotation remain open |
 | Audit | Four Chroma server advisories, not exposed by embedded design; torch lookup skipped; see security review |
 | Licenses | Official pinned card/API declare MIT; model/configuration inspected and weight hash verified. No weights redistributed. Existing dependency audit/license review still applies |
 | Remote CI | Hosted CI for the current PR revision must be checked; no result is claimed here |
@@ -66,3 +67,10 @@ behavior changes were introduced. Download validation is tested offline with gen
 the WAF blocker prevents a live document-acquisition or real-tender-quality claim. Hosted CI for
 this branch and the existing v1.0 gates still require review; this pilot does not complete v1.1
 discovery or remove the live structured-extraction/real-tender evaluation blockers.
+
+The local PDF corpus milestone starts from main `6847a0c` after merged TED pilot PR #7.
+Its 28 generated-fixture tests and the complete offline suite pass: 169 passed, one optional
+live TED test skipped; Ruff lint and formatting pass. Production ingestion, dependencies and
+model/provider configuration are unchanged. No live document download, real-PDF parsing outcome,
+gold labels, benchmark or LLM evaluation is claimed. The acquisition/annotation and existing
+live extraction, coverage, security and release-review gates remain open.

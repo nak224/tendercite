@@ -43,3 +43,9 @@ source attribution, personal-data and third-party rights before redistributing a
 PDF/XML downloads default to ignored local storage; none was obtained or redistributed in this
 pilot due to TED WAF challenges. Offline TED test fixtures are original synthetic responses and
 generated documents, not copies of real procurement documents.
+
+The [manual PDF corpus importer](docs/evaluation/real-pdf-import.md) likewise leaves downloaded
+bytes outside Git and flags missing/unverified provenance and rights. A curator's verification
+notes must describe the actual source and reuse basis; importing a public PDF does not grant
+redistribution rights. Its automated fixtures are original generated PDFs, and no real procurement
+PDFs are distributed with this milestone.
