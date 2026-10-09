@@ -1,0 +1,3299 @@
+{
+  "status": "completed_real_retrieval",
+  "created_at_utc": "2026-10-08T08:53:19.385073+00:00",
+  "code_commit": "f36de9757a6f9f57c4d672e05861a8ffcb2dbc1b",
+  "runner_sha256": "c70ce192ecff4ee424c3b99303788faea8d985ff3fae3dd4d9d7aa33315067b7",
+  "lock_sha256": "0465fc3323cb0d53f6bd68680645f4db6eef27e4dc72b2162ad29f1aff954c21",
+  "model": {
+    "id": "intfloat/multilingual-e5-small",
+    "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "license": "mit",
+    "dimension": 384,
+    "normalized_vectors_verified": true,
+    "load_revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "max_seq_length": 512,
+    "device": "cpu",
+    "dtype": "torch.float32",
+    "trust_remote_code": false,
+    "prefixes": {
+      "query": "query: ",
+      "passage": "passage: "
+    },
+    "configuration": {
+      "_name_or_path": "tmp/",
+      "architectures": [
+        "BertModel"
+      ],
+      "attention_probs_dropout_prob": 0.1,
+      "classifier_dropout": null,
+      "hidden_act": "gelu",
+      "hidden_dropout_prob": 0.1,
+      "hidden_size": 384,
+      "initializer_range": 0.02,
+      "intermediate_size": 1536,
+      "layer_norm_eps": 1e-12,
+      "max_position_embeddings": 512,
+      "model_type": "bert",
+      "num_attention_heads": 12,
+      "num_hidden_layers": 12,
+      "pad_token_id": 0,
+      "position_embedding_type": "absolute",
+      "tokenizer_class": "XLMRobertaTokenizer",
+      "torch_dtype": "float32",
+      "transformers_version": "4.29.0",
+      "type_vocab_size": 2,
+      "use_cache": true,
+      "vocab_size": 250037
+    },
+    "pooling": {
+      "word_embedding_dimension": 384,
+      "pooling_mode_cls_token": false,
+      "pooling_mode_mean_tokens": true,
+      "pooling_mode_max_tokens": false,
+      "pooling_mode_mean_sqrt_len_tokens": false
+    },
+    "files": {
+      "1_Pooling/config.json": {
+        "bytes": 200,
+        "sha256": "987f7a67a38fa564c849bb5d277c52ab9088a84368fc0be31a354125aebb12a0"
+      },
+      "README.md": {
+        "bytes": 497538,
+        "sha256": "0038de97aee16258cecbad7ffda4b4febd6953e747a00e0ddbc8e6ed241e9c1c"
+      },
+      "config.json": {
+        "bytes": 655,
+        "sha256": "69137736cab8b8903a07fe8afaafdda25aac55415a12a55d1bffa9f581abf959"
+      },
+      "model.safetensors": {
+        "bytes": 470641600,
+        "sha256": "1a55775f53449dac10a2bcbc312469fac40b96d53198c407081a831f81c98477"
+      },
+      "modules.json": {
+        "bytes": 387,
+        "sha256": "c6e29747481e8b5dd2b58401966aeac910de39092f90cda9a704b1545f902b04"
+      },
+      "sentence_bert_config.json": {
+        "bytes": 57,
+        "sha256": "948201d8329907aae938fa62f9ceeed53f5694dacc2b87b9f3b78b37ee986529"
+      },
+      "sentencepiece.bpe.model": {
+        "bytes": 5069051,
+        "sha256": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865"
+      },
+      "special_tokens_map.json": {
+        "bytes": 167,
+        "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7"
+      },
+      "tokenizer.json": {
+        "bytes": 17082730,
+        "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+      },
+      "tokenizer_config.json": {
+        "bytes": 443,
+        "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+      }
+    },
+    "official_weight_lfs_sha256": "1a55775f53449dac10a2bcbc312469fac40b96d53198c407081a831f81c98477"
+  },
+  "dataset": {
+    "version": "synthetic-tender-3",
+    "sha256": "f33fd99f47a2337bf8bc4d58ebe0ac2f938c60b0b7ef3c36cfbd5f5904efa56d",
+    "pdf_sha256": "22cae0680bf7872a970ba8593a31370cafb49f0d83fdf7855d36895e2de6f6f4",
+    "document": {
+      "id": "61262263-d7c9-40f2-8163-93892d709b51",
+      "filename": "gold.pdf",
+      "media_type": "application/pdf",
+      "sha256": "22cae0680bf7872a970ba8593a31370cafb49f0d83fdf7855d36895e2de6f6f4",
+      "page_count": 8,
+      "chunk_count": 15,
+      "created_at": "2026-10-08T08:53:15.958470Z"
+    },
+    "gold": [
+      {
+        "id": "deadline",
+        "page": 1,
+        "query": "When must bids be submitted?",
+        "category": "MUST",
+        "requirement_type": "DEADLINE",
+        "quote": "Bids must be submitted by 30 November 2026 at 12:00 UTC.",
+        "language": "en"
+      },
+      {
+        "id": "references",
+        "page": 1,
+        "query": "How many comparable reference projects are required?",
+        "category": "MUST",
+        "requirement_type": "REFERENCE",
+        "quote": "The bidder must provide two comparable reference projects completed in the last three years.",
+        "language": "en"
+      },
+      {
+        "id": "insurance",
+        "page": 2,
+        "query": "What liability insurance coverage is required?",
+        "category": "MUST",
+        "requirement_type": "INSURANCE",
+        "quote": "Professional liability insurance must provide coverage of at least EUR 1000000 per claim.",
+        "language": "en"
+      },
+      {
+        "id": "certificate",
+        "page": 2,
+        "query": "Which quality management certificate is required?",
+        "category": "MUST",
+        "requirement_type": "CERTIFICATE",
+        "quote": "A valid ISO 9001 quality management certificate or equivalent proof is required.",
+        "language": "en"
+      },
+      {
+        "id": "price",
+        "page": 4,
+        "query": "What weighting is assigned to price in award scoring?",
+        "category": "SCORING",
+        "requirement_type": "PRICE",
+        "quote": "The award score assigns a weighting of 40 percent to price and 60 percent to quality.",
+        "language": "en"
+      },
+      {
+        "id": "privacy",
+        "page": 4,
+        "query": "Where must personal data be stored?",
+        "category": "MUST",
+        "requirement_type": "PRIVACY",
+        "quote": "Personal data must be encrypted at rest and stored exclusively within the European Union.",
+        "language": "en"
+      },
+      {
+        "id": "de-deadline",
+        "language": "de",
+        "page": 5,
+        "query": "Bis wann muss das Angebot elektronisch eingereicht werden?",
+        "category": "MUST",
+        "requirement_type": "DEADLINE",
+        "quote": "Das Angebot muss bis zum 15. Dezember 2026 um 12:00 Uhr MEZ über die Vergabeplattform eingereicht werden."
+      },
+      {
+        "id": "de-references",
+        "language": "de",
+        "page": 5,
+        "query": "Welche vergleichbaren Referenzprojekte müssen nachgewiesen werden?",
+        "category": "MUST",
+        "requirement_type": "REFERENCE",
+        "quote": "Der Bieter muss drei vergleichbare Referenzprojekte aus den letzten fünf Jahren mit Auftraggeber, Leistungszeitraum und Ansprechpartner nachweisen."
+      },
+      {
+        "id": "de-insurance",
+        "language": "de",
+        "page": 6,
+        "query": "Welche Mindestdeckung ist für die Haftpflichtversicherung vorgeschrieben?",
+        "category": "MUST",
+        "requirement_type": "INSURANCE",
+        "quote": "Eine Betriebshaftpflichtversicherung mit einer Deckungssumme von mindestens 3.000.000 EUR für Personen- und Sachschäden je Schadensfall ist nachzuweisen."
+      },
+      {
+        "id": "de-certificate",
+        "language": "de",
+        "page": 6,
+        "query": "Welches Zertifikat oder welcher gleichwertige Nachweis wird verlangt?",
+        "category": "MUST",
+        "requirement_type": "CERTIFICATE",
+        "quote": "Für das Qualitätsmanagement ist ein gültiges Zertifikat nach DIN EN ISO 9001 oder ein gleichwertiger Nachweis vorzulegen."
+      },
+      {
+        "id": "de-price",
+        "language": "de",
+        "page": 8,
+        "query": "Wie werden Preis und Qualität bei der Zuschlagswertung gewichtet?",
+        "category": "SCORING",
+        "requirement_type": "PRICE",
+        "quote": "Bei der Zuschlagswertung wird der Angebotspreis mit 35 Prozent und die Qualität des Umsetzungskonzepts mit 65 Prozent gewichtet."
+      },
+      {
+        "id": "de-privacy",
+        "language": "de",
+        "page": 8,
+        "query": "Welche Anforderungen gelten für Speicherort und Schutz personenbezogener Daten?",
+        "category": "MUST",
+        "requirement_type": "PRIVACY",
+        "quote": "Personenbezogene Daten müssen ausschließlich in Rechenzentren innerhalb der Europäischen Union verarbeitet und bei Speicherung sowie Übertragung verschlüsselt werden."
+      },
+      {
+        "id": "security",
+        "language": "en",
+        "page": 4,
+        "query": "What authentication is required for privileged administrator access?",
+        "category": "MUST",
+        "requirement_type": "SECURITY",
+        "quote": "Privileged administrator access must use multifactor authentication and log every privileged action."
+      },
+      {
+        "id": "de-security",
+        "language": "de",
+        "page": 8,
+        "query": "Welche Authentisierung ist für privilegierte Administrationszugriffe vorgeschrieben?",
+        "category": "MUST",
+        "requirement_type": "SECURITY",
+        "quote": "Privilegierte Administrationszugriffe müssen durch Mehrfaktor-Authentisierung abgesichert und vollständig protokolliert werden."
+      }
+    ],
+    "chunks": [
+      {
+        "id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 1,
+        "ordinal": 0,
+        "text": "Example EN-2026-17: digital records service. Administrative overview.\nThe authority moved its public information desk in 2024. Archive opening hours\nare historical background and do not define the electronic submission deadline.\nBids must be submitted by 30 November 2026 at 12:00 UTC.\nThe procurement portal includes an optional display-language selector.\nReading guide for the historical annex: the archive catalogue groups\npublications by year, department and subject. Headings such as tender deadline,\nfinancial standing, reference evidence and certificate index describe old\nfolders. Their position in the catalogue conveys no priority for the current\nprocurement. The optional visitor route starts at the exhibition desk and ends\nin the former council chamber. Printed map numbers identify rooms, not contract\nlots or evaluation steps.\nThe digitisation exhibition reproduces a retired sample tender from 2019. It\nincludes an illustrative turnover figure of EUR 500000, a price weighting of 90\npercent and a sample delivery period of six weeks. These figures explain an\nearlier training exercise and are not thresholds, award criteria or delivery\nobligations in this procedure. The example",
+        "char_start": 0,
+        "char_end": 1194
+      },
+      {
+        "id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 1,
+        "ordinal": 1,
+        "text": "eks. These figures explain an\nearlier training exercise and are not thresholds, award criteria or delivery\nobligations in this procedure. The example insurance form is marked obsolete; no\nbidder is asked to complete it. A photograph of its approval stamp is retained\nonly as an archive image.\nThe public brochure also describes an old security awareness event, a privacy\nquiz and an award ceremony for volunteer guides. Its certificates were\nattendance souvenirs rather than conformity evidence. The presentation discussed\ncontract liability in a fictional museum scenario with no connection to the\ndigital records service. None of those slides supplements the current\nconditions. The catalogue search tips and alphabetical keyword list are\nnavigation aids; users can consult them without accepting any additional\ncontractual obligation.\nThe bidder must provide two comparable reference projects completed in the last\nthree years.\nPrinted brochure numbering is unrelated to electronic page order.",
+        "char_start": 1045,
+        "char_end": 2041
+      },
+      {
+        "id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 2,
+        "ordinal": 0,
+        "text": "Example EN-2026-17: evidence of suitability.\nProfessional liability insurance must provide coverage of at least EUR 1000000\nper claim.\nThe cover illustration depicts the authority building; it has no bearing on\ninsurance coverage.\nReading guide for the historical annex: the archive catalogue groups\npublications by year, department and subject. Headings such as tender deadline,\nfinancial standing, reference evidence and certificate index describe old\nfolders. Their position in the catalogue conveys no priority for the current\nprocurement. The optional visitor route starts at the exhibition desk and ends\nin the former council chamber. Printed map numbers identify rooms, not contract\nlots or evaluation steps.\nThe digitisation exhibition reproduces a retired sample tender from 2019. It\nincludes an illustrative turnover figure of EUR 500000, a price weighting of 90\npercent and a sample delivery period of six weeks. These figures explain an\nearlier training exercise and are not thresholds, award criteria or delivery\nobligations in this procedure. The example insurance form is marked obsolete; no\nbidder is asked to complete it. A photograph of its approval stamp is retained\nonly as an",
+        "char_start": 0,
+        "char_end": 1196
+      },
+      {
+        "id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 2,
+        "ordinal": 1,
+        "text": "rocedure. The example insurance form is marked obsolete; no\nbidder is asked to complete it. A photograph of its approval stamp is retained\nonly as an archive image.\nThe public brochure also describes an old security awareness event, a privacy\nquiz and an award ceremony for volunteer guides. Its certificates were\nattendance souvenirs rather than conformity evidence. The presentation discussed\ncontract liability in a fictional museum scenario with no connection to the\ndigital records service. None of those slides supplements the current\nconditions. The catalogue search tips and alphabetical keyword list are\nnavigation aids; users can consult them without accepting any additional\ncontractual obligation.\nA valid ISO 9001 quality management certificate or equivalent proof is required.\nThe archive catalogue uses certificate-themed folder icons solely for\nnavigation.",
+        "char_start": 1047,
+        "char_end": 1919
+      },
+      {
+        "id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 3,
+        "ordinal": 0,
+        "text": "Historical information leaflet, not tender requirements.\nIn the 2021 public survey, 70 percent of visitors preferred online brochures.\nThe archive exhibition listed five reference projects from a previous programme.\nA retired publication template showed a 31 March deadline and an insurance\nexample. These historic dates, weights and examples do not govern this\nprocurement.",
+        "char_start": 0,
+        "char_end": 374
+      },
+      {
+        "id": "77929324-325e-44b5-82fe-77915c8dbca5",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 4,
+        "ordinal": 0,
+        "text": "Example EN-2026-17: award and delivery conditions.\nThe award score assigns a weighting of 40 percent to price and 60 percent to\nquality.\nPhotographs of the former server room are descriptive background.\nReading guide for the historical annex: the archive catalogue groups\npublications by year, department and subject. Headings such as tender deadline,\nfinancial standing, reference evidence and certificate index describe old\nfolders. Their position in the catalogue conveys no priority for the current\nprocurement. The optional visitor route starts at the exhibition desk and ends\nin the former council chamber. Printed map numbers identify rooms, not contract\nlots or evaluation steps.\nThe digitisation exhibition reproduces a retired sample tender from 2019. It\nincludes an illustrative turnover figure of EUR 500000, a price weighting of 90\npercent and a sample delivery period of six weeks. These figures explain an\nearlier training exercise and are not thresholds, award criteria or delivery\nobligations in this procedure. The example insurance form is marked obsolete; no\nbidder is asked to complete it. A photograph of its approval stamp is retained\nonly as an archive image.\nThe public",
+        "char_start": 0,
+        "char_end": 1194
+      },
+      {
+        "id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 4,
+        "ordinal": 1,
+        "text": "rance form is marked obsolete; no\nbidder is asked to complete it. A photograph of its approval stamp is retained\nonly as an archive image.\nThe public brochure also describes an old security awareness event, a privacy\nquiz and an award ceremony for volunteer guides. Its certificates were\nattendance souvenirs rather than conformity evidence. The presentation discussed\ncontract liability in a fictional museum scenario with no connection to the\ndigital records service. None of those slides supplements the current\nconditions. The catalogue search tips and alphabetical keyword list are\nnavigation aids; users can consult them without accepting any additional\ncontractual obligation.\nPersonal data must be encrypted at rest and stored exclusively within the\nEuropean Union.\nThe public visitor map and the list of nearby bus stops are provided for\norientation only.\nPrivileged administrator access must use multifactor authentication and log\nevery privileged action.",
+        "char_start": 1045,
+        "char_end": 2010
+      },
+      {
+        "id": "3a2ee5dd-0f04-4580-acf4-16a76ff9bcee",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 5,
+        "ordinal": 0,
+        "text": "Beispiel DE-2026-42: Betrieb eines digitalen Aktenarchivs. Verfahrensübersicht.\nDas Verwaltungsgebäude wurde 2023 renoviert. Die Öffnungszeiten des Bürgerbüros\nbetreffen den Publikumsverkehr und sind keine Angebotsfrist.\nDas Angebot muss bis zum 15. Dezember 2026 um 12:00 Uhr MEZ über die\nVergabeplattform eingereicht werden.\nDie Farbgestaltung der Plattform dient nur der Orientierung.\nLesehilfe zum historischen Anhang: Der Archivkatalog ordnet Veröffentlichungen\nnach Jahr, Fachbereich und Thema. Überschriften wie Angebotsfrist, finanzielle\nLeistungsfähigkeit, Referenznachweise und Zertifikatsregister bezeichnen alte\nAktenordner. Ihre Reihenfolge im Katalog bestimmt keine Priorität im aktuellen\nVergabeverfahren. Der freiwillige Besucherrundgang beginnt am Ausstellungstresen\nund endet im ehemaligen Ratssaal. Nummern im Lageplan kennzeichnen Räume, keine\nLose oder Wertungsschritte.\nDie Ausstellung zur Digitalisierung zeigt ein ausgemustertes Musterangebot von\n2019. Darin stehen beispielhaft 500.000 EUR Umsatz, eine Preisgewichtung von 90\nProzent und eine Lieferzeit von sechs Wochen. Diese Zahlen erläutern eine\nfrühere Schulungsübung und sind weder Mindestanforderungen noch",
+        "char_start": 0,
+        "char_end": 1188
+      },
+      {
+        "id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 5,
+        "ordinal": 1,
+        "text": "tung von 90\nProzent und eine Lieferzeit von sechs Wochen. Diese Zahlen erläutern eine\nfrühere Schulungsübung und sind weder Mindestanforderungen noch\nZuschlagskriterien oder Lieferpflichten dieses Verfahrens. Das Muster einer\nVersicherungserklärung trägt den Vermerk veraltet; seine Abgabe wird nicht\nverlangt. Das Foto des Freigabestempels bleibt ausschließlich als Archivbild\nerhalten.\nDie Bürgerbroschüre berichtet außerdem von einem früheren Aktionstag zur\nIT-Sicherheit, einem Datenschutzquiz und einer Preisverleihung für ehrenamtliche\nStadtführer. Die damaligen Zertifikate waren Teilnahmeurkunden und keine\nKonformitätsnachweise. Ein Vortrag behandelte die Haftung in einem erfundenen\nMuseumsvertrag ohne Bezug zum digitalen Aktenarchiv. Diese Folien ergänzen die\naktuellen Vertragsbedingungen nicht. Suchhinweise und das alphabetische\nStichwortverzeichnis dienen nur der Navigation und begründen keine zusätzlichen\nLeistungspflichten.\nDer Bieter muss drei vergleichbare Referenzprojekte aus den letzten fünf Jahren\nmit Auftraggeber, Leistungszeitraum und Ansprechpartner nachweisen.\nDie Nummern der Bildunterschriften sind keine Referenzkennzeichen.",
+        "char_start": 1039,
+        "char_end": 2197
+      },
+      {
+        "id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 6,
+        "ordinal": 0,
+        "text": "Beispiel DE-2026-42: Eignungsnachweise und Qualitätssicherung.\nEine Betriebshaftpflichtversicherung mit einer Deckungssumme von mindestens\n3.000.000 EUR für Personen- und Sachschäden je Schadensfall ist nachzuweisen.\nDas Titelbild zeigt das Rathaus; aus der Abbildung ergeben sich keine weiteren\nVersicherungsbedingungen.\nLesehilfe zum historischen Anhang: Der Archivkatalog ordnet Veröffentlichungen\nnach Jahr, Fachbereich und Thema. Überschriften wie Angebotsfrist, finanzielle\nLeistungsfähigkeit, Referenznachweise und Zertifikatsregister bezeichnen alte\nAktenordner. Ihre Reihenfolge im Katalog bestimmt keine Priorität im aktuellen\nVergabeverfahren. Der freiwillige Besucherrundgang beginnt am Ausstellungstresen\nund endet im ehemaligen Ratssaal. Nummern im Lageplan kennzeichnen Räume, keine\nLose oder Wertungsschritte.\nDie Ausstellung zur Digitalisierung zeigt ein ausgemustertes Musterangebot von\n2019. Darin stehen beispielhaft 500.000 EUR Umsatz, eine Preisgewichtung von 90\nProzent und eine Lieferzeit von sechs Wochen. Diese Zahlen erläutern eine\nfrühere Schulungsübung und sind weder Mindestanforderungen noch\nZuschlagskriterien oder Lieferpflichten dieses Verfahrens. Das Muster einer",
+        "char_start": 0,
+        "char_end": 1198
+      },
+      {
+        "id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 6,
+        "ordinal": 1,
+        "text": "tern eine\nfrühere Schulungsübung und sind weder Mindestanforderungen noch\nZuschlagskriterien oder Lieferpflichten dieses Verfahrens. Das Muster einer\nVersicherungserklärung trägt den Vermerk veraltet; seine Abgabe wird nicht\nverlangt. Das Foto des Freigabestempels bleibt ausschließlich als Archivbild\nerhalten.\nDie Bürgerbroschüre berichtet außerdem von einem früheren Aktionstag zur\nIT-Sicherheit, einem Datenschutzquiz und einer Preisverleihung für ehrenamtliche\nStadtführer. Die damaligen Zertifikate waren Teilnahmeurkunden und keine\nKonformitätsnachweise. Ein Vortrag behandelte die Haftung in einem erfundenen\nMuseumsvertrag ohne Bezug zum digitalen Aktenarchiv. Diese Folien ergänzen die\naktuellen Vertragsbedingungen nicht. Suchhinweise und das alphabetische\nStichwortverzeichnis dienen nur der Navigation und begründen keine zusätzlichen\nLeistungspflichten.\nFür das Qualitätsmanagement ist ein gültiges Zertifikat nach DIN EN ISO 9001\noder ein gleichwertiger Nachweis vorzulegen.\nDie Hauschronik beschreibt außerdem die Eröffnung des Lesesaals im Jahr 1998.",
+        "char_start": 1049,
+        "char_end": 2116
+      },
+      {
+        "id": "c7f48086-1098-4943-b94f-d9def00eb714",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 7,
+        "ordinal": 0,
+        "text": "Historische Bürgerinformation, keine Vergabeanforderungen.\nIn einer Besucherbefragung von 2020 wünschten 80 Prozent längere Öffnungszeiten.\nDie damalige Ausstellung zeigte zwei Referenzprojekte und ein historisches\nZertifikat. Die frühere Broschüre enthielt ein Preisbeispiel sowie Hinweise zur\nVersicherung von Ausstellungsstücken. Diese Angaben legen weder\nZuschlagsgewichte noch Eignungskriterien für das aktuelle Verfahren fest.",
+        "char_start": 0,
+        "char_end": 432
+      },
+      {
+        "id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 8,
+        "ordinal": 0,
+        "text": "Beispiel DE-2026-42: Zuschlagskriterien und Datenschutz.\nBei der Zuschlagswertung wird der Angebotspreis mit 35 Prozent und die Qualität\ndes Umsetzungskonzepts mit 65 Prozent gewichtet.\nDie beigefügte Anfahrtsskizze nennt Buslinien und öffentliche Parkplätze; sie\nist für die Wertung ohne Bedeutung.\nLesehilfe zum historischen Anhang: Der Archivkatalog ordnet Veröffentlichungen\nnach Jahr, Fachbereich und Thema. Überschriften wie Angebotsfrist, finanzielle\nLeistungsfähigkeit, Referenznachweise und Zertifikatsregister bezeichnen alte\nAktenordner. Ihre Reihenfolge im Katalog bestimmt keine Priorität im aktuellen\nVergabeverfahren. Der freiwillige Besucherrundgang beginnt am Ausstellungstresen\nund endet im ehemaligen Ratssaal. Nummern im Lageplan kennzeichnen Räume, keine\nLose oder Wertungsschritte.\nDie Ausstellung zur Digitalisierung zeigt ein ausgemustertes Musterangebot von\n2019. Darin stehen beispielhaft 500.000 EUR Umsatz, eine Preisgewichtung von 90\nProzent und eine Lieferzeit von sechs Wochen. Diese Zahlen erläutern eine\nfrühere Schulungsübung und sind weder Mindestanforderungen noch\nZuschlagskriterien oder Lieferpflichten dieses Verfahrens. Das Muster einer\nVersicherungserklärung",
+        "char_start": 0,
+        "char_end": 1199
+      },
+      {
+        "id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 8,
+        "ordinal": 1,
+        "text": "ungsübung und sind weder Mindestanforderungen noch\nZuschlagskriterien oder Lieferpflichten dieses Verfahrens. Das Muster einer\nVersicherungserklärung trägt den Vermerk veraltet; seine Abgabe wird nicht\nverlangt. Das Foto des Freigabestempels bleibt ausschließlich als Archivbild\nerhalten.\nDie Bürgerbroschüre berichtet außerdem von einem früheren Aktionstag zur\nIT-Sicherheit, einem Datenschutzquiz und einer Preisverleihung für ehrenamtliche\nStadtführer. Die damaligen Zertifikate waren Teilnahmeurkunden und keine\nKonformitätsnachweise. Ein Vortrag behandelte die Haftung in einem erfundenen\nMuseumsvertrag ohne Bezug zum digitalen Aktenarchiv. Diese Folien ergänzen die\naktuellen Vertragsbedingungen nicht. Suchhinweise und das alphabetische\nStichwortverzeichnis dienen nur der Navigation und begründen keine zusätzlichen\nLeistungspflichten.\nPersonenbezogene Daten müssen ausschließlich in Rechenzentren innerhalb der\nEuropäischen Union verarbeitet und bei Speicherung sowie Übertragung\nverschlüsselt werden.\nDie Liste früherer Veranstaltungsräume dient nur der Dokumentation der\nHausgeschichte.\nPrivilegierte Administrationszugriffe müssen durch Mehrfaktor-Authentisierung\nabgesichert und",
+        "char_start": 1050,
+        "char_end": 2242
+      },
+      {
+        "id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+        "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+        "page_number": 8,
+        "ordinal": 2,
+        "text": "gsräume dient nur der Dokumentation der\nHausgeschichte.\nPrivilegierte Administrationszugriffe müssen durch Mehrfaktor-Authentisierung\nabgesichert und vollständig protokolliert werden.",
+        "char_start": 2093,
+        "char_end": 2276
+      }
+    ],
+    "chunk_size": 1200,
+    "overlap": 150,
+    "prefixed_passage_token_lengths": [
+      245,
+      200,
+      250,
+      178,
+      76,
+      253,
+      198,
+      256,
+      246,
+      260,
+      232,
+      97,
+      267,
+      248,
+      41
+    ],
+    "truncated_passages": 0
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+    "affinity_cpus": 5,
+    "cpu_max": "400000 100000",
+    "memory_max": "34359738368",
+    "torch_threads": 4,
+    "torch_interop_threads": 1,
+    "versions": {
+      "sentence-transformers": "6.1.0",
+      "transformers": "5.19.0",
+      "torch": "2.14.1+cpu",
+      "huggingface-hub": "1.33.0",
+      "chromadb": "1.5.9",
+      "fastapi": "0.142.2",
+      "uvicorn": "0.54.0",
+      "pypdf": "6.19.0",
+      "httpx": "0.28.1",
+      "numpy": "2.5.3",
+      "tokenizers": "0.23.2",
+      "safetensors": "0.8.0"
+    }
+  },
+  "configuration": {
+    "llm_configured": false,
+    "llm_destination": null,
+    "llm_model": "",
+    "embedding_model": "intfloat/multilingual-e5-small",
+    "retrieval_enabled": true
+  },
+  "analysis_request": {
+    "document_ids": [
+      "61262263-d7c9-40f2-8163-93892d709b51"
+    ],
+    "query": "Mandatory requirements, deadlines, references, insurance, certificates, award criteria, pricing, security and privacy requirements",
+    "top_k": 12
+  },
+  "retrieval_plan": {
+    "strategy": "category-aware-round-robin",
+    "version": "1",
+    "queries": [
+      {
+        "key": "user",
+        "query": "Mandatory requirements, deadlines, references, insurance, certificates, award criteria, pricing, security and privacy requirements"
+      },
+      {
+        "key": "deadlines",
+        "query": "Tender submission deadline and clarification dates. Angebotsfrist, Abgabefrist und Fristen für Bieterfragen."
+      },
+      {
+        "key": "eligibility",
+        "query": "Bidder eligibility, reference projects, evidence and certificates. Eignung, Referenzprojekte, Nachweise und Zertifikate des Bieters."
+      },
+      {
+        "key": "financial",
+        "query": "Required turnover, financial standing and insurance coverage. Mindestumsatz, finanzielle Leistungsfähigkeit und Haftpflichtversicherung."
+      },
+      {
+        "key": "technical",
+        "query": "Technical requirements, IT security and personal data protection. Technische Anforderungen, IT-Sicherheit und Datenschutz."
+      },
+      {
+        "key": "award",
+        "query": "Award criteria, scoring, price and quality weighting. Zuschlagskriterien, Wertung, Preis- und Qualitätsgewichtung."
+      },
+      {
+        "key": "contract",
+        "query": "Contract terms, liability, penalties and termination. Vertragsbedingungen, Haftung, Vertragsstrafen und Kündigung."
+      }
+    ],
+    "hits_per_query": 3,
+    "max_chunks": 12
+  },
+  "timings_seconds": {
+    "cached_model_load_and_first_query": 5.782813344999909,
+    "embedding": [
+      {
+        "chunks": 15,
+        "seconds": 1.2418538199999603
+      }
+    ],
+    "indexing": [
+      {
+        "chunks": 15,
+        "seconds": 1.2578090270000075
+      }
+    ],
+    "upload_parse_chunk_store_embed_index": 1.280235090999895,
+    "warm_query_http_top_5": {
+      "count": 42,
+      "min": 0.024699086000055104,
+      "median": 0.02769758249996812,
+      "mean": 0.028269758809515332,
+      "max": 0.0399538639999264
+    },
+    "category_plan_http": {
+      "count": 3,
+      "min": 0.21471115999997892,
+      "median": 0.22800833199994486,
+      "mean": 0.227669240999982,
+      "max": 0.24028823100002228
+    },
+    "baseline_http_top_12": {
+      "count": 3,
+      "min": 0.03028934599990407,
+      "median": 0.036284500999954616,
+      "mean": 0.03458053899995169,
+      "max": 0.03716776999999638
+    }
+  },
+  "trials": [
+    {
+      "trial": 1,
+      "query_metrics": {
+        "en": {
+          "cases": 7,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        },
+        "de": {
+          "cases": 7,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        },
+        "combined": {
+          "cases": 14,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        }
+      },
+      "cases": {
+        "deadline": {
+          "hits": [
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.837815523147583
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8240548968315125
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8233343362808228
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.8190860748291016
+            },
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.7998207807540894
+            }
+          ],
+          "seconds": 0.03107759200008786
+        },
+        "references": {
+          "hits": [
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.8178421258926392
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7883204221725464
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7859490513801575
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7805612087249756
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7799492478370667
+            }
+          ],
+          "seconds": 0.026887443999953575
+        },
+        "insurance": {
+          "hits": [
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8266159296035767
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7990251779556274
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.790723443031311
+            },
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.7893307209014893
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7654836177825928
+            }
+          ],
+          "seconds": 0.02649741699997321
+        },
+        "certificate": {
+          "hits": [
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8405795693397522
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8019028902053833
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.8011505603790283
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7984696626663208
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7882891893386841
+            }
+          ],
+          "seconds": 0.026584953999986283
+        },
+        "price": {
+          "hits": [
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8195918202400208
+            },
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7841803431510925
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7792804837226868
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7784818410873413
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7685892581939697
+            }
+          ],
+          "seconds": 0.02968314300005659
+        },
+        "privacy": {
+          "hits": [
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8204262852668762
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7881854772567749
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7842962741851807
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.7798579931259155
+            },
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7688599228858948
+            }
+          ],
+          "seconds": 0.025465263999990384
+        },
+        "de-deadline": {
+          "hits": [
+            {
+              "chunk_id": "3a2ee5dd-0f04-4580-acf4-16a76ff9bcee",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8379689455032349
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8245183825492859
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8243612051010132
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8175365328788757
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8170250654220581
+            }
+          ],
+          "seconds": 0.02947664300006636
+        },
+        "de-references": {
+          "hits": [
+            {
+              "chunk_id": "c7f48086-1098-4943-b94f-d9def00eb714",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 7,
+              "score": 0.8337801098823547
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8329794406890869
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8197801113128662
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8176658749580383
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8088222742080688
+            }
+          ],
+          "seconds": 0.03150584299999082
+        },
+        "de-insurance": {
+          "hits": [
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8219739198684692
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8135262727737427
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8128527402877808
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8126015067100525
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8094699382781982
+            }
+          ],
+          "seconds": 0.0399538639999264
+        },
+        "de-certificate": {
+          "hits": [
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8281661868095398
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8242745995521545
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8228967189788818
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8216258883476257
+            },
+            {
+              "chunk_id": "c7f48086-1098-4943-b94f-d9def00eb714",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 7,
+              "score": 0.8209415674209595
+            }
+          ],
+          "seconds": 0.03404990599995017
+        },
+        "de-price": {
+          "hits": [
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8576928973197937
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8295258283615112
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8096908330917358
+            },
+            {
+              "chunk_id": "3a2ee5dd-0f04-4580-acf4-16a76ff9bcee",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8078024387359619
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8018780946731567
+            }
+          ],
+          "seconds": 0.028880855000011252
+        },
+        "de-privacy": {
+          "hits": [
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8385663032531738
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8311902284622192
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8298701643943787
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.809495210647583
+            },
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8087206482887268
+            }
+          ],
+          "seconds": 0.025944825000010496
+        },
+        "security": {
+          "hits": [
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8177263140678406
+            },
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8111332654953003
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7987762093544006
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7918732166290283
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.7809479832649231
+            }
+          ],
+          "seconds": 0.02477439400001913
+        },
+        "de-security": {
+          "hits": [
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.869161069393158
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8406245708465576
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8147065043449402
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8135601282119751
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8068651556968689
+            }
+          ],
+          "seconds": 0.02668148400005066
+        }
+      },
+      "analysis_plan": {
+        "seconds": 0.24028823100002228,
+        "search_calls": [
+          {
+            "request": {
+              "query": "Mandatory requirements, deadlines, references, insurance, certificates, award criteria, pricing, security and privacy requirements",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03373288300008426
+          },
+          {
+            "request": {
+              "query": "Tender submission deadline and clarification dates. Angebotsfrist, Abgabefrist und Fristen für Bieterfragen.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03081415500003004
+          },
+          {
+            "request": {
+              "query": "Bidder eligibility, reference projects, evidence and certificates. Eignung, Referenzprojekte, Nachweise und Zertifikate des Bieters.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.0347322580000764
+          },
+          {
+            "request": {
+              "query": "Required turnover, financial standing and insurance coverage. Mindestumsatz, finanzielle Leistungsfähigkeit und Haftpflichtversicherung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.034043251000070995
+          },
+          {
+            "request": {
+              "query": "Technical requirements, IT security and personal data protection. Technische Anforderungen, IT-Sicherheit und Datenschutz.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03008143299996391
+          },
+          {
+            "request": {
+              "query": "Award criteria, scoring, price and quality weighting. Zuschlagskriterien, Wertung, Preis- und Qualitätsgewichtung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.04264630600005148
+          },
+          {
+            "request": {
+              "query": "Contract terms, liability, penalties and termination. Vertragsbedingungen, Haftung, Vertragsstrafen und Kündigung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.0334353259999034
+          }
+        ],
+        "query_results": [
+          {
+            "query_key": "user",
+            "chunk_ids": [
+              "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "5030c807-0281-4289-af8f-fd900bb5fbba"
+            ]
+          },
+          {
+            "query_key": "deadlines",
+            "chunk_ids": [
+              "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0"
+            ]
+          },
+          {
+            "query_key": "eligibility",
+            "chunk_ids": [
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0"
+            ]
+          },
+          {
+            "query_key": "financial",
+            "chunk_ids": [
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33"
+            ]
+          },
+          {
+            "query_key": "technical",
+            "chunk_ids": [
+              "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "87eafa73-dd1d-4d6f-9c8e-efb285e853bc"
+            ]
+          },
+          {
+            "query_key": "award",
+            "chunk_ids": [
+              "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33"
+            ]
+          },
+          {
+            "query_key": "contract",
+            "chunk_ids": [
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "77929324-325e-44b5-82fe-77915c8dbca5"
+            ]
+          }
+        ],
+        "context": [
+          {
+            "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 3,
+            "score": 0.8517646789550781
+          },
+          {
+            "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8679836988449097
+          },
+          {
+            "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8537278175354004
+          },
+          {
+            "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8536892533302307
+          },
+          {
+            "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8277122378349304
+          },
+          {
+            "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8505317568778992
+          },
+          {
+            "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8491486310958862
+          },
+          {
+            "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8419602513313293
+          },
+          {
+            "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.8269608020782471
+          },
+          {
+            "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8178450465202332
+          },
+          {
+            "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.8174030184745789
+          }
+        ],
+        "coverage_at_budget_12": {
+          "en": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 1.0
+          },
+          "de": {
+            "cases": 7,
+            "page_hit_at_12": 0.7142857142857143,
+            "source_span_hit_at_12": 0.5714285714285714
+          },
+          "combined": {
+            "cases": 14,
+            "page_hit_at_12": 0.8571428571428571,
+            "source_span_hit_at_12": 0.7857142857142857
+          }
+        }
+      },
+      "single_query_baseline": {
+        "seconds": 0.03716776999999638,
+        "context": [
+          {
+            "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 3,
+            "score": 0.8517646789550781
+          },
+          {
+            "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8491486310958862
+          },
+          {
+            "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8419602513313293
+          },
+          {
+            "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8383969664573669
+          },
+          {
+            "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8382056951522827
+          },
+          {
+            "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8327487707138062
+          },
+          {
+            "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8291999697685242
+          },
+          {
+            "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8051343560218811
+          },
+          {
+            "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.7981989979743958
+          },
+          {
+            "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.7904748916625977
+          },
+          {
+            "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 5,
+            "score": 0.7889842391014099
+          },
+          {
+            "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.7846958637237549
+          }
+        ],
+        "coverage_at_budget_12": {
+          "en": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 1.0
+          },
+          "de": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 0.7142857142857143
+          },
+          "combined": {
+            "cases": 14,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 0.8571428571428571
+          }
+        }
+      }
+    },
+    {
+      "trial": 2,
+      "query_metrics": {
+        "en": {
+          "cases": 7,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        },
+        "de": {
+          "cases": 7,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        },
+        "combined": {
+          "cases": 14,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        }
+      },
+      "cases": {
+        "deadline": {
+          "hits": [
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.837815523147583
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8240548968315125
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8233343362808228
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.8190860748291016
+            },
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.7998207807540894
+            }
+          ],
+          "seconds": 0.02876502599997366
+        },
+        "references": {
+          "hits": [
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.8178421258926392
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7883204221725464
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7859490513801575
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7805612087249756
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7799492478370667
+            }
+          ],
+          "seconds": 0.0286696179999808
+        },
+        "insurance": {
+          "hits": [
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8266159296035767
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7990251779556274
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.790723443031311
+            },
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.7893307209014893
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7654836177825928
+            }
+          ],
+          "seconds": 0.02781420500002696
+        },
+        "certificate": {
+          "hits": [
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8405795693397522
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8019028902053833
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.8011505603790283
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7984696626663208
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7882891893386841
+            }
+          ],
+          "seconds": 0.026555665999921985
+        },
+        "price": {
+          "hits": [
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8195918202400208
+            },
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7841803431510925
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7792804837226868
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7784818410873413
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7685892581939697
+            }
+          ],
+          "seconds": 0.029887234999932843
+        },
+        "privacy": {
+          "hits": [
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8204262852668762
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7881854772567749
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7842962741851807
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.7798579931259155
+            },
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7688599228858948
+            }
+          ],
+          "seconds": 0.027021762000003946
+        },
+        "de-deadline": {
+          "hits": [
+            {
+              "chunk_id": "3a2ee5dd-0f04-4580-acf4-16a76ff9bcee",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8379689455032349
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8245183825492859
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8243612051010132
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8175365328788757
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8170250654220581
+            }
+          ],
+          "seconds": 0.029537699999991673
+        },
+        "de-references": {
+          "hits": [
+            {
+              "chunk_id": "c7f48086-1098-4943-b94f-d9def00eb714",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 7,
+              "score": 0.8337801098823547
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8329794406890869
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8197801113128662
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8176658749580383
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8088222742080688
+            }
+          ],
+          "seconds": 0.03225364399997943
+        },
+        "de-insurance": {
+          "hits": [
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8219739198684692
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8135262727737427
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8128527402877808
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8126015067100525
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8094699382781982
+            }
+          ],
+          "seconds": 0.03265762600005928
+        },
+        "de-certificate": {
+          "hits": [
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8281661868095398
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8242745995521545
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8228967189788818
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8216258883476257
+            },
+            {
+              "chunk_id": "c7f48086-1098-4943-b94f-d9def00eb714",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 7,
+              "score": 0.8209415674209595
+            }
+          ],
+          "seconds": 0.027611239999941972
+        },
+        "de-price": {
+          "hits": [
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8576928973197937
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8295258283615112
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8096908330917358
+            },
+            {
+              "chunk_id": "3a2ee5dd-0f04-4580-acf4-16a76ff9bcee",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8078024387359619
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8018780946731567
+            }
+          ],
+          "seconds": 0.028956880000009733
+        },
+        "de-privacy": {
+          "hits": [
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8385663032531738
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8311902284622192
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8298701643943787
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.809495210647583
+            },
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8087206482887268
+            }
+          ],
+          "seconds": 0.029419560999940586
+        },
+        "security": {
+          "hits": [
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8177263140678406
+            },
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8111332654953003
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7987762093544006
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7918732166290283
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.7809479832649231
+            }
+          ],
+          "seconds": 0.02602191199991921
+        },
+        "de-security": {
+          "hits": [
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.869161069393158
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8406245708465576
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8147065043449402
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8135601282119751
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8068651556968689
+            }
+          ],
+          "seconds": 0.02721438699995815
+        }
+      },
+      "analysis_plan": {
+        "seconds": 0.21471115999997892,
+        "search_calls": [
+          {
+            "request": {
+              "query": "Mandatory requirements, deadlines, references, insurance, certificates, award criteria, pricing, security and privacy requirements",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03067405600006623
+          },
+          {
+            "request": {
+              "query": "Tender submission deadline and clarification dates. Angebotsfrist, Abgabefrist und Fristen für Bieterfragen.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.030114157999946656
+          },
+          {
+            "request": {
+              "query": "Bidder eligibility, reference projects, evidence and certificates. Eignung, Referenzprojekte, Nachweise und Zertifikate des Bieters.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03258055499998136
+          },
+          {
+            "request": {
+              "query": "Required turnover, financial standing and insurance coverage. Mindestumsatz, finanzielle Leistungsfähigkeit und Haftpflichtversicherung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.030699523999942357
+          },
+          {
+            "request": {
+              "query": "Technical requirements, IT security and personal data protection. Technische Anforderungen, IT-Sicherheit und Datenschutz.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.029046501000038916
+          },
+          {
+            "request": {
+              "query": "Award criteria, scoring, price and quality weighting. Zuschlagskriterien, Wertung, Preis- und Qualitätsgewichtung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03488368700004685
+          },
+          {
+            "request": {
+              "query": "Contract terms, liability, penalties and termination. Vertragsbedingungen, Haftung, Vertragsstrafen und Kündigung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.02649859899997864
+          }
+        ],
+        "query_results": [
+          {
+            "query_key": "user",
+            "chunk_ids": [
+              "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "5030c807-0281-4289-af8f-fd900bb5fbba"
+            ]
+          },
+          {
+            "query_key": "deadlines",
+            "chunk_ids": [
+              "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0"
+            ]
+          },
+          {
+            "query_key": "eligibility",
+            "chunk_ids": [
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0"
+            ]
+          },
+          {
+            "query_key": "financial",
+            "chunk_ids": [
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33"
+            ]
+          },
+          {
+            "query_key": "technical",
+            "chunk_ids": [
+              "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "87eafa73-dd1d-4d6f-9c8e-efb285e853bc"
+            ]
+          },
+          {
+            "query_key": "award",
+            "chunk_ids": [
+              "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33"
+            ]
+          },
+          {
+            "query_key": "contract",
+            "chunk_ids": [
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "77929324-325e-44b5-82fe-77915c8dbca5"
+            ]
+          }
+        ],
+        "context": [
+          {
+            "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 3,
+            "score": 0.8517646789550781
+          },
+          {
+            "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8679836988449097
+          },
+          {
+            "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8537278175354004
+          },
+          {
+            "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8536892533302307
+          },
+          {
+            "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8277122378349304
+          },
+          {
+            "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8505317568778992
+          },
+          {
+            "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8491486310958862
+          },
+          {
+            "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8419602513313293
+          },
+          {
+            "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.8269608020782471
+          },
+          {
+            "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8178450465202332
+          },
+          {
+            "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.8174030184745789
+          }
+        ],
+        "coverage_at_budget_12": {
+          "en": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 1.0
+          },
+          "de": {
+            "cases": 7,
+            "page_hit_at_12": 0.7142857142857143,
+            "source_span_hit_at_12": 0.5714285714285714
+          },
+          "combined": {
+            "cases": 14,
+            "page_hit_at_12": 0.8571428571428571,
+            "source_span_hit_at_12": 0.7857142857142857
+          }
+        }
+      },
+      "single_query_baseline": {
+        "seconds": 0.036284500999954616,
+        "context": [
+          {
+            "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 3,
+            "score": 0.8517646789550781
+          },
+          {
+            "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8491486310958862
+          },
+          {
+            "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8419602513313293
+          },
+          {
+            "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8383969664573669
+          },
+          {
+            "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8382056951522827
+          },
+          {
+            "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8327487707138062
+          },
+          {
+            "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8291999697685242
+          },
+          {
+            "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8051343560218811
+          },
+          {
+            "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.7981989979743958
+          },
+          {
+            "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.7904748916625977
+          },
+          {
+            "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 5,
+            "score": 0.7889842391014099
+          },
+          {
+            "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.7846958637237549
+          }
+        ],
+        "coverage_at_budget_12": {
+          "en": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 1.0
+          },
+          "de": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 0.7142857142857143
+          },
+          "combined": {
+            "cases": 14,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 0.8571428571428571
+          }
+        }
+      }
+    },
+    {
+      "trial": 3,
+      "query_metrics": {
+        "en": {
+          "cases": 7,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        },
+        "de": {
+          "cases": 7,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        },
+        "combined": {
+          "cases": 14,
+          "page_hit_at_1": 0.8571428571428571,
+          "source_span_hit_at_1": 0.8571428571428571,
+          "page_hit_at_3": 1.0,
+          "source_span_hit_at_3": 1.0,
+          "page_hit_at_5": 1.0,
+          "source_span_hit_at_5": 1.0
+        }
+      },
+      "cases": {
+        "deadline": {
+          "hits": [
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.837815523147583
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8240548968315125
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8233343362808228
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.8190860748291016
+            },
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.7998207807540894
+            }
+          ],
+          "seconds": 0.027543042000047535
+        },
+        "references": {
+          "hits": [
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.8178421258926392
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7883204221725464
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7859490513801575
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7805612087249756
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7799492478370667
+            }
+          ],
+          "seconds": 0.02778392499999427
+        },
+        "insurance": {
+          "hits": [
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8266159296035767
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7990251779556274
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.790723443031311
+            },
+            {
+              "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 3,
+              "score": 0.7893307209014893
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7654836177825928
+            }
+          ],
+          "seconds": 0.025469990999908987
+        },
+        "certificate": {
+          "hits": [
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.8405795693397522
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8019028902053833
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.8011505603790283
+            },
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7984696626663208
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7882891893386841
+            }
+          ],
+          "seconds": 0.02867998399995031
+        },
+        "price": {
+          "hits": [
+            {
+              "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8195918202400208
+            },
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7841803431510925
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7792804837226868
+            },
+            {
+              "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7784818410873413
+            },
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.7685892581939697
+            }
+          ],
+          "seconds": 0.027464834999932464
+        },
+        "privacy": {
+          "hits": [
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8204262852668762
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7881854772567749
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7842962741851807
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.7798579931259155
+            },
+            {
+              "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7688599228858948
+            }
+          ],
+          "seconds": 0.025616482000032192
+        },
+        "de-deadline": {
+          "hits": [
+            {
+              "chunk_id": "3a2ee5dd-0f04-4580-acf4-16a76ff9bcee",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8379689455032349
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8245183825492859
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8243612051010132
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8175365328788757
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8170250654220581
+            }
+          ],
+          "seconds": 0.02711256800000683
+        },
+        "de-references": {
+          "hits": [
+            {
+              "chunk_id": "c7f48086-1098-4943-b94f-d9def00eb714",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 7,
+              "score": 0.8337801098823547
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8329794406890869
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8197801113128662
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8176658749580383
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8088222742080688
+            }
+          ],
+          "seconds": 0.024699086000055104
+        },
+        "de-insurance": {
+          "hits": [
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8219739198684692
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8135262727737427
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8128527402877808
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8126015067100525
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8094699382781982
+            }
+          ],
+          "seconds": 0.027219624999929692
+        },
+        "de-certificate": {
+          "hits": [
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8281661868095398
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8242745995521545
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8228967189788818
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8216258883476257
+            },
+            {
+              "chunk_id": "c7f48086-1098-4943-b94f-d9def00eb714",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 7,
+              "score": 0.8209415674209595
+            }
+          ],
+          "seconds": 0.027863324000009015
+        },
+        "de-price": {
+          "hits": [
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8576928973197937
+            },
+            {
+              "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8295258283615112
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8096908330917358
+            },
+            {
+              "chunk_id": "3a2ee5dd-0f04-4580-acf4-16a76ff9bcee",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8078024387359619
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8018780946731567
+            }
+          ],
+          "seconds": 0.025869056000033197
+        },
+        "de-privacy": {
+          "hits": [
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8385663032531738
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8311902284622192
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8298701643943787
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.809495210647583
+            },
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8087206482887268
+            }
+          ],
+          "seconds": 0.02819186900001114
+        },
+        "security": {
+          "hits": [
+            {
+              "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 4,
+              "score": 0.8177263140678406
+            },
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8111332654953003
+            },
+            {
+              "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 2,
+              "score": 0.7987762093544006
+            },
+            {
+              "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 1,
+              "score": 0.7918732166290283
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.7809479832649231
+            }
+          ],
+          "seconds": 0.024993057999949997
+        },
+        "de-security": {
+          "hits": [
+            {
+              "chunk_id": "7d9f35c7-21b4-4339-a895-fc088a12d4a3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.869161069393158
+            },
+            {
+              "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8406245708465576
+            },
+            {
+              "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 5,
+              "score": 0.8147065043449402
+            },
+            {
+              "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 6,
+              "score": 0.8135601282119751
+            },
+            {
+              "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+              "document_name": "gold.pdf",
+              "page_number": 8,
+              "score": 0.8068651556968689
+            }
+          ],
+          "seconds": 0.02897293500006981
+        }
+      },
+      "analysis_plan": {
+        "seconds": 0.22800833199994486,
+        "search_calls": [
+          {
+            "request": {
+              "query": "Mandatory requirements, deadlines, references, insurance, certificates, award criteria, pricing, security and privacy requirements",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03218639699991854
+          },
+          {
+            "request": {
+              "query": "Tender submission deadline and clarification dates. Angebotsfrist, Abgabefrist und Fristen für Bieterfragen.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.028839908999998443
+          },
+          {
+            "request": {
+              "query": "Bidder eligibility, reference projects, evidence and certificates. Eignung, Referenzprojekte, Nachweise und Zertifikate des Bieters.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.0350684549999869
+          },
+          {
+            "request": {
+              "query": "Required turnover, financial standing and insurance coverage. Mindestumsatz, finanzielle Leistungsfähigkeit und Haftpflichtversicherung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.036235556999940854
+          },
+          {
+            "request": {
+              "query": "Technical requirements, IT security and personal data protection. Technische Anforderungen, IT-Sicherheit und Datenschutz.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03229819000000589
+          },
+          {
+            "request": {
+              "query": "Award criteria, scoring, price and quality weighting. Zuschlagskriterien, Wertung, Preis- und Qualitätsgewichtung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.03239397899994856
+          },
+          {
+            "request": {
+              "query": "Contract terms, liability, penalties and termination. Vertragsbedingungen, Haftung, Vertragsstrafen und Kündigung.",
+              "document_ids": [
+                "61262263-d7c9-40f2-8163-93892d709b51"
+              ],
+              "top_k": 3
+            },
+            "seconds": 0.030736248000039268
+          }
+        ],
+        "query_results": [
+          {
+            "query_key": "user",
+            "chunk_ids": [
+              "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "5030c807-0281-4289-af8f-fd900bb5fbba"
+            ]
+          },
+          {
+            "query_key": "deadlines",
+            "chunk_ids": [
+              "7cf13509-4309-466f-8e08-c5cbed5e637d",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0"
+            ]
+          },
+          {
+            "query_key": "eligibility",
+            "chunk_ids": [
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0"
+            ]
+          },
+          {
+            "query_key": "financial",
+            "chunk_ids": [
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33"
+            ]
+          },
+          {
+            "query_key": "technical",
+            "chunk_ids": [
+              "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+              "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+              "87eafa73-dd1d-4d6f-9c8e-efb285e853bc"
+            ]
+          },
+          {
+            "query_key": "award",
+            "chunk_ids": [
+              "12828a79-1779-4713-9ae8-fee2bb80efe3",
+              "77929324-325e-44b5-82fe-77915c8dbca5",
+              "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33"
+            ]
+          },
+          {
+            "query_key": "contract",
+            "chunk_ids": [
+              "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+              "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+              "77929324-325e-44b5-82fe-77915c8dbca5"
+            ]
+          }
+        ],
+        "context": [
+          {
+            "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 3,
+            "score": 0.8517646789550781
+          },
+          {
+            "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8679836988449097
+          },
+          {
+            "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8537278175354004
+          },
+          {
+            "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8536892533302307
+          },
+          {
+            "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8277122378349304
+          },
+          {
+            "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8505317568778992
+          },
+          {
+            "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8491486310958862
+          },
+          {
+            "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8419602513313293
+          },
+          {
+            "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.8269608020782471
+          },
+          {
+            "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8178450465202332
+          },
+          {
+            "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.8174030184745789
+          }
+        ],
+        "coverage_at_budget_12": {
+          "en": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 1.0
+          },
+          "de": {
+            "cases": 7,
+            "page_hit_at_12": 0.7142857142857143,
+            "source_span_hit_at_12": 0.5714285714285714
+          },
+          "combined": {
+            "cases": 14,
+            "page_hit_at_12": 0.8571428571428571,
+            "source_span_hit_at_12": 0.7857142857142857
+          }
+        }
+      },
+      "single_query_baseline": {
+        "seconds": 0.03028934599990407,
+        "context": [
+          {
+            "chunk_id": "78b52b38-6456-4c3a-9cdb-03c0cc50ad2d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 3,
+            "score": 0.8517646789550781
+          },
+          {
+            "chunk_id": "5343edf8-cb3c-4042-a9e9-8d9feda024d7",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8491486310958862
+          },
+          {
+            "chunk_id": "5030c807-0281-4289-af8f-fd900bb5fbba",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8419602513313293
+          },
+          {
+            "chunk_id": "b8337e20-3ad8-4540-ba67-3a03a2d753d0",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 2,
+            "score": 0.8383969664573669
+          },
+          {
+            "chunk_id": "77929324-325e-44b5-82fe-77915c8dbca5",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8382056951522827
+          },
+          {
+            "chunk_id": "fa100ff6-a463-4fa3-ac44-22659195fe6f",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 4,
+            "score": 0.8327487707138062
+          },
+          {
+            "chunk_id": "7cf13509-4309-466f-8e08-c5cbed5e637d",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 1,
+            "score": 0.8291999697685242
+          },
+          {
+            "chunk_id": "12828a79-1779-4713-9ae8-fee2bb80efe3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.8051343560218811
+          },
+          {
+            "chunk_id": "1ea8318d-6ec7-44b4-b18f-ded6a93ccd33",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.7981989979743958
+          },
+          {
+            "chunk_id": "1ebfd1fd-afc0-4959-ac7c-4f139f787b20",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 8,
+            "score": 0.7904748916625977
+          },
+          {
+            "chunk_id": "44a0f562-f91a-42e1-9008-72d1060c3bf3",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 5,
+            "score": 0.7889842391014099
+          },
+          {
+            "chunk_id": "87eafa73-dd1d-4d6f-9c8e-efb285e853bc",
+            "document_id": "61262263-d7c9-40f2-8163-93892d709b51",
+            "document_name": "gold.pdf",
+            "page_number": 6,
+            "score": 0.7846958637237549
+          }
+        ],
+        "coverage_at_budget_12": {
+          "en": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 1.0
+          },
+          "de": {
+            "cases": 7,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 0.7142857142857143
+          },
+          "combined": {
+            "cases": 14,
+            "page_hit_at_12": 1.0,
+            "source_span_hit_at_12": 0.8571428571428571
+          }
+        }
+      }
+    }
+  ],
+  "external_llm_called": false
+}

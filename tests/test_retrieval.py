@@ -90,6 +90,6 @@ def test_multilingual_settings_default_and_revision_override(monkeypatch):
     monkeypatch.delenv("TENDERCITE_EMBEDDING_REVISION", raising=False)
     configured = Settings(_env_file=None)
     assert configured.embedding_model == "intfloat/multilingual-e5-small"
-    assert configured.embedding_revision is None
+    assert configured.embedding_revision == "614241f622f53c4eeff9890bdc4f31cfecc418b3"
     monkeypatch.setenv("TENDERCITE_EMBEDDING_REVISION", "test-only-revision")
     assert Settings(_env_file=None).embedding_revision == "test-only-revision"

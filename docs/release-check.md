@@ -13,18 +13,18 @@ see `docs/work-log.md` for those phase commits.
 | Reviews, matrix, exports | API integration tests preserve original output/history and source references |
 | UI | Streamlit AppTest against actual API; unsupported evidence styling and save-review action |
 | Hardening | Invalid/encrypted/oversized PDFs, limits, filename paths, cleanup, provider bounds and secret redaction |
-| Test/lint | RET-1: 63 offline tests passed, none skipped; Ruff/format passed. Historical core clean-clone baseline: 35 tests, 93% coverage |
+| Test/lint | Real-evaluation follow-up: 65 offline tests passed, none skipped; Ruff/format and Compose configuration passed. Historical core clean-clone baseline: 35 tests, 93% coverage |
 | Dependency install | Fresh local clone and new virtual environment; hashed Python 3.12 CPU install passed |
 | Docker build | Built successfully with trusted cloud proxy CA mounted as BuildKit secret |
 | Docker functionality | Non-root API: PDF upload, pages/chunks, evidence and restart persistence passed; UI AppTest rendered every section against the container API and exposed all three exports |
-| Embedding reproducibility | OPEN: a concrete verified multilingual-e5-small revision must be pinned before live evaluation / v1.0.0; none is verified yet |
-| Live E5 retrieval | NOT RUN for multilingual-e5-small; the prior onboarding model download received HTTP 403 from the cloud proxy |
-| German retrieval quality | NOT EVALUATED: multilingual support is enabled by model choice; bilingual fixtures are offline coverage only |
-| Analysis coverage | RET-1 implemented: bounded bilingual category plan, deduplication and audit metadata; offline regressions cover multiple categories/documents. Live coverage remains unmeasured and extraction is not exhaustive |
+| Embedding reproducibility | PASS: official revision `614241f622f53c4eeff9890bdc4f31cfecc418b3` downloaded, safetensors SHA-256 verified, SentenceTransformers loaded, normalized 384D query/passage vectors checked; tested default pinned and configurable |
+| Live E5 retrieval | MEASURED: real PDF/FastAPI/Chroma, 14 cases, 3 repeated trials. Per-language source-span Hit@1 6/7, Hit@3/@5 7/7. [Report and raw results](evaluation/multilingual-e5-synthetic-tender-3.md) |
+| German retrieval quality | NARROW SYNTHETIC MEASUREMENT: 7 cases only; reference query ranks its gold span second. General real-tender quality remains unestablished |
+| Analysis coverage | MEASURED LIMITATION: budget 12 gives 11 unique category-plan chunks and 11/14 gold spans; broad-query baseline gives 12 chunks and 12/14 spans. Plan misses German deadline, references and security. Not exhaustive |
 | Live structured extraction | NOT RUN: no real provider/model configured |
-| Real-model evaluation | NOT RUN: requires E5 download and configured LLM; no accuracy scores claimed |
+| Real-model evaluation | Retrieval/context coverage measured on unchanged synthetic-tender-3. No LLM configured/called; extraction, evidence quality and real-tender evaluation remain open |
 | Audit | Four Chroma server advisories, not exposed by embedded design; torch lookup skipped; see security review |
-| Licenses | Principal dependency licenses documented; model revision/weights not downloaded/reviewed here |
+| Licenses | Official pinned card/API declare MIT; model/configuration inspected and weight hash verified. No weights redistributed. Existing dependency audit/license review still applies |
 | Remote CI | Hosted CI for the current PR revision must be checked; no result is claimed here |
 | Release tag | Not created; external validation gates remain open |
 
@@ -46,3 +46,14 @@ RET-1 starts from merged main `8c9d293`. The category plan, audit metadata, boun
 and evidence-boundary regressions pass offline. Dataset v3 retains all 12 previous cases and
 adds two independent SECURITY cases, multi-chunk pages and source-span retrieval metrics.
 These tests use fake embeddings/providers; no live quality or new coverage percentage is claimed.
+
+The first download attempt from merged PR #2 / main `c85f325` was blocked by the proxy.
+Its [historical diagnostic record](evaluation/multilingual-e5-synthetic-tender-3-blocked.md)
+is retained. After the allowlist update, the official snapshot downloaded through the managed
+proxy with TLS verification. The [completed evaluation](evaluation/multilingual-e5-synthetic-tender-3.md)
+records actual metrics, misses, timings, versions and reproduction steps. No retrieval tuning,
+external LLM configuration/call, real-tender accuracy claim or v1.0.0 tag followed from this run.
+
+The complete offline suite now passes 65 tests, including recalculation of all recorded query
+and context metrics from raw hits/chunk text. Ruff lint/format and Compose configuration pass.
+No new Docker runtime or model/provider deployment validation is claimed for this follow-up.

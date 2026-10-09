@@ -1,0 +1,537 @@
+{
+  "report_version": 1,
+  "status": "blocked_before_model_load",
+  "created_at_utc": "2026-10-08T08:28:28.188074+00:00",
+  "repository_base_commit": "c85f3254e8a665fd7a6aac76986aba751ce12201",
+  "model": {
+    "id": "intfloat/multilingual-e5-small",
+    "resolved_revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "metadata_url": "https://huggingface.co/api/models/intfloat/multilingual-e5-small/revision/614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "declared_license": "MIT",
+    "license_source": "Downloaded model-card YAML and Hugging Face API metadata",
+    "download_complete": false,
+    "sentence_transformers_load_verified": false,
+    "revision_pinned": false,
+    "declared_embedding_dimensions": 384,
+    "runtime_embedding_dimensions": null,
+    "configuration": {
+      "_name_or_path": "tmp/",
+      "architectures": [
+        "BertModel"
+      ],
+      "attention_probs_dropout_prob": 0.1,
+      "classifier_dropout": null,
+      "hidden_act": "gelu",
+      "hidden_dropout_prob": 0.1,
+      "hidden_size": 384,
+      "initializer_range": 0.02,
+      "intermediate_size": 1536,
+      "layer_norm_eps": 1e-12,
+      "max_position_embeddings": 512,
+      "model_type": "bert",
+      "num_attention_heads": 12,
+      "num_hidden_layers": 12,
+      "pad_token_id": 0,
+      "position_embedding_type": "absolute",
+      "tokenizer_class": "XLMRobertaTokenizer",
+      "torch_dtype": "float32",
+      "transformers_version": "4.29.0",
+      "type_vocab_size": 2,
+      "use_cache": true,
+      "vocab_size": 250037
+    },
+    "sentence_transformers_configuration": {
+      "max_seq_length": 512,
+      "do_lower_case": false
+    },
+    "pooling": {
+      "word_embedding_dimension": 384,
+      "pooling_mode_cls_token": false,
+      "pooling_mode_mean_tokens": true,
+      "pooling_mode_max_tokens": false,
+      "pooling_mode_mean_sqrt_len_tokens": false
+    },
+    "modules": [
+      {
+        "idx": 0,
+        "name": "0",
+        "path": "",
+        "type": "sentence_transformers.models.Transformer"
+      },
+      {
+        "idx": 1,
+        "name": "1",
+        "path": "1_Pooling",
+        "type": "sentence_transformers.models.Pooling"
+      },
+      {
+        "idx": 2,
+        "name": "2",
+        "path": "2_Normalize",
+        "type": "sentence_transformers.models.Normalize"
+      }
+    ],
+    "required_prefixes": {
+      "query": "query: ",
+      "passage": "passage: "
+    },
+    "downloaded_metadata_files": {
+      "README.md": {
+        "sha256": "0038de97aee16258cecbad7ffda4b4febd6953e747a00e0ddbc8e6ed241e9c1c",
+        "bytes": 497538
+      },
+      "config.json": {
+        "sha256": "69137736cab8b8903a07fe8afaafdda25aac55415a12a55d1bffa9f581abf959",
+        "bytes": 655
+      },
+      "sentence_bert_config.json": {
+        "sha256": "948201d8329907aae938fa62f9ceeed53f5694dacc2b87b9f3b78b37ee986529",
+        "bytes": 57
+      },
+      "modules.json": {
+        "sha256": "c6e29747481e8b5dd2b58401966aeac910de39092f90cda9a704b1545f902b04",
+        "bytes": 387
+      },
+      "1_Pooling/config.json": {
+        "sha256": "987f7a67a38fa564c849bb5d277c52ab9088a84368fc0be31a354125aebb12a0",
+        "bytes": 200
+      },
+      "tokenizer_config.json": {
+        "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+        "bytes": 443
+      },
+      "special_tokens_map.json": {
+        "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7",
+        "bytes": 167
+      }
+    },
+    "missing_required_files": [
+      "model.safetensors",
+      "tokenizer.json",
+      "sentencepiece.bpe.model"
+    ]
+  },
+  "download_diagnostics": {
+    "checks": [
+      {
+        "requested_url": "https://huggingface.co/api/models/intfloat/multilingual-e5-small/revision/614241f622f53c4eeff9890bdc4f31cfecc418b3",
+        "checked_at_utc": "2026-10-08T08:28:27.489742+00:00",
+        "http_status": 200,
+        "final_host": "huggingface.co",
+        "resolved_revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+        "declared_license": "mit",
+        "request_chain_without_query_strings": [
+          {
+            "method": "GET",
+            "host": "huggingface.co",
+            "path": "/api/models/intfloat/multilingual-e5-small/revision/614241f622f53c4eeff9890bdc4f31cfecc418b3"
+          }
+        ]
+      },
+      {
+        "requested_url": "https://cas-server.xethub.hf.co/v2/reconstructions/f63b59f1a0edbaa6f315e4d21ef0193f595e9c7c04c071f01aa9d2ec5c100186",
+        "checked_at_utc": "2026-10-08T08:28:27.949915+00:00",
+        "http_status": null,
+        "error_type": "ProxyError",
+        "error": "403 Forbidden",
+        "blocked_host": "cas-server.xethub.hf.co",
+        "request_chain_without_query_strings": [
+          {
+            "method": "GET",
+            "host": "cas-server.xethub.hf.co",
+            "path": "/v2/reconstructions/f63b59f1a0edbaa6f315e4d21ef0193f595e9c7c04c071f01aa9d2ec5c100186"
+          }
+        ]
+      },
+      {
+        "requested_url": "https://huggingface.co/intfloat/multilingual-e5-small/resolve/614241f622f53c4eeff9890bdc4f31cfecc418b3/model.safetensors",
+        "checked_at_utc": "2026-10-08T08:28:27.954830+00:00",
+        "http_status": null,
+        "error_type": "ProxyError",
+        "error": "403 Forbidden",
+        "blocked_host": "us.aws.cdn.hf.co",
+        "request_chain_without_query_strings": [
+          {
+            "method": "GET",
+            "host": "huggingface.co",
+            "path": "/intfloat/multilingual-e5-small/resolve/614241f622f53c4eeff9890bdc4f31cfecc418b3/model.safetensors"
+          },
+          {
+            "method": "GET",
+            "host": "us.aws.cdn.hf.co",
+            "path": "/xet-bridge-us/649e84b72ccae3ea1f35fb8b/f63b59f1a0edbaa6f315e4d21ef0193f595e9c7c04c071f01aa9d2ec5c100186"
+          }
+        ]
+      }
+    ],
+    "initial_cache_error": "Xet used a read-only home cache; fixed with writable HF_HOME/HF_HUB_CACHE/HF_XET_CACHE under ignored data/models.",
+    "network_draft_status": "saved_not_activated",
+    "requested_allowed_domains": [
+      "api.github.com",
+      "huggingface.co",
+      "cas-bridge.xethub.hf.co",
+      "cas-server.xethub.hf.co",
+      "us.aws.cdn.hf.co"
+    ],
+    "required_user_action": "Review and save the network draft in environment settings, then publish the environment."
+  },
+  "dataset": {
+    "version": "synthetic-tender-3",
+    "sha256": "f33fd99f47a2337bf8bc4d58ebe0ac2f938c60b0b7ef3c36cfbd5f5904efa56d",
+    "pdf_sha256": "22cae0680bf7872a970ba8593a31370cafb49f0d83fdf7855d36895e2de6f6f4",
+    "pages": 8,
+    "chunks": 15,
+    "chunk_size": 1200,
+    "overlap": 150,
+    "gold_cases": 14
+  },
+  "query_level": {
+    "status": "not_run",
+    "metrics": {
+      "en": {
+        "cases": 7,
+        "page_hit_at_1": null,
+        "page_hit_at_3": null,
+        "page_hit_at_5": null,
+        "source_span_hit_at_1": null,
+        "source_span_hit_at_3": null,
+        "source_span_hit_at_5": null
+      },
+      "de": {
+        "cases": 7,
+        "page_hit_at_1": null,
+        "page_hit_at_3": null,
+        "page_hit_at_5": null,
+        "source_span_hit_at_1": null,
+        "source_span_hit_at_3": null,
+        "source_span_hit_at_5": null
+      },
+      "combined": {
+        "cases": 14,
+        "page_hit_at_1": null,
+        "page_hit_at_3": null,
+        "page_hit_at_5": null,
+        "source_span_hit_at_1": null,
+        "source_span_hit_at_3": null,
+        "source_span_hit_at_5": null
+      }
+    },
+    "cases": [
+      {
+        "id": "deadline",
+        "page": 1,
+        "query": "When must bids be submitted?",
+        "category": "MUST",
+        "requirement_type": "DEADLINE",
+        "quote": "Bids must be submitted by 30 November 2026 at 12:00 UTC.",
+        "language": "en",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "references",
+        "page": 1,
+        "query": "How many comparable reference projects are required?",
+        "category": "MUST",
+        "requirement_type": "REFERENCE",
+        "quote": "The bidder must provide two comparable reference projects completed in the last three years.",
+        "language": "en",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "insurance",
+        "page": 2,
+        "query": "What liability insurance coverage is required?",
+        "category": "MUST",
+        "requirement_type": "INSURANCE",
+        "quote": "Professional liability insurance must provide coverage of at least EUR 1000000 per claim.",
+        "language": "en",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "certificate",
+        "page": 2,
+        "query": "Which quality management certificate is required?",
+        "category": "MUST",
+        "requirement_type": "CERTIFICATE",
+        "quote": "A valid ISO 9001 quality management certificate or equivalent proof is required.",
+        "language": "en",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "price",
+        "page": 4,
+        "query": "What weighting is assigned to price in award scoring?",
+        "category": "SCORING",
+        "requirement_type": "PRICE",
+        "quote": "The award score assigns a weighting of 40 percent to price and 60 percent to quality.",
+        "language": "en",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "privacy",
+        "page": 4,
+        "query": "Where must personal data be stored?",
+        "category": "MUST",
+        "requirement_type": "PRIVACY",
+        "quote": "Personal data must be encrypted at rest and stored exclusively within the European Union.",
+        "language": "en",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "de-deadline",
+        "language": "de",
+        "page": 5,
+        "query": "Bis wann muss das Angebot elektronisch eingereicht werden?",
+        "category": "MUST",
+        "requirement_type": "DEADLINE",
+        "quote": "Das Angebot muss bis zum 15. Dezember 2026 um 12:00 Uhr MEZ über die Vergabeplattform eingereicht werden.",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "de-references",
+        "language": "de",
+        "page": 5,
+        "query": "Welche vergleichbaren Referenzprojekte müssen nachgewiesen werden?",
+        "category": "MUST",
+        "requirement_type": "REFERENCE",
+        "quote": "Der Bieter muss drei vergleichbare Referenzprojekte aus den letzten fünf Jahren mit Auftraggeber, Leistungszeitraum und Ansprechpartner nachweisen.",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "de-insurance",
+        "language": "de",
+        "page": 6,
+        "query": "Welche Mindestdeckung ist für die Haftpflichtversicherung vorgeschrieben?",
+        "category": "MUST",
+        "requirement_type": "INSURANCE",
+        "quote": "Eine Betriebshaftpflichtversicherung mit einer Deckungssumme von mindestens 3.000.000 EUR für Personen- und Sachschäden je Schadensfall ist nachzuweisen.",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "de-certificate",
+        "language": "de",
+        "page": 6,
+        "query": "Welches Zertifikat oder welcher gleichwertige Nachweis wird verlangt?",
+        "category": "MUST",
+        "requirement_type": "CERTIFICATE",
+        "quote": "Für das Qualitätsmanagement ist ein gültiges Zertifikat nach DIN EN ISO 9001 oder ein gleichwertiger Nachweis vorzulegen.",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "de-price",
+        "language": "de",
+        "page": 8,
+        "query": "Wie werden Preis und Qualität bei der Zuschlagswertung gewichtet?",
+        "category": "SCORING",
+        "requirement_type": "PRICE",
+        "quote": "Bei der Zuschlagswertung wird der Angebotspreis mit 35 Prozent und die Qualität des Umsetzungskonzepts mit 65 Prozent gewichtet.",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "de-privacy",
+        "language": "de",
+        "page": 8,
+        "query": "Welche Anforderungen gelten für Speicherort und Schutz personenbezogener Daten?",
+        "category": "MUST",
+        "requirement_type": "PRIVACY",
+        "quote": "Personenbezogene Daten müssen ausschließlich in Rechenzentren innerhalb der Europäischen Union verarbeitet und bei Speicherung sowie Übertragung verschlüsselt werden.",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "security",
+        "language": "en",
+        "page": 4,
+        "query": "What authentication is required for privileged administrator access?",
+        "category": "MUST",
+        "requirement_type": "SECURITY",
+        "quote": "Privileged administrator access must use multifactor authentication and log every privileged action.",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      },
+      {
+        "id": "de-security",
+        "language": "de",
+        "page": 8,
+        "query": "Welche Authentisierung ist für privilegierte Administrationszugriffe vorgeschrieben?",
+        "category": "MUST",
+        "requirement_type": "SECURITY",
+        "quote": "Privilegierte Administrationszugriffe müssen durch Mehrfaktor-Authentisierung abgesichert und vollständig protokolliert werden.",
+        "status": "not_run",
+        "retrieved_hits": null,
+        "page_ranks": null,
+        "source_span_ranks": null,
+        "latency_seconds": null
+      }
+    ]
+  },
+  "analysis_plan": {
+    "status": "not_run",
+    "plan": {
+      "strategy": "category-aware-round-robin",
+      "version": "1",
+      "queries": [
+        {
+          "key": "user",
+          "query": "Mandatory requirements, deadlines, references, insurance, certificates, award criteria, pricing, security and privacy requirements"
+        },
+        {
+          "key": "deadlines",
+          "query": "Tender submission deadline and clarification dates. Angebotsfrist, Abgabefrist und Fristen für Bieterfragen."
+        },
+        {
+          "key": "eligibility",
+          "query": "Bidder eligibility, reference projects, evidence and certificates. Eignung, Referenzprojekte, Nachweise und Zertifikate des Bieters."
+        },
+        {
+          "key": "financial",
+          "query": "Required turnover, financial standing and insurance coverage. Mindestumsatz, finanzielle Leistungsfähigkeit und Haftpflichtversicherung."
+        },
+        {
+          "key": "technical",
+          "query": "Technical requirements, IT security and personal data protection. Technische Anforderungen, IT-Sicherheit und Datenschutz."
+        },
+        {
+          "key": "award",
+          "query": "Award criteria, scoring, price and quality weighting. Zuschlagskriterien, Wertung, Preis- und Qualitätsgewichtung."
+        },
+        {
+          "key": "contract",
+          "query": "Contract terms, liability, penalties and termination. Vertragsbedingungen, Haftung, Vertragsstrafen und Kündigung."
+        }
+      ],
+      "hits_per_query": 3,
+      "max_chunks": 12
+    },
+    "context_budget": 12,
+    "retrieved_chunk_ids": null,
+    "coverage": {
+      "en": {
+        "gold_count": 7,
+        "covered": null,
+        "source_span_coverage": null,
+        "missed_case_ids": null
+      },
+      "de": {
+        "gold_count": 7,
+        "covered": null,
+        "source_span_coverage": null,
+        "missed_case_ids": null
+      },
+      "combined": {
+        "gold_count": 14,
+        "covered": null,
+        "source_span_coverage": null,
+        "missed_case_ids": null
+      }
+    }
+  },
+  "single_query_baseline": {
+    "status": "not_run",
+    "query": "Mandatory requirements, deadlines, references, insurance, certificates, award criteria, pricing, security and privacy requirements",
+    "top_k": 12,
+    "coverage": null
+  },
+  "performance_seconds": {
+    "model_load": null,
+    "document_embedding": null,
+    "indexing": null,
+    "query_retrieval": null,
+    "analysis_plan_retrieval": null
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 5,
+    "affinity_cpus": 5,
+    "cgroup_cpu_max": "400000 100000",
+    "cgroup_memory_max": "34359738368",
+    "dependency_lock_sha256": "0465fc3323cb0d53f6bd68680645f4db6eef27e4dc72b2162ad29f1aff954c21",
+    "versions": {
+      "sentence-transformers": "6.1.0",
+      "transformers": "5.19.0",
+      "torch": "2.14.1+cpu",
+      "huggingface-hub": "1.33.0",
+      "hf-xet": "1.7.0",
+      "chromadb": "1.5.9",
+      "fastapi": "0.142.2",
+      "uvicorn": "0.54.0",
+      "pypdf": "6.19.0",
+      "httpx": "0.28.1",
+      "numpy": "2.5.3",
+      "tokenizers": "0.23.2",
+      "safetensors": "0.8.0"
+    }
+  },
+  "external_llm_configured_or_called": false,
+  "validation": {
+    "pytest": {
+      "command": "HF_HUB_OFFLINE=1 .venv/bin/pytest",
+      "passed": 63,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "warning": "Existing upstream Starlette/httpx deprecation warning"
+    },
+    "ruff_check": {
+      "command": ".venv/bin/ruff check .",
+      "status": "passed"
+    },
+    "ruff_format_check": {
+      "command": ".venv/bin/ruff format --check .",
+      "status": "passed"
+    },
+    "scope": "Offline software validation only; not model evaluation"
+  }
+}

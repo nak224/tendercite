@@ -21,11 +21,12 @@ provider services, user uploads or external datasets.
 | uv | Installation/build tooling | MIT OR Apache-2.0 |
 
 Model source and declared license: https://huggingface.co/intfloat/multilingual-e5-small .
-Pin a concrete embedding-model commit and verify its downloaded artifacts/license before live
-evaluation or v1.0.0. No revision has been pinned or verified in this offline follow-up.
-Model downloads were blocked by the onboarding network policy; no downloaded-weight inspection
-is claimed. The model choice enables multilingual support, including German and English,
-but German retrieval quality still requires evaluation. Licensing does not establish accuracy.
+Revision `614241f622f53c4eeff9890bdc4f31cfecc418b3` was downloaded via the official
+Hugging Face mechanism, inspected and loaded with SentenceTransformers on CPU. Its model card/API
+declare MIT; the safetensors SHA-256 matches upstream metadata. The default is pinned to that
+revision and remains configurable. See the [evaluation report](docs/evaluation/multilingual-e5-synthetic-tender-3.md)
+for artifact hashes, configuration and narrow synthetic English/German measurements. Weights
+are not redistributed here. Licensing and synthetic results do not establish real-tender accuracy.
 
 Runtime/development lockfiles record exact dependency versions and package hashes. The table
 covers principal components, not every transitive bundled artifact. Retain dependency notices

@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     llm_api_key: SecretStr | None = None
     retrieval_enabled: bool = True
     embedding_model: str = "intfloat/multilingual-e5-small"
-    embedding_revision: str | None = None
+    embedding_revision: str | None = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
 
     @field_validator("llm_base_url")
     @classmethod
