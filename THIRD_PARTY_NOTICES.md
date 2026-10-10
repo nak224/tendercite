@@ -49,3 +49,11 @@ bytes outside Git and flags missing/unverified provenance and rights. A curator'
 notes must describe the actual source and reuse basis; importing a public PDF does not grant
 redistribution rights. Its automated fixtures are original generated PDFs, and no real procurement
 PDFs are distributed with this milestone.
+
+The [external EU Tenders QA pilot](docs/evaluation/external-benchmark-pilot.md) records the upstream
+card's MIT declaration for `tmskss/eu-tenders-with-questions-for-agentic-checklist-filling` at a
+pinned revision. It does not verify rights to the underlying procurement PDFs, redistribution
+permissions, attribution or personal data. The card describes LLM-based curation, without evidence
+of independent human gold review. Raw QA/PDF content remains ignored local data; the committed
+report contains our validation observations, filenames, IDs and hashes, with no source answers
+or PDF text. TenderCite's Apache-2.0 grant does not cover those external source documents.

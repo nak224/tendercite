@@ -122,3 +122,14 @@ states. `python -m evaluation.validate_annotations` validates each entry against
 and optionally exports verified gold with hashes, exclusions and deterministic tender-level splits.
 Exact quote occurrence does not validate the interpretation; distinct reviewer aliases are human
 declarations. No genuine documents have been annotated and no new model evaluation is performed.
+
+## External procurement QA pilot
+
+`python -m evaluation.acquire_external_benchmark` optionally acquires the public EU Tenders QA
+metadata and PDFs for one selected family; `--validate-only` checks local hashes, schema and
+document references without networking. See the [actual pilot report](../docs/evaluation/external-benchmark-pilot.md)
+and [small machine-readable summary](../docs/evaluation/external-benchmark-pilot.json).
+The 12-case selected family has nine usable document-reference cases and an encrypted invitation.
+No original chunk/page/span mapping or independent human-gold evidence is available. Artifacts
+remain under ignored `data/evaluation/external/`; no answers or third-party PDFs are committed.
+Normal CI uses original synthetic fixtures and mocked SDK/HTTP behavior, never live downloads.
