@@ -148,6 +148,12 @@ association and exact page quotes, reports exclusions, and exports only independ
 VERIFIED labels with deterministic tender-level train/development/held-out splits. The runnable
 example is synthetic; real human labels and model evaluation remain pending.
 
+The [external EU Tenders QA pilot](docs/evaluation/external-benchmark-pilot.md) adds an optional
+bounded Hugging Face acquisition/validation CLI. The pinned dataset has 97 English QA records;
+one 12-question family yielded four PDFs, three parseable, with nine usable document-reference
+cases. Original chunk spans and independent human gold are unavailable; retrieval/LLM evaluation
+has not run. Raw PDFs/QA stay ignored, and the report includes one-line PowerShell commands.
+
 ## Docker
 
 ```bash

@@ -1,0 +1,184 @@
+{
+  "pilot_version": "external-eu-qa-1",
+  "source_repository": "tmskss/eu-tenders-with-questions-for-agentic-checklist-filling",
+  "revision": "f2b0856ef0a5c327afb4f40c7cde5dd44c8d56ea",
+  "selected_family": "BSGEE_2025-002_School_Information_Systems",
+  "status": "failed",
+  "pdf_downloads_requested": true,
+  "validated_at": "2026-10-10T17:29:10.607273+00:00",
+  "card_metadata": {
+    "language": [
+      "en"
+    ],
+    "license": "mit",
+    "task_categories": [
+      "question-answering"
+    ]
+  },
+  "dataset_rights": "upstream declaration only; document rights unverified",
+  "label_origin": "upstream_candidates_not_independent_human_gold",
+  "metadata": {
+    "records": 97,
+    "valid_records": 97,
+    "invalid_records": [],
+    "family_counts": {
+      "BSGEE_2023_016_School_Trips": 15,
+      "BSGEE_2024-012_Nursery_And_School_Supplies": 15,
+      "BSGEE_2025-002_School_Information_Systems": 12,
+      "EC-COMM_VIE_2026_RP_0005": 15,
+      "EC-MOVE_2026_OP_0001_Road_Safety": 10,
+      "EMSA_2026_CPN_0010_Equipment_Assistance_Service": 15,
+      "ENISA_2026_OP_0007_EU_Cybersecurity": 15
+    },
+    "question_types": {
+      "Cross-document factual": 20,
+      "Implicit multi-hop": 18,
+      "Single-document lookup": 23,
+      "Single-document reasoning": 20,
+      "Unanswerable": 16
+    },
+    "unanswerable_ids": [
+      "BSGEE_2023_016_School_Trips-aa83a6ea",
+      "BSGEE_2023_016_School_Trips-d3d3d569",
+      "BSGEE_2023_016_School_Trips-25013bfe",
+      "BSGEE_2024-012_Nursery_And_School_Supplies-b51e4f03",
+      "BSGEE_2024-012_Nursery_And_School_Supplies-f206c228",
+      "BSGEE_2024-012_Nursery_And_School_Supplies-c814ef67",
+      "EC-COMM_VIE_2026_RP_0005-b4f95d6d",
+      "EC-COMM_VIE_2026_RP_0005-98eb0224",
+      "EC-COMM_VIE_2026_RP_0005-24df8bc9",
+      "EC-MOVE_2026_OP_0001_Road_Safety-36b82c04",
+      "EMSA_2026_CPN_0010_Equipment_Assistance_Service-51d6e968",
+      "EMSA_2026_CPN_0010_Equipment_Assistance_Service-a0c7cce0",
+      "EMSA_2026_CPN_0010_Equipment_Assistance_Service-0c78a07e",
+      "ENISA_2026_OP_0007_EU_Cybersecurity-3eed5d94",
+      "ENISA_2026_OP_0007_EU_Cybersecurity-e1cf8d67",
+      "ENISA_2026_OP_0007_EU_Cybersecurity-301168a3"
+    ],
+    "metadata_review_flags": [
+      {
+        "id": "EC-MOVE_2026_OP_0001_Road_Safety-36b82c04",
+        "reason": "Unanswerable case has evidence references or nonzero hops"
+      }
+    ]
+  },
+  "issues": [
+    {
+      "filename": "data/BSGEE_2025-002_School_Information_Systems/01.BSGEE 2025-002 Invitation.pdf",
+      "error": "Encrypted PDFs are not supported"
+    }
+  ],
+  "retrieval_scores": null,
+  "llm_evaluation_performed": false,
+  "runtime": {
+    "python": "3.12.14",
+    "huggingface_hub": "1.33.0",
+    "pypdf": "6.19.0"
+  },
+  "local_validation_report": "data/evaluation/external/eu-tenders-qa-f2b0856-school-systems/validation.json",
+  "acquired_artifacts": [
+    {
+      "filename": "README.md",
+      "status": "downloaded",
+      "bytes": 5535,
+      "sha256": "92fc0a9aab6001eef2774c21056aa5eb6442f4f0dcc08d1d9264d519c8bc1fc4",
+      "retrieved_at": "2026-10-10T17:19:16.741000+00:00",
+      "url": "https://huggingface.co/datasets/tmskss/eu-tenders-with-questions-for-agentic-checklist-filling/resolve/f2b0856ef0a5c327afb4f40c7cde5dd44c8d56ea/README.md"
+    },
+    {
+      "filename": "eu-tenders-with-questions-for-agentic-checklist-filling.json",
+      "status": "downloaded",
+      "bytes": 207412,
+      "sha256": "5453b298c7fd154b2eb896efd0ce6e77636e0a19d3d5287cb7504c8d94928a00",
+      "retrieved_at": "2026-10-10T17:19:17.021392+00:00",
+      "url": "https://huggingface.co/datasets/tmskss/eu-tenders-with-questions-for-agentic-checklist-filling/resolve/f2b0856ef0a5c327afb4f40c7cde5dd44c8d56ea/eu-tenders-with-questions-for-agentic-checklist-filling.json"
+    },
+    {
+      "filename": "data/BSGEE_2025-002_School_Information_Systems/01.BSGEE 2025-002 Invitation.pdf",
+      "status": "downloaded",
+      "bytes": 263101,
+      "sha256": "580db1d72c59882b4267fb5b413aeb19ecba0581414449b3a82d34fe79f685db",
+      "retrieved_at": "2026-10-10T17:19:18.884825+00:00",
+      "url": "https://huggingface.co/datasets/tmskss/eu-tenders-with-questions-for-agentic-checklist-filling/resolve/f2b0856ef0a5c327afb4f40c7cde5dd44c8d56ea/data/BSGEE_2025-002_School_Information_Systems/01.BSGEE%202025-002%20Invitation.pdf"
+    },
+    {
+      "filename": "data/BSGEE_2025-002_School_Information_Systems/02.BSGEE 2025-002 Specifications - FINAL.pdf",
+      "status": "downloaded",
+      "bytes": 1523138,
+      "sha256": "c1f60eaec29d35ebcb14790948566080b1d06cd5eabb7cebb2a09c3918c3efe7",
+      "retrieved_at": "2026-10-10T17:19:20.919601+00:00",
+      "url": "https://huggingface.co/datasets/tmskss/eu-tenders-with-questions-for-agentic-checklist-filling/resolve/f2b0856ef0a5c327afb4f40c7cde5dd44c8d56ea/data/BSGEE_2025-002_School_Information_Systems/02.BSGEE%202025-002%20Specifications%20-%20FINAL.pdf"
+    },
+    {
+      "filename": "data/BSGEE_2025-002_School_Information_Systems/03.BSGEE 2025-002 Specifications - ANNEXES A B C D.pdf",
+      "status": "downloaded",
+      "bytes": 1823938,
+      "sha256": "b0081a3ff075c6211721018a829338ed12c784ae4e577db2f3d12f1a177118be",
+      "retrieved_at": "2026-10-10T17:19:23.111146+00:00",
+      "url": "https://huggingface.co/datasets/tmskss/eu-tenders-with-questions-for-agentic-checklist-filling/resolve/f2b0856ef0a5c327afb4f40c7cde5dd44c8d56ea/data/BSGEE_2025-002_School_Information_Systems/03.BSGEE%202025-002%20Specifications%20-%20ANNEXES%20A%20B%20C%20D.pdf"
+    },
+    {
+      "filename": "data/BSGEE_2025-002_School_Information_Systems/09.BSGEE 2025-002 FwC_services - FINAL.pdf",
+      "status": "downloaded",
+      "bytes": 1193606,
+      "sha256": "113e3a3cd38a04f185493f2816f13130e0cbb2c0a19644b2fb177e77327342c5",
+      "retrieved_at": "2026-10-10T17:19:25.222452+00:00",
+      "url": "https://huggingface.co/datasets/tmskss/eu-tenders-with-questions-for-agentic-checklist-filling/resolve/f2b0856ef0a5c327afb4f40c7cde5dd44c8d56ea/data/BSGEE_2025-002_School_Information_Systems/09.BSGEE%202025-002%20FwC_services%20-%20FINAL.pdf"
+    }
+  ],
+  "selected_family_validation": {
+    "family": "BSGEE_2025-002_School_Information_Systems",
+    "questions": 12,
+    "answerable": 12,
+    "unanswerable": 0,
+    "usable_document_reference_questions": 9,
+    "exact_source_span_ground_truth_questions": 0,
+    "independently_human_verified_questions": 0,
+    "pdfs": {
+      "data/BSGEE_2025-002_School_Information_Systems/01.BSGEE 2025-002 Invitation.pdf": {
+        "status": "failed",
+        "pages": null,
+        "text_characters": null,
+        "alphabetic_characters": null,
+        "words": null,
+        "reason": "Encrypted PDFs are not supported",
+        "measurement_status": "unavailable; parser rejected the document"
+      },
+      "data/BSGEE_2025-002_School_Information_Systems/02.BSGEE 2025-002 Specifications - FINAL.pdf": {
+        "status": "passed",
+        "pages": 50,
+        "text_characters": 118157,
+        "alphabetic_characters": 92514,
+        "words": 16290,
+        "reason": null
+      },
+      "data/BSGEE_2025-002_School_Information_Systems/03.BSGEE 2025-002 Specifications - ANNEXES A B C D.pdf": {
+        "status": "passed",
+        "pages": 37,
+        "text_characters": 38759,
+        "alphabetic_characters": 30646,
+        "words": 5032,
+        "reason": null
+      },
+      "data/BSGEE_2025-002_School_Information_Systems/09.BSGEE 2025-002 FwC_services - FINAL.pdf": {
+        "status": "passed",
+        "pages": 50,
+        "text_characters": 113462,
+        "alphabetic_characters": 86613,
+        "words": 16355,
+        "reason": null
+      }
+    },
+    "retrieval_benchmark_ready": false
+  },
+  "unusable_case_ids": [
+    "BSGEE_2025-002_School_Information_Systems-b0043663",
+    "BSGEE_2025-002_School_Information_Systems-aad3fe25",
+    "BSGEE_2025-002_School_Information_Systems-d6a6ae3e"
+  ],
+  "original_chunk_mapping": {
+    "references": 24,
+    "unique_ids": 17,
+    "source_span_mapping_available": false
+  }
+}
