@@ -13,7 +13,7 @@ see `docs/work-log.md` for those phase commits.
 | Reviews, matrix, exports | API integration tests preserve original output/history and source references |
 | UI | Streamlit AppTest against actual API; unsupported evidence styling and save-review action |
 | Hardening | Invalid/encrypted/oversized PDFs, limits, filename paths, cleanup, provider bounds and secret redaction |
-| Test/lint | External pilot: 256 offline tests passed, 1 optional live TED test skipped; 36 new synthetic/mocked tests; Ruff lint/format passed. Historical core clean-clone baseline: 35 tests, 93% coverage |
+| Test/lint | External document retrieval: 285 offline tests passed, 1 optional live TED test skipped; 29 new deterministic tests; Ruff lint/format passed. Historical core clean-clone baseline: 35 tests, 93% coverage |
 | Dependency install | Fresh local clone and new virtual environment; hashed Python 3.12 CPU install passed |
 | Docker build | Built successfully with trusted cloud proxy CA mounted as BuildKit secret |
 | Docker functionality | Non-root API: PDF upload, pages/chunks, evidence and restart persistence passed; UI AppTest rendered every section against the container API and exposed all three exports |
@@ -22,14 +22,15 @@ see `docs/work-log.md` for those phase commits.
 | German retrieval quality | NARROW SYNTHETIC MEASUREMENT: 7 cases only; reference query ranks its gold span second. General real-tender quality remains unestablished |
 | Analysis coverage | MEASURED LIMITATION: budget 12 gives 11 unique category-plan chunks and 11/14 gold spans; broad-query baseline gives 12 chunks and 12/14 spans. Plan misses German deadline, references and security. Not exhaustive |
 | Live structured extraction | NOT RUN: no real provider/model configured |
-| Real-model evaluation | Retrieval/context coverage measured on unchanged synthetic-tender-3. No LLM configured/called; extraction, evidence quality and real-tender evaluation remain open |
+| Real-model evaluation | Retrieval/context coverage measured on unchanged synthetic-tender-3; exploratory document retrieval also measured on external English PDFs. No LLM called; verified real-tender source-span accuracy, extraction and evidence quality remain open |
 | Real-notice acquisition pilot | [TED pilot](evaluation/ted-pilot.md): live public API returned 20 German competition-notice metadata records; 17 provisional metadata candidates. All 40 PDF/XML requests hit origin AWS WAF challenges. No real PDF/XML obtained, PDF parsing not attempted, suitable shortlist/manual annotation/scores pending. Issue #4 remains open |
 | Manual PDF corpus registration | [Local importer](evaluation/real-pdf-import.md): hash-addressed PDFs, multi-document tender groups, provenance/rights flags and integrity verification tested with self-generated fixtures. No genuine procurement PDFs supplied/imported; permitted downloads, source/rights review, original-language confirmation and manual annotation remain open |
-| Human annotations | [Schema/validator/export](evaluation/real-tender-annotations.md) tested with generated PDFs: exact page quotes, independent reviewer aliases, duplicate exclusions and deterministic tender-level splits. No genuine human gold annotations or real-document model evaluation yet |
+| Human annotations | [Schema/validator/export](evaluation/real-tender-annotations.md) tested with generated PDFs: exact page quotes, independent reviewer aliases, duplicate exclusions and deterministic tender-level splits. No genuine human gold annotations; verified source-span/extraction evaluation on real PDFs remains open |
 | External benchmark acquisition | [EU Tenders QA pilot](evaluation/external-benchmark-pilot.md): 97 English QA records inspected, one 12-case family acquired. All four PDFs downloaded; three parse, one is encrypted. Nine cases have usable document references; zero supplied exact spans or independently verified human gold. Milestone 3B needs label/rights review and source-span preparation |
+| External document retrieval | [Milestone 3B-a](evaluation/external-document-retrieval.md): real pinned E5/Chroma on 3 PDFs / 306 chunks; 9 eligible cases, 3 excluded unchanged for encrypted-source dependence. Any-document Hit@1/@2/@3 9/9; all-documents Hit@1 5/9, @2/@3 9/9; single-reference MRR 1.0 (5 cases). Exploratory upstream candidate labels; every eligible case references one dominant PDF. No independent accuracy or German-quality claim |
 | Audit | Four Chroma server advisories, not exposed by embedded design; torch lookup skipped; see security review |
 | Licenses | Official pinned card/API declare MIT; model/configuration inspected and weight hash verified. No weights redistributed. Existing dependency audit/license review still applies |
-| Remote CI | [PR #8 CI](https://github.com/nak224/tendercite/actions/runs/37945307489) passed lint, offline tests and Docker build. Check the annotation PR's own revision before merging; prior CI does not establish its result |
+| Remote CI | [PR #10 CI](https://github.com/nak224/tendercite/actions/runs/38072345827) passed lint, offline tests and Docker build for acquisition. Check the document-retrieval PR's own revision before merging; prior CI does not establish its result |
 | Release tag | Not created; external validation gates remain open |
 
 A published CI run, real model evaluation and explicit review of remaining findings are required

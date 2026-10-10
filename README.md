@@ -151,8 +151,11 @@ example is synthetic; real human labels and model evaluation remain pending.
 The [external EU Tenders QA pilot](docs/evaluation/external-benchmark-pilot.md) adds an optional
 bounded Hugging Face acquisition/validation CLI. The pinned dataset has 97 English QA records;
 one 12-question family yielded four PDFs, three parseable, with nine usable document-reference
-cases. Original chunk spans and independent human gold are unavailable; retrieval/LLM evaluation
-has not run. Raw PDFs/QA stay ignored, and the report includes one-line PowerShell commands.
+cases. [Exploratory document retrieval](docs/evaluation/external-document-retrieval.md) ran real
+pinned E5/Chroma on those nine cases: any-document Hit@1 and all-documents Hit@2 were 9/9.
+Every eligible label references the same specifications PDF; these candidate-label scores establish
+neither source-span correctness nor general retrieval quality. Original spans and independent human
+gold remain unavailable. Raw PDFs/QA/results stay ignored; no LLM evaluation has run.
 
 ## Docker
 
