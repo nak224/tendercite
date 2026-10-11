@@ -29,6 +29,7 @@ def run_dry(
     question_id=None,
     execute=False,
     previous_preflight=None,
+    retry_reconciled=False,
 ):
     output_dir = confined(output_dir)
     if output_dir.exists():
@@ -44,6 +45,8 @@ def run_dry(
         questions = build_comparison_questions(corpus, top_k=config.rag_top_k)
         if execute and not question_id:
             raise ValueError("Execution requires an explicit --question-id")
+        if retry_reconciled and not execute:
+            raise ValueError("--retry-reconciled requires explicit --execute")
         if question_id:
             questions = [q for q in questions if q.question_id == question_id]
             if len(questions) != 2:
@@ -94,6 +97,7 @@ def run_dry(
                     output_dir,
                     confirmed=transmission_confirmed,
                     environment=os.environ,
+                    retry_reconciled=retry_reconciled,
                 )
             )
     except ValidationError as exc:
@@ -154,6 +158,11 @@ def main(argv=None):
     )
     cli.add_argument("--question-id", help="Original eligible ID; required for execution")
     cli.add_argument(
+        "--retry-reconciled",
+        action="store_true",
+        help="Explicit new attempt after zero-cost reconciliation",
+    )
+    cli.add_argument(
         "--previous-preflight", type=Path, help="Optional original READY_DRY_RUN report"
     )
     cli.add_argument(
@@ -175,6 +184,7 @@ def main(argv=None):
             question_id=args.question_id,
             execute=args.execute,
             previous_preflight=args.previous_preflight,
+            retry_reconciled=args.retry_reconciled,
         )
     except (OSError, ValueError) as exc:
         logging.error("Preflight not started: %s", exc)
