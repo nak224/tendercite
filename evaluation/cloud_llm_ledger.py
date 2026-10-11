@@ -3,9 +3,12 @@
 import hashlib
 import json
 import os
+import re
 import tempfile
 from contextlib import contextmanager
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
+from uuid import uuid4
 
 from evaluation import external_benchmark
 from evaluation.external_benchmark import confined
@@ -86,6 +89,38 @@ def amount(value):
     return result
 
 
+def quota_failure(entry, request_id):
+    """Match one saved no-usage quota response, including legacy PR #15 output."""
+    if entry["status"] != "UNCERTAIN" or entry["strategy"] not in ("e5_rag", "full_context"):
+        raise ValueError("Only an uncertain recorded quota failure can be reconciled here")
+    path = confined(Path(entry["output_dir"]) / f"{entry['strategy']}.json")
+    record, digest = read_local_json(path)
+    if not isinstance(record, dict) or not isinstance(record.get("raw_response"), str):
+        raise ValueError("Original provider response is missing")
+    body = json.loads(record["raw_response"])
+    error = body.get("error") if isinstance(body, dict) else None
+    if (
+        record.get("reservation_key") != entry["key"]
+        or record.get("question_id") != entry["question_id"]
+        or record.get("strategy") != entry["strategy"]
+        or record.get("provider_request_id") != request_id
+        or entry.get("provider_request_id", request_id) != request_id
+        or record.get("http_status") != 429
+        or record.get("accounting_status") != "UNCERTAIN"
+        or not isinstance(error, dict)
+        or error.get("code") != "credit_balance_exhausted"
+        or error.get("type") != "insufficient_quota"
+        or not isinstance(error.get("message"), str)
+        or body.get("usage") is not None
+        or record.get("accounting") is not None
+        or (entry.get("response_file_sha256") and entry["response_file_sha256"] != digest)
+    ):
+        raise ValueError(
+            "Request/entry does not match the recorded no-usage credit_balance_exhausted failure"
+        )
+    return path, digest
+
+
 class ExperimentLedger:
     def __init__(self, path, config, corpus):
         self.path = confined(path)
@@ -111,52 +146,132 @@ class ExperimentLedger:
                 or self.data.get("binding") != binding
             ):
                 raise ValueError("Ledger binding changed; do not reset the existing experiment")
-            entries = self.data.get("entries")
-            if (
-                not isinstance(entries, list)
-                or not all(isinstance(e, dict) and isinstance(e.get("key"), str) for e in entries)
-                or len({e["key"] for e in entries}) != len(entries)
-            ):
-                raise ValueError("Malformed or duplicate ledger entries")
-            for entry in entries:
-                amount(entry["reserved_cost"])
-                if entry["status"] not in ("RESERVED", "UNCERTAIN", "SETTLED", "OVER_ESTIMATE"):
-                    raise ValueError("Invalid ledger accounting state")
-                if entry["status"] in ("SETTLED", "OVER_ESTIMATE"):
-                    amount(entry["usage_derived_cost"])
         else:
             self.data = {"version": "cloud-llm-ledger-1", "binding": binding, "entries": []}
             atomic_save(self.path, self.data)
+        self.validate_history()
+
+    @classmethod
+    def existing(cls, path):
+        """Offline access to an existing ledger only; never create/reset an experiment."""
+        ledger = cls.__new__(cls)
+        ledger.path, ledger.limit = confined(path), Decimal("20")
+        ledger.data, _ = read_local_json(ledger.path)
+        if (
+            not isinstance(ledger.data, dict)
+            or ledger.data.get("version") != "cloud-llm-ledger-1"
+            or not isinstance(ledger.data.get("binding"), dict)
+            or ledger.data["binding"].get("currency") != "USD"
+            or amount(ledger.data["binding"].get("limit")) != ledger.limit
+        ):
+            raise ValueError("Invalid existing 20 USD experiment ledger")
+        ledger.validate_history()
+        return ledger
+
+    def validate_history(self):
+        entries = self.data.get("entries")
+        if (
+            not isinstance(entries, list)
+            or not all(isinstance(e, dict) and isinstance(e.get("key"), str) for e in entries)
+            or len({e["key"] for e in entries}) != len(entries)
+        ):
+            raise ValueError("Malformed or duplicate ledger entries")
+        for entry in entries:
+            amount(entry["reserved_cost"])
+            if entry["status"] not in ("RESERVED", "UNCERTAIN", "SETTLED", "OVER_ESTIMATE"):
+                raise ValueError("Invalid ledger accounting state")
+            if entry["status"] in ("SETTLED", "OVER_ESTIMATE"):
+                amount(entry["usage_derived_cost"])
+        self.manual_zero = {}
+        pointers = self.data.get("manual_reconciliations", [])
+        if not isinstance(pointers, list):
+            raise ValueError("Malformed manual reconciliation history")
+        for pointer in pointers:
+            key = pointer["reservation_key"]
+            if key in self.manual_zero:
+                raise ValueError("Duplicate manual reconciliation")
+            expected_file = f"reconciliations/{key}.json"
+            if not re.fullmatch(r"[0-9a-f]{64}", key) or pointer["audit_file"] != expected_file:
+                raise ValueError("Invalid reconciliation audit path")
+            audit, digest = read_local_json(self.path.parent / expected_file)
+            originals = [entry for entry in entries if entry["key"] == key]
+            if (
+                digest != pointer["audit_sha256"]
+                or not isinstance(audit, dict)
+                or len(originals) != 1
+                or audit.get("original_entry") != originals[0]
+                or audit.get("schema_version") != "cloud-llm-reconciliation-1"
+                or audit.get("provider_error_code") != "credit_balance_exhausted"
+                or audit.get("confirmed_zero_billed") is not True
+                or amount(audit.get("confirmed_billed_usd")) != 0
+                or originals[0]["status"] != "UNCERTAIN"
+            ):
+                raise ValueError("Manual reconciliation audit does not match immutable history")
+            path, response_hash = quota_failure(originals[0], audit["provider_request_id"])
+            if (
+                response_hash != audit["response_file_sha256"]
+                or str(path) != audit["response_file"]
+            ):
+                raise ValueError("Reconciled original response changed")
+            self.manual_zero[key] = audit
+
+    @staticmethod
+    def attempt_id(entry):
+        return entry.get("attempt_id") or f"legacy:{entry['key']}"
+
+    def effective_status(self, entry):
+        return "MANUALLY_RECONCILED_ZERO" if entry["key"] in self.manual_zero else entry["status"]
 
     def committed(self):
         return amount(self.data["binding"]["prior_estimated_spend"]) + sum(
-            (
-                amount(e["usage_derived_cost"])
-                if e["status"] in ("SETTLED", "OVER_ESTIMATE")
-                else amount(e["reserved_cost"])
-            )
-            for e in self.data["entries"]
+            self.entry_cost(e) for e in self.data["entries"]
         )
 
-    def assert_pair_new(self, question_id):
-        if any(e["status"] != "SETTLED" for e in self.data["entries"]):
+    def entry_cost(self, entry):
+        if entry["key"] in self.manual_zero:
+            return Decimal("0")
+        return amount(
+            entry["usage_derived_cost"]
+            if entry["status"] in ("SETTLED", "OVER_ESTIMATE")
+            else entry["reserved_cost"]
+        )
+
+    def assert_pair_new(self, question_id, *, retry_reconciled=False):
+        if any(
+            self.effective_status(e) not in ("SETTLED", "MANUALLY_RECONCILED_ZERO")
+            for e in self.data["entries"]
+        ):
             raise ValueError(
                 "Ledger has uncertain/interrupted/over-estimate accounting; reconcile first"
             )
-        if any(e["question_id"] == question_id for e in self.data["entries"]):
+        prior = [e for e in self.data["entries"] if e["question_id"] == question_id]
+        if retry_reconciled and not prior:
+            raise ValueError("Explicit retry requires a previously reconciled failed attempt")
+        if prior and (not retry_reconciled or any(e["key"] not in self.manual_zero for e in prior)):
             raise ValueError(
                 "Question pair already attempted; automatic repeats/resumes are disabled"
             )
 
-    def reserve(self, question, estimate, output_dir):
+    def reserve(self, question, estimate, output_dir, *, attempt_id=None, retry_reconciled=False):
         cost = amount(estimate)
         if self.committed() + cost > self.limit:
             raise ValueError("Next request cannot fit the remaining persistent 20 USD budget")
-        key = hashlib.sha256(f"{question.question_id}:{question.strategy}".encode()).hexdigest()
-        if any(e["key"] == key for e in self.data["entries"]):
+        prior = [
+            e
+            for e in self.data["entries"]
+            if e["question_id"] == question.question_id and e["strategy"] == question.strategy
+        ]
+        if prior and (not retry_reconciled or any(e["key"] not in self.manual_zero for e in prior)):
             raise ValueError("Request already attempted")
+        attempt_id = attempt_id or str(uuid4())
+        key = hashlib.sha256(
+            f"{attempt_id}:{question.question_id}:{question.strategy}".encode()
+        ).hexdigest()
+        if any(e["key"] == key for e in self.data["entries"]):
+            raise ValueError("Attempt already reserved")
         entry = {
             "key": key,
+            "attempt_id": attempt_id,
             "question_id": question.question_id,
             "strategy": question.strategy,
             "reserved_cost": str(cost),
@@ -168,7 +283,11 @@ class ExperimentLedger:
         atomic_save(self.path, self.data)  # Durable BEFORE any network request.
         return entry
 
-    def reconcile(self, entry, accounting):
+    def reconcile(self, entry, accounting, *, record=None):
+        if record is not None:
+            entry["provider_request_id"] = record.get("provider_request_id")
+            entry["http_status"] = record.get("http_status")
+            entry["provider_error_code"] = record.get("provider_error_code")
         if accounting is None:
             entry["status"] = "UNCERTAIN"  # Reservation remains committed.
         else:

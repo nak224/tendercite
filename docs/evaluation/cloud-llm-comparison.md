@@ -1,10 +1,10 @@
-# Guarded cloud LLM comparison (Milestones 3B-d1 / 3B-d2)
+# Guarded cloud LLM comparison (Milestones 3B-d1 / 3B-d2 / 3B-d2a)
 
 The CLI defaults to an offline dry-run. An explicitly authorized operator can now execute
 **one original eligible question with both strategies**, using OpenAI Chat Completions and
 `gpt-6.1-sol`. Codex implementation, tests and PR review make **no paid API calls**. Live model
-compatibility, token usage, billing and answer quality remain unmeasured until an operator runs
-the pilot. No model fallback, schema weakening, automatic retry or automatic all-question run
+compatibility, token usage and answer quality remain unmeasured after the operator's first
+quota-rejected pilot. No model fallback, schema weakening, automatic retry or automatic all-question run
 is implemented.
 
 ## Shared inputs and compatible payloads
@@ -88,8 +88,10 @@ The ledger binds provider/model, artifact provenance, original rates, optional u
 prior estimated spend and the 20 USD cap. Its committed balance includes settled usage-derived
 costs and every unresolved reservation. The selected pair must fit the remaining balance;
 each request is checked/reserved again before sending. Repeated attempts of a question pair,
-including partly completed pairs, are rejected even with a fresh output directory. There is
-no automatic resume or retry.
+including partly completed pairs, are rejected even with a fresh output directory, except
+an explicit `--retry-reconciled` after every previous attempt of that question has a validated
+manual zero-cost reconciliation. Successful or usage-settled requests cannot be repeated.
+There is no automatic resume or retry.
 
 Results distinguish four quantities:
 
@@ -115,8 +117,12 @@ requests never receive an assumed zero charge. Known usage reconciles the reserv
 cost above the reservation pauses further execution. Truncated/refused/invalid structured
 responses also stop the pair, while preserving known usage. A valid answer with invalid/missing
 citations remains an observable result and does not prevent comparing the other arm.
-Uncertain/interrupted ledger entries require explicit human dashboard reconciliation before
-any later continuation; this pilot offers no automated clearance or retry command.
+HTTP failures are classified before checking the response model identifier. The original
+provider code, type, message, HTTP status and request ID are retained; a no-usage HTTP 429 with
+`credit_balance_exhausted` remains `UNCERTAIN`, rather than reporting a missing model or
+assuming zero cost. Uncertain/interrupted ledger entries block later continuation. The narrow
+offline workflow below can clear only a recorded no-usage credit-exhaustion failure after
+explicit human dashboard confirmation; it cannot clear unrelated errors or interrupted requests.
 
 Enable provider-side project budget/usage alerts before authorizing a pilot and confirm how
 those controls are enforced. Local estimates and locks are safeguards, **not guaranteed
@@ -173,6 +179,80 @@ On an interrupted run, inspect the ledger and any `blocked-execution.json` befor
 else. Missing response files do not prove a request was unbilled. Exit 0 for execution means
 `COMPLETED_PAIR`, not semantic correctness or reconciled provider billing.
 
+## Manual reconciliation and explicitly authorized retry (3B-d2a)
+
+The operator reported HTTP 429, type `insufficient_quota`, code `credit_balance_exhausted`,
+request ID `req_d46ba490ffed4cc08a80bea893b31a49`, no token usage and an uncertain reservation
+of **0.19928000 USD** for the first RAG request. Full context was never attempted. The operator
+reported checking the OpenAI billing dashboard and confirming **0 USD** billed, then adding
+credits. This is operator-supplied billing confirmation, not independently measured API usage
+or an invoice. **Codex has not reconciled this incident or executed a real retry.**
+
+The reconciliation CLI is entirely offline. It requires the exact reservation key, matching
+provider request ID, `--confirm-zero-billed`, a reason and a non-personal operator alias. It
+checks the original saved response, status, question/strategy association and absent usage.
+Legacy PR #15 entries and their misleading error summary remain intact; matching uses the
+original provider error body. Missing response files, different errors or request IDs,
+nonzero/unknown billing and already-reconciled entries are rejected.
+
+The original entry, reservation and `UNCERTAIN` historical status are never rewritten.
+An exclusively created audit file under
+`data/evaluation/external/cloud-llm-experiment/reconciliations/<reservation-key>.json` records
+the complete original entry, affected attempt, response hash, operator confirmation, zero
+billed amount, reason and UTC timestamp. Its hash is added to the existing ledger; only that
+atomic publication releases the reservation. Later reads verify the immutable audit and
+original response. Do not edit or delete either. An interrupted publication retains the
+reservation; repeating the identical explicit confirmation can publish the existing audit
+without overwriting it. A duplicate completed reconciliation is rejected.
+
+Reconciliation and execution share the same OS lock and persistent **20 USD** experiment
+budget. `--retry-reconciled` is required to retry this same question pair, in a fresh output
+directory and with all normal execution gates. A new UUID identifies the pair attempt; both
+requests get new reservation keys while the failed attempt remains in history. Legacy attempts
+are identified as `legacy:<original-reservation-key>` without migrating their entries.
+Any unresolved reservation anywhere in the ledger still blocks execution. A question with
+even one successful/settled previous request is not eligible for a whole-pair retry.
+Estimation, pricing, prompts, retrieval, annotations and model selection are unchanged.
+
+Run these one-line PowerShell commands from the same checkout that holds the **existing**
+ledger and original output files. Do not copy/reset the ledger. First inspect the incident
+and derive its original question ID and reservation key, failing unless exactly one matches:
+
+```powershell
+$raw = .\.venv\Scripts\python.exe -m evaluation.reconcile_cloud_llm_ledger inspect; if ($LASTEXITCODE -ne 0) { throw 'Ledger inspection failed' }; $state = $raw | ConvertFrom-Json; $failed = @($state.entries | Where-Object { $_.provider_request_id -eq 'req_d46ba490ffed4cc08a80bea893b31a49' }); if ($failed.Count -ne 1) { throw 'Expected exactly one matching failed request' }; $reservationKey = $failed[0].reservation_key; $questionId = $failed[0].question_id; $failed[0] | Format-List
+```
+
+Confirm the inspected HTTP status/code, RAG strategy, original reservation and request ID.
+**Only after checking that exact request's provider billing is zero**, explicitly reconcile:
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluation.reconcile_cloud_llm_ledger reconcile-zero --reservation-key $reservationKey --request-id req_d46ba490ffed4cc08a80bea893b31a49 --confirm-zero-billed --operator-alias operator-1 --reason 'OpenAI billing dashboard checked: this exact failed request billed 0 USD'
+```
+
+Verify the new state before attempting any API request:
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluation.reconcile_cloud_llm_ledger inspect
+```
+
+Expect the original `historical_status: UNCERTAIN` and `original_reserved_usd: 0.19928000`
+to remain, with `effective_status: MANUALLY_RECONCILED_ZERO`, zero committed cost for this
+entry and an incremented reconciliation count. Other costs/reservations remain unchanged.
+The inspect/reconcile commands always report zero API calls. A missing ledger is an error,
+not permission to create a replacement.
+
+Reuse the existing API-key session command and unchanged verified config above. After fresh
+operator authorization, run exactly the original question pair with a new output directory:
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluation.cloud_llm_comparison --execute --confirm-transmission --retry-reconciled --question-id $questionId --config .\data\evaluation\external\cloud-llm-comparison\config.json --acquisition-dir .\data\evaluation\external\eu-tenders-qa-f2b0856-school-systems --retrieval-results .\data\evaluation\external\document-retrieval-run-2\results.json --output-dir .\data\evaluation\external\cloud-llm-comparison\pilot-retry-1
+```
+
+Use a different fresh directory if `pilot-retry-1` exists. This may send two paid requests;
+failures stop the pair without retrying. Inspect its `execution.json`, `e5_rag.json` and
+`full_context.json` using the commands above with the new directory name. Final billing
+still requires provider-dashboard reconciliation; local limits are not provider billing caps.
+
 ## Rights, local storage and actual validation
 
 `--confirm-transmission` is an explicit human declaration about these artifact hashes and the
@@ -182,15 +262,22 @@ for the underlying PDFs. Prompts, PDF bytes, provider response text and annotati
 ignored `data/evaluation/external/`. Do not force-add them. Keys are never recorded/logged, including
 in echoed provider errors. No raw text, answers, pricing secrets or real annotations are committed.
 
-Starting from main `fab6cd9` after PR #14, the complete suite passed **487 tests**, one optional
-live TED test skipped; Ruff lint and formatting passed. Fifty-eight added tests use original
-synthetic PDFs/QA, artificial prices and mocked HTTP only. They cover strict model payloads,
+Starting from main `763c238` after merged PR #15, the complete suite passed **509 tests**, one
+optional live TED test skipped; Ruff lint and formatting passed. The 58 execution tests and
+22 reconciliation regression cases use original synthetic PDFs/QA, artificial prices and
+mocked HTTP only. They cover strict model payloads,
 citations/inability, exact preflight wire reuse, token categories/tiers, missing usage/credentials,
 errors/truncation, overspending, interruption/output failure, persistent duplicate prevention,
-cross-process locking, malformed ledgers, default dry-run and one-pair CLI execution. Linux
+cross-process locking, malformed ledgers, default dry-run and one-pair CLI execution. The
+reconciliation cases additionally cover the legacy quota response, explicit billing confirmation,
+wrong request/error rejection, preserved history, duplicate/tampered audits and responses,
+interrupted audit publication, a missing ledger, explicit retry and unchanged execution gates.
+Linux
 locking was executed; Windows commands/locking remain untested in this cloud environment.
 
-No live API authentication, compatibility, usage or cost comparison was performed. The operator's
+The operator's ledger and original incident output are absent from this cloud checkout;
+the real incident was not reconciled. No real API requests or live cost comparison were performed
+by Codex. The operator's
 valid local config/key, explicit transmission permission and provider-side controls remain pilot
 prerequisites. Independently reviewed semantic answers and final dashboard billing are later
 validation steps; small biased upstream candidate QA labels do not establish general accuracy.

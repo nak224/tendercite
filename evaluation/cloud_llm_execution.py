@@ -5,6 +5,7 @@ import json
 import re
 import time
 from decimal import Decimal
+from uuid import uuid4
 
 import httpx
 from pydantic import ValidationError
@@ -70,6 +71,24 @@ def response_record(response, question, corpus, config):
         record["completion_id"] = body.get("id")
         if "error" in body:
             record["original_provider_error"] = body["error"]
+        if not 200 <= response.http_status < 300:
+            provider_error = body.get("error")
+            provider_error = provider_error if isinstance(provider_error, dict) else {}
+            record["primary_cause"] = (
+                provider_error.get("code") or provider_error.get("type") or "http_error"
+            )
+            record["provider_error_code"] = provider_error.get("code")
+            record["provider_error_type"] = provider_error.get("type")
+            record["provider_error_message"] = provider_error.get("message")
+            if body.get("usage") is not None:
+                try:
+                    accounting = account_usage(body["usage"], config)
+                    record["accounting"] = accounting
+                    record["accounting_status"] = "USAGE_RECORDED_NOT_INVOICE"
+                except ValueError as exc:
+                    record["usage_error"] = str(exc)
+            record["error"] = f"HTTP {response.http_status}: {record['primary_cause']}"
+            return record, accounting
         model = body.get("model")
         if model != config.model and not (
             isinstance(model, str)
@@ -115,6 +134,7 @@ async def execute_pair(
     confirmed,
     environment,
     transport: httpx.AsyncBaseTransport | None = None,
+    retry_reconciled=False,
 ):
     validate_execution(config, report, questions, confirmed=confirmed, environment=environment)
     if any(
@@ -149,7 +169,9 @@ async def execute_pair(
     )
     with experiment_lock(path):
         ledger = ExperimentLedger(path, config, corpus)
-        ledger.assert_pair_new(questions[0].question_id)
+        ledger.assert_pair_new(questions[0].question_id, retry_reconciled=retry_reconciled)
+        run["attempt_id"] = str(uuid4())
+        run["retry_reconciled"] = retry_reconciled
         pair_estimate = Decimal(report["estimated_experiment_cost_with_margin"])
         if ledger.committed() + pair_estimate > Decimal("20"):
             raise ValueError("Selected pair cannot fit the remaining persistent 20 USD budget")
@@ -158,7 +180,11 @@ async def execute_pair(
         ):
             try:
                 entry = ledger.reserve(
-                    question, row["estimated_cost_with_safety_margin"], output_dir
+                    question,
+                    row["estimated_cost_with_safety_margin"],
+                    output_dir,
+                    attempt_id=run["attempt_id"],
+                    retry_reconciled=retry_reconciled,
                 )
             except ValueError as exc:
                 run["error"] = str(exc)
@@ -194,12 +220,13 @@ async def execute_pair(
                     "configuration": config.model_dump(mode="json"),
                     "source_provenance": corpus.provenance,
                     "reservation_key": entry["key"],
+                    "attempt_id": run["attempt_id"],
                 }
             )
             # Preserve output before releasing any reservation. A filesystem/crash failure leaves
             # RESERVED durable and blocks another invocation until manual billing reconciliation.
             write_new_json(output_dir / f"{question.strategy}.json", redact(record, key))
-            ledger.reconcile(entry, accounting)
+            ledger.reconcile(entry, accounting, record=redact(record, key))
             run["results"].append(
                 {
                     "strategy": question.strategy,
