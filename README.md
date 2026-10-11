@@ -167,6 +167,12 @@ support before a question is evidence-complete. The local pilot contains nine qu
 100 exported pages, with zero human annotations so far. Source files remain ignored; no new
 retrieval scores or requirement-extraction labels are produced.
 
+The [recorded source-span evaluator](docs/evaluation/external-source-span-retrieval.md) adds
+offline chunk-rank metrics and size/boundary diagnostics using saved E5 results. It requires
+a hash-matching COMPLETE human-review report and freshly validated VERIFIED quotes. Execution
+here is blocked by missing reviewed inputs; no source-span scores are claimed. The guide has
+one-line PowerShell commands for scoring existing local reviewed files without rerunning E5.
+
 ## Docker
 
 ```bash
