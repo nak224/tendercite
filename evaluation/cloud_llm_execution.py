@@ -61,7 +61,13 @@ def response_record(response, question, corpus, config):
         "raw_response_sha256": hashlib.sha256(response.body).hexdigest(),
         "response_validity": "INVALID_OR_INCOMPLETE",
         "accounting_status": "UNCERTAIN",
+        "generation_status": "INVALID_RESPONSE_STRUCTURE"
+        if 200 <= response.http_status < 300
+        else "PROVIDER_HTTP_ERROR",
+        "configured_output_limit": config.max_output_tokens,
     }
+    if not 200 <= response.http_status < 300:
+        record["primary_cause"] = "http_error"
     accounting = None
     try:
         body = json.loads(response.body)
@@ -72,6 +78,7 @@ def response_record(response, question, corpus, config):
         if "error" in body:
             record["original_provider_error"] = body["error"]
         if not 200 <= response.http_status < 300:
+            record["generation_status"] = "PROVIDER_HTTP_ERROR"
             provider_error = body.get("error")
             provider_error = provider_error if isinstance(provider_error, dict) else {}
             record["primary_cause"] = (
@@ -95,9 +102,19 @@ def response_record(response, question, corpus, config):
             and re.fullmatch(re.escape(config.model) + r"-\d{4}-\d{2}-\d{2}", model)
         ):
             raise ValueError("Actual model is missing or differs from configured model")
+        choices = body.get("choices")
+        if isinstance(choices, list) and len(choices) == 1 and isinstance(choices[0], dict):
+            record["completion_status"] = choices[0].get("finish_reason")
+            if record["completion_status"] == "length":
+                record["generation_status"] = "OUTPUT_TOKEN_TRUNCATION"
+            elif record["completion_status"] == "content_filter" or (
+                isinstance(choices[0].get("message"), dict) and choices[0]["message"].get("refusal")
+            ):
+                record["generation_status"] = "PROVIDER_REFUSAL"
         accounting = account_usage(body.get("usage"), config)
         record["accounting"] = accounting
         record["accounting_status"] = "USAGE_RECORDED_NOT_INVOICE"
+        record["actual_output_tokens"] = accounting["completion_tokens"]
         if accounting["completion_tokens"] > config.max_output_tokens:
             raise ValueError("Provider completion usage exceeds configured output-token limit")
         if response.http_status != 200:
@@ -111,13 +128,29 @@ def response_record(response, question, corpus, config):
         record["provider_native_metadata"] = {
             key: message[key] for key in ("annotations", "citations") if key in message
         }
-        if choice.get("finish_reason") != "stop" or message.get("refusal"):
+        if choice.get("finish_reason") == "length":
+            record["generation_status"] = "OUTPUT_TOKEN_TRUNCATION"
+            raise ValueError("Completion was truncated: provider finish_reason is length")
+        if message.get("refusal") or choice.get("finish_reason") == "content_filter":
+            record["generation_status"] = "PROVIDER_REFUSAL"
+            raise ValueError("Completion was refused or filtered")
+        if choice.get("finish_reason") != "stop":
             raise ValueError("Completion was truncated, refused or incomplete")
-        answer = QAAnswer.model_validate_json(message.get("content"))
+        try:
+            content = json.loads(message.get("content"))
+        except (ValueError, TypeError):
+            record["generation_status"] = "INVALID_STRUCTURED_JSON"
+            raise ValueError("Completion content is not valid structured JSON") from None
+        answer = QAAnswer.model_validate(content)
         record["structured_answer"] = answer.model_dump()
         record["citation_validation"] = validate_answer(answer, question, corpus)
         record["response_validity"] = "VALID_STRUCTURED_ANSWER"
-    except (ValueError, TypeError, KeyError, AttributeError, ValidationError) as exc:
+        record["generation_status"] = "VALID_STRUCTURED_ANSWER"
+        record["evidence_status"] = record["citation_validation"]["citation_status"]
+    except ValidationError as exc:
+        record["generation_status"] = "INVALID_JSON_SCHEMA"
+        record["error"] = str(exc)
+    except (ValueError, TypeError, KeyError, AttributeError) as exc:
         # Schema errors can contain source content; they are kept only in ignored local outputs.
         record["error"] = str(exc)
     return record, accounting

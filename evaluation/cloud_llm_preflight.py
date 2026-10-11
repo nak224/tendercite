@@ -79,6 +79,40 @@ class SpendingLimits(StrictModel):
         return self
 
 
+class ModelCapabilities(StrictModel):
+    """Operator-sourced provider documentation, not an invented universal model limit."""
+
+    base_url: Nonblank
+    model: Nonblank
+    max_completion_tokens: Annotated[StrictInt, Field(ge=1)]
+    context_window_tokens: Annotated[StrictInt, Field(ge=1)]
+    documentation_url: Nonblank
+    as_of: date
+    confirmed_from_provider_documentation: Literal[True]
+    verification_origin: Literal["operator_verified_provider_documentation"] = (
+        "operator_verified_provider_documentation"
+    )
+
+    @field_validator("documentation_url")
+    @classmethod
+    def documentation(cls, value):
+        Settings.validate_provider_url(value)
+        if urlsplit(value).scheme != "https":
+            raise ValueError("Model capability documentation must use HTTPS")
+        return value
+
+
+OPENAI_SOL_CAPABILITIES = ModelCapabilities(
+    base_url="https://api.openai.com/v1",
+    model="gpt-6.1-sol",
+    max_completion_tokens=128_000,
+    context_window_tokens=1_050_000,
+    documentation_url="https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+    as_of=date(2026, 10, 11),
+    confirmed_from_provider_documentation=True,
+)
+
+
 class ComparisonConfig(StrictModel):
     config_version: Literal["cloud-llm-comparison-1"]
     base_url: Nonblank
@@ -87,7 +121,7 @@ class ComparisonConfig(StrictModel):
         "TENDERCITE_LLM_API_KEY"
     )
     temperature: Annotated[float, Field(strict=True, ge=0, le=2, allow_inf_nan=False)] = 0.0
-    max_output_tokens: Annotated[StrictInt, Field(ge=1)] = 2048
+    max_output_tokens: Annotated[StrictInt, Field(ge=1)] = 4096
     request_timeout_seconds: Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)] = 90.0
     reasoning_effort: Literal["low"] = "low"
     rag_top_k: Annotated[StrictInt, Field(ge=1, le=50)] = 12
@@ -101,6 +135,7 @@ class ComparisonConfig(StrictModel):
     repetitions: Annotated[StrictInt, Field(ge=1, le=10)] = 1
     pricing: Pricing
     usage_pricing: UsagePricing | None = None
+    model_capabilities: ModelCapabilities | None = None
     spending: SpendingLimits = Field(default_factory=SpendingLimits)
 
     @field_validator("base_url")
@@ -121,6 +156,31 @@ class ComparisonConfig(StrictModel):
             )
         if self.spending.per_request > self.spending.cumulative:
             raise ValueError("Per-request spending limit exceeds cumulative limit")
+        official_sol = (self.base_url, self.model) == (
+            OPENAI_SOL_CAPABILITIES.base_url,
+            OPENAI_SOL_CAPABILITIES.model,
+        )
+        if official_sol and self.model_capabilities is None:
+            self.model_capabilities = OPENAI_SOL_CAPABILITIES.model_copy(deep=True)
+        capabilities = self.model_capabilities
+        if capabilities:
+            if (capabilities.base_url.rstrip("/"), capabilities.model) != (
+                self.base_url,
+                self.model,
+            ):
+                raise ValueError("Model capability endpoint/model must match configuration")
+            if self.max_output_tokens > capabilities.max_completion_tokens:
+                raise ValueError("Requested output limit exceeds documented model capability")
+            if self.usable_context_tokens > capabilities.context_window_tokens:
+                raise ValueError("Usable context exceeds documented model context window")
+            if official_sol and (
+                capabilities.max_completion_tokens > OPENAI_SOL_CAPABILITIES.max_completion_tokens
+                or capabilities.context_window_tokens
+                > OPENAI_SOL_CAPABILITIES.context_window_tokens
+            ):
+                raise ValueError("Capability declaration exceeds the verified gpt-6.1-sol limits")
+        elif self.max_output_tokens > 4096:
+            raise ValueError("Output limits above 4096 require documented model_capabilities")
         return self
 
 
