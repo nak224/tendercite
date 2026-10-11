@@ -156,3 +156,15 @@ existing reviews and reports are never overwritten. See the [guide](../docs/eval
 and [JSON Schema](external-qa-source-span-schema.json) for commands and manual review steps.
 The local pilot has nine unannotated questions, 100 exported pages and zero reviewed spans.
 No scoring, model/LLM calls or changes to requirement gold are part of this workflow.
+
+## Recorded external source-span retrieval
+
+`python -m evaluation.external_source_span_retrieval` validates the review JSON, COMPLETE
+report, acquisition and recorded 3B-a chunks, then computes page/span Hit@k, all-document
+support and verified-span recall at chunk ranks 1/3/5/10/20/50. It reconstructs production
+chunks offline for structural diagnostics; it never loads E5 or reruns searches. Strict
+metrics retain all verified spans, with a separately labeled scorable-span diagnostic.
+Raw questions/quotes and results remain in ignored local storage. See the
+[report and PowerShell commands](../docs/evaluation/external-source-span-retrieval.md).
+The actual invocation here was blocked: the requested COMPLETE report is missing and the
+local review template contains no evidence. No measured source-span scores are available.
