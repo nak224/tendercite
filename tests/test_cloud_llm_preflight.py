@@ -233,7 +233,9 @@ def test_credentials_and_permission_are_execution_requirements_not_dry_run_requi
         transmission_confirmed=True,
         environment={config.api_key_env: "test-only-private-value"},
     )
-    assert blockers == ["paid_execution_disabled_in_this_milestone"]
+    assert "execution_requires_official_openai_endpoint_and_gpt_6_1_sol" in blockers
+    assert "execution_requires_20_USD_experiment_budget" in blockers
+    assert "explicit_question_selection_required" in blockers
     report, _ = preflight(
         config,
         comparison,

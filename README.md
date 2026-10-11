@@ -176,8 +176,10 @@ one-line PowerShell commands for scoring existing local reviewed files without r
 The [cloud LLM comparison foundation](docs/evaluation/cloud-llm-comparison.md) prepares the same
 nine questions with either 12 recorded E5 chunks or all three parseable documents. It checks
 source provenance, shared citation schemas and explicitly priced token/cost budgets through a
-local dry-run CLI. Paid execution is disabled. Provider/model selection, context/pricing
-verification and document-transmission permission remain required before a later paid phase.
+local dry-run CLI. Explicitly guarded `gpt-6.1-sol` execution supports one selected question with
+both strategies, using persistent spending reservations and provider-usage accounting. Dry-run
+remains the default; Codex/CI make no paid calls. A valid local configuration/key, explicit
+document-transmission permission and provider-side budget controls remain pilot prerequisites.
 
 ## Docker
 
