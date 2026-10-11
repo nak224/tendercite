@@ -168,3 +168,13 @@ Raw questions/quotes and results remain in ignored local storage. See the
 [report and PowerShell commands](../docs/evaluation/external-source-span-retrieval.md).
 The actual invocation here was blocked: the requested COMPLETE report is missing and the
 local review template contains no evidence. No measured source-span scores are available.
+
+## Cloud LLM comparison preflight
+
+`python -m evaluation.cloud_llm_comparison` prepares `e5_rag` from saved ranked chunks and
+`full_context` from every parsed family PDF, using identical questions/instructions/schema.
+The [setup guide](../docs/evaluation/cloud-llm-comparison.md) documents explicit endpoint/model,
+context, pricing/currency and spending assumptions, source/citation validation and one-line
+PowerShell dry-run commands. Raw prompts stay ignored. The template requires verified pricing
+and context limits; missing values fail clearly. No E5 rerun, human-label change or paid API call
+occurs; `--execute` is disabled in this milestone even with credentials and permission.
