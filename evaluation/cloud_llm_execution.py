@@ -1,4 +1,4 @@
-"""Opt-in, exactly one question pair, no automatic retries or uncertain-cost continuation."""
+"""Guarded pair or one proven truncation retry; no automatic retries or uncertain costs."""
 
 import hashlib
 import json
@@ -19,12 +19,29 @@ from evaluation.ted_acquisition import timestamp
 from tendercite.services.llm.openai_compatible import OpenAICompatibleLLM, ResponseLimitError
 
 
-def validate_execution(config, report, questions, *, confirmed, environment):
+def validate_execution(
+    config,
+    report,
+    questions,
+    *,
+    confirmed,
+    environment,
+    retry_strategy=None,
+    original_attempt_id=None,
+    retry_authorized=False,
+):
     selected = (
         len(questions) == 2
         and questions[0].question_id == questions[1].question_id
         and [q.strategy for q in questions] == ["e5_rag", "full_context"]
     )
+    if retry_strategy or original_attempt_id or retry_authorized:
+        selected = bool(
+            len(questions) == 1
+            and questions[0].strategy == retry_strategy
+            and original_attempt_id
+            and retry_authorized
+        )
     blockers = execution_blockers(
         config,
         ready=report["status"] == "READY_DRY_RUN",
@@ -168,8 +185,22 @@ async def execute_pair(
     environment,
     transport: httpx.AsyncBaseTransport | None = None,
     retry_reconciled=False,
+    retry_strategy=None,
+    original_attempt_id=None,
+    retry_authorized=False,
 ):
-    validate_execution(config, report, questions, confirmed=confirmed, environment=environment)
+    validate_execution(
+        config,
+        report,
+        questions,
+        confirmed=confirmed,
+        environment=environment,
+        retry_strategy=retry_strategy,
+        original_attempt_id=original_attempt_id,
+        retry_authorized=retry_authorized,
+    )
+    if retry_strategy and retry_reconciled:
+        raise ValueError("Truncation retry cannot bypass the zero-cost pair reconciliation gate")
     if any(
         (output_dir / name).exists()
         for name in ("e5_rag.json", "full_context.json", "execution.json")
@@ -201,8 +232,15 @@ async def execute_pair(
         reasoning_effort=config.reasoning_effort,
     )
     with experiment_lock(path):
+        if retry_strategy and not path.exists():
+            raise ValueError("Truncation retry requires the existing experiment ledger")
         ledger = ExperimentLedger(path, config, corpus)
-        ledger.assert_pair_new(questions[0].question_id, retry_reconciled=retry_reconciled)
+        retry = None
+        if retry_strategy:
+            retry = ledger.assert_truncated_retry(questions[0], original_attempt_id, corpus, config)
+            run["retry"] = retry
+        else:
+            ledger.assert_pair_new(questions[0].question_id, retry_reconciled=retry_reconciled)
         run["attempt_id"] = str(uuid4())
         run["retry_reconciled"] = retry_reconciled
         pair_estimate = Decimal(report["estimated_experiment_cost_with_margin"])
@@ -218,6 +256,7 @@ async def execute_pair(
                     output_dir,
                     attempt_id=run["attempt_id"],
                     retry_reconciled=retry_reconciled,
+                    truncated_retry_key=retry["original_reservation_key"] if retry else None,
                 )
             except ValueError as exc:
                 run["error"] = str(exc)
@@ -237,6 +276,8 @@ async def execute_pair(
                     "error": str(exc),
                     "error_type": type(exc).__name__,
                     "latency_seconds": time.perf_counter() - started,
+                    "generation_status": "TRANSPORT_ERROR",
+                    "configured_output_limit": config.max_output_tokens,
                 }
                 if isinstance(exc, ResponseLimitError):
                     record["raw_response_truncated"] = True
@@ -254,6 +295,7 @@ async def execute_pair(
                     "source_provenance": corpus.provenance,
                     "reservation_key": entry["key"],
                     "attempt_id": run["attempt_id"],
+                    "retry": retry,
                 }
             )
             # Preserve output before releasing any reservation. A filesystem/crash failure leaves
@@ -267,6 +309,8 @@ async def execute_pair(
                     "accounting_status": record["accounting_status"],
                     "ledger_status": entry["status"],
                     "response_validity": record["response_validity"],
+                    "generation_status": record.get("generation_status"),
+                    "evidence_status": record.get("evidence_status"),
                     "usage_derived_cost": None
                     if accounting is None
                     else accounting["usage_derived_cost"],
@@ -281,7 +325,7 @@ async def execute_pair(
                 )
                 break
         else:
-            run["status"] = "COMPLETED_PAIR"
+            run["status"] = "COMPLETED_STRATEGY_RETRY" if retry else "COMPLETED_PAIR"
         run["persistent_committed_cost_or_reservations"] = str(ledger.committed())
         run["remaining_budget"] = str(Decimal("20") - ledger.committed())
         run["known_usage_derived_subtotal"] = str(
