@@ -70,6 +70,24 @@ def response_record(response, question, corpus, config):
         record["completion_id"] = body.get("id")
         if "error" in body:
             record["original_provider_error"] = body["error"]
+        if not 200 <= response.http_status < 300:
+            provider_error = body.get("error")
+            provider_error = provider_error if isinstance(provider_error, dict) else {}
+            record["primary_cause"] = (
+                provider_error.get("code") or provider_error.get("type") or "http_error"
+            )
+            record["provider_error_code"] = provider_error.get("code")
+            record["provider_error_type"] = provider_error.get("type")
+            record["provider_error_message"] = provider_error.get("message")
+            if body.get("usage") is not None:
+                try:
+                    accounting = account_usage(body["usage"], config)
+                    record["accounting"] = accounting
+                    record["accounting_status"] = "USAGE_RECORDED_NOT_INVOICE"
+                except ValueError as exc:
+                    record["usage_error"] = str(exc)
+            record["error"] = f"HTTP {response.http_status}: {record['primary_cause']}"
+            return record, accounting
         model = body.get("model")
         if model != config.model and not (
             isinstance(model, str)
