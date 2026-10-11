@@ -133,3 +133,14 @@ The 12-case selected family has nine usable document-reference cases and an encr
 No original chunk/page/span mapping or independent human-gold evidence is available. Artifacts
 remain under ignored `data/evaluation/external/`; no answers or third-party PDFs are committed.
 Normal CI uses original synthetic fixtures and mocked SDK/HTTP behavior, never live downloads.
+
+## Exploratory external document retrieval
+
+`python -m evaluation.external_document_retrieval --run-real-model` is an opt-in real-model runner.
+It requires the pinned acquisition directory, a fresh output directory and an ignored model cache.
+It rechecks artifact hashes/parsing, excludes complete cases with unavailable referenced PDFs,
+indexes all parseable family PDFs together with existing services, and ranks unique documents
+from a bounded top-50 chunk pool. The [report](../docs/evaluation/external-document-retrieval.md)
+contains actual per-case/aggregate document metrics, exclusions, model verification, label bias
+and one-line PowerShell commands. Questions, retrieved chunk text and model outputs remain in
+ignored local `results.json`. No source-span scores, verified gold or LLM evaluation are produced.
