@@ -157,6 +157,16 @@ Every eligible label references the same specifications PDF; these candidate-lab
 neither source-span correctness nor general retrieval quality. Original spans and independent human
 gold remain unavailable. Raw PDFs/QA/results stay ignored; no LLM evaluation has run.
 
+## External QA source-span review
+
+The [human source-span workflow](docs/evaluation/external-qa-source-spans.md) prepares a separate
+versioned review template and exact numbered page-text exports from the existing acquisition
+and document-retrieval outputs. Offline validation checks hashes, original references, verbatim
+quotes, duplicates and independent reviewer aliases; every referenced document needs VERIFIED
+support before a question is evidence-complete. The local pilot contains nine questions and
+100 exported pages, with zero human annotations so far. Source files remain ignored; no new
+retrieval scores or requirement-extraction labels are produced.
+
 ## Docker
 
 ```bash

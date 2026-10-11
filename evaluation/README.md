@@ -144,3 +144,15 @@ from a bounded top-50 chunk pool. The [report](../docs/evaluation/external-docum
 contains actual per-case/aggregate document metrics, exclusions, model verification, label bias
 and one-line PowerShell commands. Questions, retrieved chunk text and model outputs remain in
 ignored local `results.json`. No source-span scores, verified gold or LLM evaluation are produced.
+
+## External QA source-span annotation
+
+`python -m evaluation.prepare_external_qa_spans` generates a separate versioned review JSON
+and exact page-text exports from the pinned acquisition and completed 3B-a results.
+`python -m evaluation.validate_external_qa_spans` validates source hashes, original references,
+page quotes and independent reviewer metadata, reporting completeness for every required
+document. All source-containing paths are confined to ignored `data/evaluation/external/`;
+existing reviews and reports are never overwritten. See the [guide](../docs/evaluation/external-qa-source-spans.md)
+and [JSON Schema](external-qa-source-span-schema.json) for commands and manual review steps.
+The local pilot has nine unannotated questions, 100 exported pages and zero reviewed spans.
+No scoring, model/LLM calls or changes to requirement gold are part of this workflow.

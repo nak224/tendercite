@@ -1,0 +1,218 @@
+{
+  "$defs": {
+    "ReferencePDF": {
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "minLength": 1,
+          "title": "Filename",
+          "type": "string"
+        },
+        "pdf_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Pdf Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filename",
+        "pdf_sha256"
+      ],
+      "title": "ReferencePDF",
+      "type": "object"
+    },
+    "ReviewQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "question_id": {
+          "minLength": 1,
+          "title": "Question Id",
+          "type": "string"
+        },
+        "question": {
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "question_type": {
+          "enum": [
+            "Single-document lookup",
+            "Single-document reasoning",
+            "Cross-document factual",
+            "Implicit multi-hop",
+            "Unanswerable"
+          ],
+          "title": "Question Type",
+          "type": "string"
+        },
+        "source_documents": {
+          "items": {
+            "$ref": "#/$defs/ReferencePDF"
+          },
+          "minItems": 1,
+          "title": "Source Documents",
+          "type": "array"
+        },
+        "annotation_notes": {
+          "default": "",
+          "title": "Annotation Notes",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/SourceEvidence"
+          },
+          "maxItems": 100,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "question_id",
+        "question",
+        "question_type",
+        "source_documents",
+        "evidence"
+      ],
+      "title": "ReviewQuestion",
+      "type": "object"
+    },
+    "SourceEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "source_document": {
+          "minLength": 1,
+          "title": "Source Document",
+          "type": "string"
+        },
+        "pdf_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Pdf Sha256",
+          "type": "string"
+        },
+        "page_number": {
+          "minimum": 1,
+          "title": "Page Number",
+          "type": "integer"
+        },
+        "exact_source_quote": {
+          "minLength": 1,
+          "title": "Exact Source Quote",
+          "type": "string"
+        },
+        "interpretation_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Interpretation Note"
+        },
+        "review_status": {
+          "enum": [
+            "DRAFT",
+            "VERIFIED",
+            "REJECTED"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "author_alias": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Author Alias",
+          "type": "string"
+        },
+        "reviewer_alias": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer Alias"
+        },
+        "review_notes": {
+          "title": "Review Notes",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_document",
+        "pdf_sha256",
+        "page_number",
+        "exact_source_quote",
+        "review_status",
+        "author_alias",
+        "review_notes"
+      ],
+      "title": "SourceEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "annotation_schema_version": {
+      "const": "external-qa-source-spans-1",
+      "title": "Annotation Schema Version",
+      "type": "string"
+    },
+    "source_repository": {
+      "const": "tmskss/eu-tenders-with-questions-for-agentic-checklist-filling",
+      "title": "Source Repository",
+      "type": "string"
+    },
+    "dataset_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Dataset Revision",
+      "type": "string"
+    },
+    "family": {
+      "minLength": 1,
+      "title": "Family",
+      "type": "string"
+    },
+    "acquisition_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Acquisition Manifest Sha256",
+      "type": "string"
+    },
+    "eligibility_results_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Eligibility Results Sha256",
+      "type": "string"
+    },
+    "label_origin": {
+      "const": "human_source_spans_over_upstream_candidate_qa",
+      "title": "Label Origin",
+      "type": "string"
+    },
+    "questions": {
+      "items": {
+        "$ref": "#/$defs/ReviewQuestion"
+      },
+      "maxItems": 1000,
+      "title": "Questions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "annotation_schema_version",
+    "source_repository",
+    "dataset_revision",
+    "family",
+    "acquisition_manifest_sha256",
+    "eligibility_results_sha256",
+    "label_origin",
+    "questions"
+  ],
+  "title": "ReviewFile",
+  "type": "object"
+}
