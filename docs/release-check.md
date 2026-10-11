@@ -13,7 +13,7 @@ see `docs/work-log.md` for those phase commits.
 | Reviews, matrix, exports | API integration tests preserve original output/history and source references |
 | UI | Streamlit AppTest against actual API; unsupported evidence styling and save-review action |
 | Hardening | Invalid/encrypted/oversized PDFs, limits, filename paths, cleanup, provider bounds and secret redaction |
-| Test/lint | Recorded source-span metrics: 369 offline tests passed, 1 optional live TED test skipped; 44 new original-fixture tests; Ruff lint/format passed. Historical core clean-clone baseline: 35 tests, 93% coverage |
+| Test/lint | Cloud LLM foundation: 429 offline tests passed, 1 optional live TED test skipped; 60 new original-fixture tests; Ruff lint/format passed. Historical core clean-clone baseline: 35 tests, 93% coverage |
 | Dependency install | Fresh local clone and new virtual environment; hashed Python 3.12 CPU install passed |
 | Docker build | Built successfully with trusted cloud proxy CA mounted as BuildKit secret |
 | Docker functionality | Non-root API: PDF upload, pages/chunks, evidence and restart persistence passed; UI AppTest rendered every section against the container API and exposed all three exports |
@@ -30,9 +30,10 @@ see `docs/work-log.md` for those phase commits.
 | External document retrieval | [Milestone 3B-a](evaluation/external-document-retrieval.md): real pinned E5/Chroma on 3 PDFs / 306 chunks; 9 eligible cases, 3 excluded unchanged for encrypted-source dependence. Any-document Hit@1/@2/@3 9/9; all-documents Hit@1 5/9, @2/@3 9/9; single-reference MRR 1.0 (5 cases). Exploratory upstream candidate labels; every eligible case references one dominant PDF. No independent accuracy or German-quality claim |
 | External QA source spans | [Milestone 3B-b1](evaluation/external-qa-source-spans.md): separate schema, local template/page export and strict quote/reviewer validation implemented. Nine original eligible questions, two referenced PDFs / 100 pages; zero annotations and 0/9 evidence-complete. Human source/semantic review and independent second review remain open; no new retrieval scores |
 | Recorded source-span metrics | [Milestone 3B-b2](evaluation/external-source-span-retrieval.md): offline saved-chunk scoring and structural diagnostics implemented/tested. Actual invocation blocked by missing COMPLETE review report; retained local template has zero spans. Windows commands provided; real scores, miss analysis and structural counts remain unmeasured |
+| Cloud LLM comparison foundation | [Milestone 3B-d1](evaluation/cloud-llm-comparison.md): both contexts prepared locally for 9 questions, 3 PDFs / 137 pages; shared schema/citation validation and dry-run token/cost safeguards tested offline. Unfilled pricing/context configuration fails clearly; no provider selected, real cost estimate or paid calls. Provider compatibility, budgets, permission, execution and human answer evaluation remain open |
 | Audit | Four Chroma server advisories, not exposed by embedded design; torch lookup skipped; see security review |
 | Licenses | Official pinned card/API declare MIT; model/configuration inspected and weight hash verified. No weights redistributed. Existing dependency audit/license review still applies |
-| Remote CI | [PR #10 CI](https://github.com/nak224/tendercite/actions/runs/38072345827) passed lint, offline tests and Docker build for acquisition. Check the source-span PR's own revision before merging; prior CI does not establish its result |
+| Remote CI | [PR #10 CI](https://github.com/nak224/tendercite/actions/runs/38072345827) passed lint, offline tests and Docker build for acquisition. Check the cloud LLM foundation PR's own revision before merging; prior CI does not establish its result |
 | Release tag | Not created; external validation gates remain open |
 
 A published CI run, real model evaluation and explicit review of remaining findings are required

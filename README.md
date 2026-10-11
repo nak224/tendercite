@@ -173,6 +173,12 @@ a hash-matching COMPLETE human-review report and freshly validated VERIFIED quot
 here is blocked by missing reviewed inputs; no source-span scores are claimed. The guide has
 one-line PowerShell commands for scoring existing local reviewed files without rerunning E5.
 
+The [cloud LLM comparison foundation](docs/evaluation/cloud-llm-comparison.md) prepares the same
+nine questions with either 12 recorded E5 chunks or all three parseable documents. It checks
+source provenance, shared citation schemas and explicitly priced token/cost budgets through a
+local dry-run CLI. Paid execution is disabled. Provider/model selection, context/pricing
+verification and document-transmission permission remain required before a later paid phase.
+
 ## Docker
 
 ```bash

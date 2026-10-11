@@ -1,4 +1,5 @@
 import json
+import math
 from typing import TypeVar
 
 import httpx
@@ -23,23 +24,34 @@ class OpenAICompatibleLLM:
         model: str,
         api_key: str | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
+        temperature: float = 0,
+        max_output_tokens: int | None = None,
+        request_timeout: float = 90,
     ) -> None:
+        if not math.isfinite(temperature) or not 0 <= temperature <= 2:
+            raise ValueError("temperature must be finite and between 0 and 2")
+        if max_output_tokens is not None and (
+            type(max_output_tokens) is not int or max_output_tokens < 1
+        ):
+            raise ValueError("max_output_tokens must be a positive integer")
+        if not math.isfinite(request_timeout) or request_timeout <= 0:
+            raise ValueError("request_timeout must be finite and positive")
         self.transport = transport
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.api_key = api_key
+        self.temperature = temperature
+        self.max_output_tokens = max_output_tokens
+        self.request_timeout = request_timeout
 
-    async def generate_structured(
+    def build_payload(
         self,
         *,
         system_prompt: str,
         user_prompt: str,
         response_model: type[T],
-    ) -> T:
-        headers = {"Content-Type": "application/json"}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-
+    ) -> dict:
+        """Build the exact generation payload without HTTP or credentials, for preflight."""
         schema = response_model.model_json_schema()
         payload = {
             "model": self.model,
@@ -52,14 +64,31 @@ class OpenAICompatibleLLM:
                     + json.dumps(schema),
                 },
             ],
-            "temperature": 0,
+            "temperature": self.temperature,
             "response_format": {
                 "type": "json_schema",
                 "json_schema": {"name": "tender_findings", "schema": schema},
             },
         }
+        if self.max_output_tokens is not None:
+            payload["max_tokens"] = self.max_output_tokens
+        return payload
+
+    async def generate_structured(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        response_model: type[T],
+    ) -> T:
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        payload = self.build_payload(
+            system_prompt=system_prompt, user_prompt=user_prompt, response_model=response_model
+        )
         async with httpx.AsyncClient(
-            timeout=90, transport=self.transport, follow_redirects=False
+            timeout=self.request_timeout, transport=self.transport, follow_redirects=False
         ) as client:
             async with client.stream(
                 "POST", f"{self.base_url}/chat/completions", headers=headers, json=payload

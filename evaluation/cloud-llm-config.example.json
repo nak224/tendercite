@@ -1,0 +1,24 @@
+{
+  "config_version": "cloud-llm-comparison-1",
+  "base_url": "https://provider.invalid/v1",
+  "model": "REPLACE_WITH_SELECTED_MODEL",
+  "api_key_env": "TENDERCITE_LLM_API_KEY",
+  "temperature": 0.0,
+  "max_output_tokens": 2048,
+  "request_timeout_seconds": 90.0,
+  "rag_top_k": 12,
+  "usable_context_tokens": null,
+  "context_budget_source": "REPLACE_WITH_VERIFIED_MODEL_CONTEXT_DOCUMENTATION",
+  "token_estimator": "utf8_bytes_v1",
+  "token_safety_multiplier": "1.10",
+  "request_overhead_tokens": 256,
+  "repetitions": 1,
+  "pricing": null,
+  "spending": {
+    "currency": "EUR",
+    "per_request": "1",
+    "cumulative": "20",
+    "prior_estimated_spend": "0",
+    "safety_multiplier": "1.25"
+  }
+}
