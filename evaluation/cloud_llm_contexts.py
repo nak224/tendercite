@@ -218,6 +218,8 @@ def validate_answer(answer: QAAnswer, prepared: PreparedQuestion, corpus: Compar
         reason = None
         if not quote:
             reason = "empty_quote"
+        elif prepared.strategy == "e5_rag" and not (citation.chunk_id or "").strip():
+            reason = "supplied_chunk_id_required"
         elif page is None:
             reason = "unknown_document_or_page"
         elif not any(quote in normalize_quote(s.text) for s in allowed):
@@ -246,6 +248,11 @@ def validate_answer(answer: QAAnswer, prepared: PreparedQuestion, corpus: Compar
     return {
         "question_id": prepared.question_id,
         "answer_status": answer.status,
+        "response_classification": (
+            "UNABLE_TO_ANSWER"
+            if answer.status == "UNABLE_TO_ANSWER"
+            else f"ANSWERED_{status.value}"
+        ),
         "citation_status": status.value,
         "citations": results,
         "question_id_matches": not invalid_id,
