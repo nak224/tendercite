@@ -54,7 +54,7 @@ def test_default_is_dry_run_and_credentials_are_not_sent_or_logged(arguments, mo
     report = json.loads((output / "preflight.json").read_text())
     assert report["status"] == "READY_DRY_RUN" and report["api_calls"] == 0
     assert report["credential_environment_present"] and not report["api_execution_available"]
-    assert report["execution_blockers"][0] == "paid_execution_disabled_in_this_milestone"
+    assert "explicit_execution_opt_in_required" in report["execution_blockers"]
     assert "private-unit-test-key-marker" not in capsys.readouterr().out
     assert all("private-unit-test-key-marker" not in file.read_text() for file in output.iterdir())
     original = (output / "preflight.json").read_bytes()
@@ -70,7 +70,7 @@ def test_dry_run_does_not_require_credentials(arguments, monkeypatch):
     assert "api_key_environment_variable_missing" in record["execution_blockers"]
 
 
-def test_execute_is_disabled_even_with_key_opt_in_and_permission(arguments, monkeypatch):
+def test_execute_requires_an_explicit_question_even_with_key_and_permission(arguments, monkeypatch):
     monkeypatch.setenv("TENDERCITE_LLM_API_KEY", "test-only-key")
     assert cli.main(arguments + ["--execute", "--confirm-transmission"]) == 1
     assert not Path(arguments[-1]).exists()

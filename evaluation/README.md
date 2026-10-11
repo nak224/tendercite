@@ -177,4 +177,7 @@ The [setup guide](../docs/evaluation/cloud-llm-comparison.md) documents explicit
 context, pricing/currency and spending assumptions, source/citation validation and one-line
 PowerShell dry-run commands. Raw prompts stay ignored. The template requires verified pricing
 and context limits; missing values fail clearly. No E5 rerun, human-label change or paid API call
-occurs; `--execute` is disabled in this milestone even with credentials and permission.
+occurs by default. `--execute --confirm-transmission --question-id <original-id>` enables one
+guarded OpenAI `gpt-6.1-sol` pair, subject to key/config/context checks and a persistent 20 USD
+ledger. Usage-derived costs and independently validated citations stay local; reasoning tokens
+are not double-counted. No retries, automatic all-question execution or live calls in CI/Codex.

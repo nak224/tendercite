@@ -1,11 +1,47 @@
 import json
 import math
+import time
+from dataclasses import dataclass
 from typing import TypeVar
 
 import httpx
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
+
+
+def strict_output_schema(schema: dict) -> dict:
+    """Require nullable properties too, without changing other providers' schemas."""
+    result = json.loads(json.dumps(schema))
+
+    def visit(node):
+        if isinstance(node, dict):
+            node.pop("default", None)
+            if node.get("type") == "object":
+                node["additionalProperties"] = False
+                node["required"] = list(node.get("properties", {}))
+            for value in node.values():
+                visit(value)
+        elif isinstance(node, list):
+            for value in node:
+                visit(value)
+
+    visit(result)
+    return result
+
+
+@dataclass
+class CompletionResponse:
+    body: bytes
+    http_status: int
+    request_id: str | None
+    latency_seconds: float
+
+
+class ResponseLimitError(ValueError):
+    def __init__(self, response: CompletionResponse):
+        super().__init__("Provider response exceeds supported size")
+        self.response = response
 
 
 class OpenAICompatibleLLM:
@@ -27,6 +63,7 @@ class OpenAICompatibleLLM:
         temperature: float = 0,
         max_output_tokens: int | None = None,
         request_timeout: float = 90,
+        reasoning_effort: str | None = None,
     ) -> None:
         if not math.isfinite(temperature) or not 0 <= temperature <= 2:
             raise ValueError("temperature must be finite and between 0 and 2")
@@ -36,6 +73,8 @@ class OpenAICompatibleLLM:
             raise ValueError("max_output_tokens must be a positive integer")
         if not math.isfinite(request_timeout) or request_timeout <= 0:
             raise ValueError("request_timeout must be finite and positive")
+        if reasoning_effort not in (None, "low"):
+            raise ValueError("This pilot supports only explicit low reasoning effort")
         self.transport = transport
         self.base_url = base_url.rstrip("/")
         self.model = model
@@ -43,6 +82,7 @@ class OpenAICompatibleLLM:
         self.temperature = temperature
         self.max_output_tokens = max_output_tokens
         self.request_timeout = request_timeout
+        self.reasoning_effort = reasoning_effort
 
     def build_payload(
         self,
@@ -53,6 +93,9 @@ class OpenAICompatibleLLM:
     ) -> dict:
         """Build the exact generation payload without HTTP or credentials, for preflight."""
         schema = response_model.model_json_schema()
+        sol = self.model == "gpt-6.1-sol"
+        if sol:
+            schema = strict_output_schema(schema)
         payload = {
             "model": self.model,
             "messages": [
@@ -71,8 +114,43 @@ class OpenAICompatibleLLM:
             },
         }
         if self.max_output_tokens is not None:
-            payload["max_tokens"] = self.max_output_tokens
+            payload["max_completion_tokens" if sol else "max_tokens"] = self.max_output_tokens
+        if sol:
+            payload.pop("temperature")
+            payload["reasoning_effort"] = self.reasoning_effort or "low"
+            payload["response_format"]["json_schema"]["strict"] = True
         return payload
+
+    async def request_completion(self, payload: dict) -> CompletionResponse:
+        """One HTTP attempt, retaining response/usage for evaluation accounting."""
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        started = time.perf_counter()
+        async with httpx.AsyncClient(
+            timeout=self.request_timeout, transport=self.transport, follow_redirects=False
+        ) as client:
+            async with client.stream(
+                "POST", f"{self.base_url}/chat/completions", headers=headers, json=payload
+            ) as response:
+                body = bytearray()
+                async for part in response.aiter_bytes():
+                    body.extend(part)
+                    if len(body) > 2_000_000:
+                        raise ResponseLimitError(
+                            CompletionResponse(
+                                bytes(body[:2_000_000]),
+                                response.status_code,
+                                response.headers.get("x-request-id"),
+                                time.perf_counter() - started,
+                            )
+                        )
+                return CompletionResponse(
+                    bytes(body),
+                    response.status_code,
+                    response.headers.get("x-request-id"),
+                    time.perf_counter() - started,
+                )
 
     async def generate_structured(
         self,
@@ -81,25 +159,15 @@ class OpenAICompatibleLLM:
         user_prompt: str,
         response_model: type[T],
     ) -> T:
-        headers = {"Content-Type": "application/json"}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
         payload = self.build_payload(
             system_prompt=system_prompt, user_prompt=user_prompt, response_model=response_model
         )
-        async with httpx.AsyncClient(
-            timeout=self.request_timeout, transport=self.transport, follow_redirects=False
-        ) as client:
-            async with client.stream(
-                "POST", f"{self.base_url}/chat/completions", headers=headers, json=payload
-            ) as response:
-                response.raise_for_status()
-                body = bytearray()
-                async for part in response.aiter_bytes():
-                    body.extend(part)
-                    if len(body) > 2_000_000:
-                        raise ValueError("Provider response exceeds supported size")
-        result = json.loads(body)
+        completion = await self.request_completion(payload)
+        httpx.Response(
+            completion.http_status,
+            request=httpx.Request("POST", f"{self.base_url}/chat/completions"),
+        ).raise_for_status()
+        result = json.loads(completion.body)
         choice = result["choices"][0]
         if choice.get("finish_reason") not in (None, "stop"):
             raise ValueError("Provider output was truncated or refused")
