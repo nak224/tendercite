@@ -1,11 +1,12 @@
-# Guarded cloud LLM comparison (Milestones 3B-d1 / 3B-d2 / 3B-d2a)
+# Guarded cloud LLM comparison (Milestones 3B-d1 / 3B-d2 / 3B-d2a / 3B-d3)
 
 The CLI defaults to an offline dry-run. An explicitly authorized operator can now execute
-**one original eligible question with both strategies**, using OpenAI Chat Completions and
+**one original eligible question with both strategies**, or explicitly retry one settled
+truncated strategy, using OpenAI Chat Completions and
 `gpt-6.1-sol`. Codex implementation, tests and PR review make **no paid API calls**. Live model
-compatibility, token usage and answer quality remain unmeasured after the operator's first
-quota-rejected pilot. No model fallback, schema weakening, automatic retry or automatic all-question run
-is implemented.
+compatibility and usage were exercised by operator pilots, including a billable truncated
+Full-Context response; independent answer quality remains unmeasured. No model fallback, schema
+weakening, automatic retry or automatic all-question run is implemented.
 
 ## Shared inputs and compatible payloads
 
@@ -253,6 +254,187 @@ failures stop the pair without retrying. Inspect its `execution.json`, `e5_rag.j
 `full_context.json` using the commands above with the new directory name. Final billing
 still requires provider-dashboard reconciliation; local limits are not provider billing caps.
 
+## Larger output caps and one-strategy truncation retry (3B-d3)
+
+The operator verified the [official gpt-6.1-sol documentation](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
+on **2026-10-11**: maximum output **128,000 tokens**, context window **1,050,000 tokens**.
+The managed proxy blocked independent access from this cloud checkout (HTTP 403 for
+`developers.openai.com` and `platform.openai.com`). Capability metadata therefore records
+`operator_verified_provider_documentation`, the URL and date, rather than claiming Codex
+fetched the documentation. These capabilities apply to the exact configured model and official
+endpoint. Other models require matching sourced capability declarations for caps above 4,096.
+
+The evaluation default is **4,096**; explicit existing limits remain supported. The operator
+can select **8,192** for the next Full-Context experiment and **12,288** if needed, up to the
+verified maximum. Model output and context bounds, local usable context, maximum output cost,
+safety margin, per-request cost and remaining persistent balance must all pass. The original
+UTF-8-byte estimator, pricing and safety factors are unchanged. The same pure payload builder
+puts the selected cap into `max_completion_tokens`, wire hashes and preflight/audit records.
+Sources, ordering, questions, schema and prompt instructions are unchanged. Increasing a cap
+is recorded as an experimental configuration difference, not an identical rerun. It never
+happens automatically in response to truncation.
+
+The operator's `df0f34c8` Full-Context attempt reportedly ended with HTTP 200,
+`finish_reason: length`, 4,096 output tokens and recorded usage-derived cost. It remains billable
+under the existing configured rates. **Do not reconcile it to zero, edit it or reset the ledger.**
+The preceding successful RAG response must remain intact. The actual operator runs and ledger
+are absent from this cloud checkout; no real comparison metrics or paid retry were produced here.
+
+A single-strategy retry requires `--strategy`, `--retry-truncated-attempt`, exact `--question-id`,
+`--authorize-truncated-retry`, `--execute`, `--confirm-transmission`, a key and passing preflight.
+The original attempt must be the latest attempt of that question/strategy, durably `SETTLED`,
+and prove truncation in its original provider response. Saved usage is recomputed under its
+original rates and must match the preserved ledger cost. Response, attempt, source and original
+payload hashes are checked. Modern response files are additionally hash-pinned in their ledger
+entries; legacy attempts are supported without rewriting their history. The retry allows only
+an explicitly larger cap and updated capability metadata; all other experiment settings must
+match. Successful answers, unrelated errors, refunds/zero-cost failures, uncertain/interrupted
+accounting and already-retried originals are rejected. Both execution workflows retain the
+same cross-process lock and cumulative **20 USD** ledger. The older `--retry-reconciled` quota
+workflow stays separate and cannot authorize a billable truncation retry.
+
+A retry gets a new UUID, response directory and reserved cost, linked by `retry_of_key` and
+`retry_of_attempt` to the original. Only the selected strategy is sent. The successful RAG
+response is reused for reporting. A further truncation stops again; selecting that new settled
+attempt for another larger-cap experiment requires fresh explicit authorization.
+
+### Inspect original artifacts and identify the exact Full-Context attempt
+
+These are operator commands for the original checkout, not commands run by Codex. Reuse its
+existing config, ledger, acquisition and recorded E5 results. Do not move or delete original
+response directories referenced by the ledger. All new output directories must be fresh.
+
+```powershell
+$questionId = 'BSGEE_2025-002_School_Information_Systems-df0f34c8'; $raw = .\.venv\Scripts\python.exe -m evaluation.reconcile_cloud_llm_ledger inspect; if ($LASTEXITCODE -ne 0) { throw 'Ledger inspection failed' }; $state = $raw | ConvertFrom-Json; $found = @($state.entries | Where-Object { $_.question_id -eq $questionId -and $_.strategy -eq 'full_context' } | Select-Object -Last 1); if ($found.Count -ne 1 -or $found[0].historical_status -ne 'SETTLED') { throw 'Expected latest settled Full-Context attempt' }; $attemptId = $found[0].attempt_id; $originalDir = $found[0].output_dir; $response = Get-Content (Join-Path $originalDir 'full_context.json') -Raw | ConvertFrom-Json; if ($response.completion_status -ne 'length') { throw 'Selected attempt is not truncated' }; $response | Select-Object question_id,strategy,provider_request_id,response_validity,completion_status,accounting_status,accounting,preflight_estimate
+```
+
+Inspect both original answers/errors in VS Code, without modifying them:
+
+```powershell
+code (Join-Path $originalDir 'e5_rag.json') (Join-Path $originalDir 'full_context.json') (Join-Path $originalDir 'execution.json') .\data\evaluation\external\cloud-llm-experiment\ledger.json
+```
+
+### Generate reports offline
+
+This reads every ledger attempt and its saved artifacts, rechecks PDF/source/payload provenance
+and citations, and generates `comparison.json`, `attempts.csv`, `comparisons.csv` and
+`comparison.md` under ignored local storage. No API key or transmission permission is needed.
+No model weights are loaded and no API requests are sent. It never modifies the ledger.
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluation.cloud_llm_reporting --acquisition-dir .\data\evaluation\external\eu-tenders-qa-f2b0856-school-systems --retrieval-results .\data\evaluation\external\document-retrieval-run-2\results.json --output-dir .\data\evaluation\external\cloud-llm-comparison\report-before-8192-1
+```
+
+Default comparison selection is the first recorded attempt of each strategy, including an
+original quota failure if present. `--latest-valid` explicitly selects the latest structurally
+valid answer per strategy; **every failed/truncated attempt and incurred cost remains in the
+report**. Latest-valid selection does not establish evidence quality or semantic correctness.
+Question types and expected source documents remain original upstream candidate labels.
+Unattempted questions are included with no selected attempt. Cohort options (`--family`,
+`--dataset-revision`, `--expected-cases`, `--expected-documents`) support other pinned datasets
+without guessing their labels or mixing their provenance.
+
+Reports retain input/output/reasoning/cache tokens, estimates, configured caps, latency,
+usage-derived cost and original-to-retry links. `estimate_to_usage_cost_ratio` is the
+conservative reservation divided by usage-derived cost; it is unavailable for missing or
+zero usage cost. Per-question differences are Full-Context minus RAG; ratios are Full-Context
+cost divided by RAG cost. Displayed comparison costs are distinct from cumulative usage-derived
+cost **across all attempts**, prior estimated spend and outstanding reservations. Uncertain
+attempts retain their reservations; missing artifacts never prove zero billing. Settled costs
+remain visible even when a response artifact is missing. Final provider billing still requires
+provider-dashboard reconciliation, and local limits are not guaranteed billing caps.
+
+### Dry-run the 8,192-token Full-Context experiment
+
+Set only the output cap in this PowerShell session; reuse the existing rates and settings:
+
+```powershell
+$env:TENDERCITE_LLM_MAX_OUTPUT_TOKENS = '8192'
+```
+
+The following plans **one** Full-Context request and checks the original truncation and remaining
+ledger balance, without sending it. No key is required for dry-run:
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluation.cloud_llm_comparison --dry-run --question-id $questionId --strategy full_context --retry-truncated-attempt $attemptId --config .\data\evaluation\external\cloud-llm-comparison\config.json --acquisition-dir .\data\evaluation\external\eu-tenders-qa-f2b0856-school-systems --retrieval-results .\data\evaluation\external\document-retrieval-run-2\results.json --output-dir .\data\evaluation\external\cloud-llm-comparison\full-context-preflight-8192-1
+```
+
+Inspect the estimate, capability declaration, original/new cap and remaining balance:
+
+```powershell
+Get-Content .\data\evaluation\external\cloud-llm-comparison\full-context-preflight-8192-1\preflight.json -Raw | ConvertFrom-Json | Select-Object status,planned_requests,configuration,request_preflight,truncation_retry,estimated_experiment_cost_with_margin,available_experiment_budget,failures
+```
+
+Proceed only for `READY_DRY_RUN`, after reviewing the estimate and transmission rights. The CLI
+revalidates everything and reserves the updated maximum cost under lock before sending.
+
+### Explicitly authorize only the Full-Context retry
+
+Set the key only in this session, without committing it or putting it in command history:
+
+```powershell
+$env:TENDERCITE_LLM_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'OpenAI API key' -AsSecureString)).Password
+```
+
+Only after explicit operator authorization and permission to transmit the documents:
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluation.cloud_llm_comparison --execute --confirm-transmission --authorize-truncated-retry --question-id $questionId --strategy full_context --retry-truncated-attempt $attemptId --config .\data\evaluation\external\cloud-llm-comparison\config.json --acquisition-dir .\data\evaluation\external\eu-tenders-qa-f2b0856-school-systems --retrieval-results .\data\evaluation\external\document-retrieval-run-2\results.json --output-dir .\data\evaluation\external\cloud-llm-comparison\full-context-retry-8192-1
+```
+
+Exit 0 means `COMPLETED_STRATEGY_RETRY` with one request; it does not assert answer correctness.
+There is no E5 recomputation or second RAG request. Re-running the same original attempt is
+rejected. If the new response truncates, inspect its usage and new attempt ID before separately
+considering 12,288. Set the session cap explicitly to `'12288'`, select that newer truncated ID,
+and use fresh dry-run/response directories. Never change the cap solely to bypass a budget failure.
+
+### Updated comparison using original RAG and latest valid Full-Context
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluation.cloud_llm_reporting --latest-valid --acquisition-dir .\data\evaluation\external\eu-tenders-qa-f2b0856-school-systems --retrieval-results .\data\evaluation\external\document-retrieval-run-2\results.json --output-dir .\data\evaluation\external\cloud-llm-comparison\report-after-8192-1
+```
+
+```powershell
+code .\data\evaluation\external\cloud-llm-comparison\report-after-8192-1\comparison.md .\data\evaluation\external\cloud-llm-comparison\report-after-8192-1\attempts.csv .\data\evaluation\external\cloud-llm-comparison\report-after-8192-1\comparison.json
+```
+
+### Diagnostics, optional human review and source-span coverage
+
+`generation_status` distinguishes `VALID_STRUCTURED_ANSWER`, `OUTPUT_TOKEN_TRUNCATION`,
+`PROVIDER_REFUSAL`, `INVALID_STRUCTURED_JSON`, `INVALID_JSON_SCHEMA`,
+`INVALID_RESPONSE_STRUCTURE`, `PROVIDER_HTTP_ERROR` and transport/artifact/interruption failures.
+`response_validity`, `accounting_status` and ledger status remain separate. Missing/inconsistent
+usage retains uncertain accounting even when a provider completion status is available.
+Truncation uses `finish_reason: length`, not equality to the configured cap. Its tokens, costs,
+limit, original response and metadata are retained. HTTP/structured errors stop execution.
+
+Citation quality is separate from generation: `ANSWERED` with no evidence reports
+`MISSING_EVIDENCE` and **zero** evidence records; inability reports `UNABLE_TO_ANSWER` with its
+reason. Invalid citations do not turn valid JSON into a generation failure. Citations still
+require an actually supplied RAG chunk or Full-Context document/page and a matching stored
+quote. Expected-document representation uses verified citations and explicitly remains a
+candidate-label diagnostic, not independent gold or exhaustive evidence coverage.
+
+Without independently reviewed spans, ground-truth coverage is `NOT_ASSESSED`. To opt in, add
+`--annotations <local-review.json> --validation <local-COMPLETE-validation.json>` to reporting.
+The separate external-QA source-span workflow must have independently reviewed every required
+document and a fresh **COMPLETE** cohort validation. Reporting reruns the original hash,
+metadata, independent-review and verbatim-page checks; stale/mismatched files are rejected.
+Partial/DRAFT reviews yield `NOT_ASSESSED`. Only complete reviewed quotes contained within a
+correctly located supplied source or verified citation count toward context/citation coverage.
+These are textual-location diagnostics, **not semantic correctness or extraction accuracy**.
+Procurement requirement labels and upstream reference answers are not imported as QA gold.
+
+An optional separate `--human-review <local-file.json>` records human judgments without editing
+model outputs. Format `cloud-qa-human-reviews-1` contains the exact report `provenance` object
+and `reviews` with `attempt_id`, `question_id`, `strategy`, `response_file_sha256`, non-personal
+`reviewer_alias`, `reviewed_by_human: true`, timezone-aware `reviewed_at`, `correctness`
+(`CORRECT`, `INCORRECT`, `UNCERTAIN`, `NOT_ASSESSED`), `completeness`
+(`COMPLETE`, `PARTIAL`, `INCOMPLETE`, `UNCERTAIN`, `NOT_ASSESSED`) and `notes`. Create declarations
+only after a person actually reviews that specific unchanged response. Duplicate, unmatched or
+wrong-hash verdicts are rejected. A human verdict does not become independently verified gold;
+no automatic semantic score is computed. Keep reviews, source text and reports local and ignored.
+
 ## Rights, local storage and actual validation
 
 `--confirm-transmission` is an explicit human declaration about these artifact hashes and the
@@ -262,22 +444,18 @@ for the underlying PDFs. Prompts, PDF bytes, provider response text and annotati
 ignored `data/evaluation/external/`. Do not force-add them. Keys are never recorded/logged, including
 in echoed provider errors. No raw text, answers, pricing secrets or real annotations are committed.
 
-Starting from main `763c238` after merged PR #15, the complete suite passed **509 tests**, one
-optional live TED test skipped; Ruff lint and formatting passed. The 58 execution tests and
-22 reconciliation regression cases use original synthetic PDFs/QA, artificial prices and
-mocked HTTP only. They cover strict model payloads,
-citations/inability, exact preflight wire reuse, token categories/tiers, missing usage/credentials,
-errors/truncation, overspending, interruption/output failure, persistent duplicate prevention,
-cross-process locking, malformed ledgers, default dry-run and one-pair CLI execution. The
-reconciliation cases additionally cover the legacy quota response, explicit billing confirmation,
-wrong request/error rejection, preserved history, duplicate/tampered audits and responses,
-interrupted audit publication, a missing ledger, explicit retry and unchanged execution gates.
-Linux
-locking was executed; Windows commands/locking remain untested in this cloud environment.
+Starting from main `773cfd7` after merged PR #16, the complete offline suite passed
+**559 tests**, one optional live TED test skipped; Ruff lint and formatting passed. Fifty added
+cases use original generated PDFs, artificial pricing and mocked HTTP only. They cover documented
+output/context bounds, unchanged wire prompts/estimation, status-based truncation diagnostics,
+settled single-strategy retries, unchanged originals, legacy records, duplicate/authorization/
+accounting/locking/budget gates, billable failures, missing evidence/artifacts, JSON/CSV/Markdown
+reports and human-review/source-span provenance safeguards. Existing 3B-d2/3B-d2a regression
+cases still pass. Linux cross-process locking was tested; PowerShell commands and Windows locking
+remain untested in this cloud environment.
 
 The operator's ledger and original incident output are absent from this cloud checkout;
 the real incident was not reconciled. No real API requests or live cost comparison were performed
-by Codex. The operator's
-valid local config/key, explicit transmission permission and provider-side controls remain pilot
+by Codex. The operator's valid local config/key, explicit transmission permission and provider-side controls remain pilot
 prerequisites. Independently reviewed semantic answers and final dashboard billing are later
 validation steps; small biased upstream candidate QA labels do not establish general accuracy.
