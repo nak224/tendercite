@@ -36,6 +36,31 @@ class Pricing(StrictModel):
     as_of: date
 
 
+class UsageTier(StrictModel):
+    above_prompt_tokens: Annotated[StrictInt, Field(ge=0)]
+    input_per_million: Money
+    output_per_million: Money
+    cached_input_per_million: Money | None = None
+    cache_write_input_per_million: Money | None = None
+
+
+class UsagePricing(StrictModel):
+    """Optional documented accounting rates; never used to retune dry-run estimates."""
+
+    source: Nonblank
+    as_of: date
+    cached_input_per_million: Money | None = None
+    cache_write_input_per_million: Money | None = None
+    tiers: list[UsageTier] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def ordered_tiers(self):
+        thresholds = [tier.above_prompt_tokens for tier in self.tiers]
+        if thresholds != sorted(set(thresholds)):
+            raise ValueError("Usage tiers must have unique ascending prompt-token thresholds")
+        return self
+
+
 class SpendingLimits(StrictModel):
     currency: Currency = "EUR"
     per_request: PositiveMoney = Decimal("1")
@@ -64,6 +89,7 @@ class ComparisonConfig(StrictModel):
     temperature: Annotated[float, Field(strict=True, ge=0, le=2, allow_inf_nan=False)] = 0.0
     max_output_tokens: Annotated[StrictInt, Field(ge=1)] = 2048
     request_timeout_seconds: Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)] = 90.0
+    reasoning_effort: Literal["low"] = "low"
     rag_top_k: Annotated[StrictInt, Field(ge=1, le=50)] = 12
     usable_context_tokens: Annotated[StrictInt, Field(ge=1)]
     context_budget_source: Nonblank
@@ -74,6 +100,7 @@ class ComparisonConfig(StrictModel):
     request_overhead_tokens: Annotated[StrictInt, Field(ge=0)] = 256
     repetitions: Annotated[StrictInt, Field(ge=1, le=10)] = 1
     pricing: Pricing
+    usage_pricing: UsagePricing | None = None
     spending: SpendingLimits = Field(default_factory=SpendingLimits)
 
     @field_validator("base_url")
@@ -120,6 +147,7 @@ def prepared_payload(config: ComparisonConfig, question) -> dict:
         temperature=config.temperature,
         max_output_tokens=config.max_output_tokens,
         request_timeout=config.request_timeout_seconds,
+        reasoning_effort=config.reasoning_effort,
     )
     return adapter.build_payload(**question.prompts(), response_model=QAAnswer)
 
@@ -133,10 +161,26 @@ def estimate_input_tokens(payload: dict, config: ComparisonConfig) -> tuple[int,
 
 
 def execution_blockers(
-    config, *, ready, opt_in=False, transmission_confirmed=False, environment=None
+    config,
+    *,
+    ready,
+    opt_in=False,
+    transmission_confirmed=False,
+    question_selected=False,
+    environment=None,
 ):
     environment = os.environ if environment is None else environment
-    blockers = ["paid_execution_disabled_in_this_milestone"]
+    blockers = []
+    if (config.base_url, config.model) != ("https://api.openai.com/v1", "gpt-6.1-sol"):
+        blockers.append("execution_requires_official_openai_endpoint_and_gpt_6_1_sol")
+    if config.api_key_env != "TENDERCITE_LLM_API_KEY":
+        blockers.append("execution_requires_TENDERCITE_LLM_API_KEY")
+    if config.spending.currency != "USD" or config.spending.cumulative != Decimal("20"):
+        blockers.append("execution_requires_20_USD_experiment_budget")
+    if config.repetitions != 1:
+        blockers.append("pilot_requires_one_pair_without_repetitions")
+    if not question_selected:
+        blockers.append("explicit_question_selection_required")
     if not opt_in:
         blockers.append("explicit_execution_opt_in_required")
     if not transmission_confirmed:
@@ -176,6 +220,20 @@ def preflight(config, corpus, questions, *, transmission_confirmed=False, enviro
                 "max_output_tokens": config.max_output_tokens,
                 "usable_context_tokens": config.usable_context_tokens,
                 "request_payload_sha256": hashlib.sha256(wire).hexdigest(),
+                "effective_generation": {
+                    key: payload[key]
+                    for key in (
+                        "model",
+                        "temperature",
+                        "max_tokens",
+                        "max_completion_tokens",
+                        "reasoning_effort",
+                    )
+                    if key in payload
+                },
+                "strict_structured_outputs": payload["response_format"]["json_schema"].get(
+                    "strict", False
+                ),
                 "estimated_input_cost": str(input_cost),
                 "maximum_output_cost": str(output_cost),
                 "estimated_cost_with_safety_margin": str(safe_cost),
