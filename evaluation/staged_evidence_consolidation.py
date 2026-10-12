@@ -86,9 +86,10 @@ def validate_extraction(answer, step, corpus):
     }
 
 
-def canonical(value):
+def canonical(value, *, fold_case=True):
     # Formatting only: retain punctuation and provision numbers; no fuzzy/legal alias matching.
-    return " ".join(unicodedata.normalize("NFKC", value).casefold().split())
+    value = unicodedata.normalize("NFKC", value)
+    return " ".join((value.casefold() if fold_case else value).split())
 
 
 def consolidate(manifest, attempts):
@@ -136,7 +137,7 @@ def consolidate(manifest, attempts):
             group = (
                 finding["kind"],
                 canonical(finding["subject"]),
-                canonical(finding["exact_identifier"]),
+                canonical(finding["exact_identifier"], fold_case=False),
             )
             key = (
                 *group,
@@ -173,7 +174,7 @@ def consolidate(manifest, attempts):
     consolidated = list(findings.values())
     for finding in consolidated:
         groups[(finding["reference_group_id"], canonical(finding["purpose"]))].append(finding)
-        identifiers[(finding["kind"], canonical(finding["exact_identifier"]))].add(
+        identifiers[(finding["kind"], canonical(finding["exact_identifier"], fold_case=False))].add(
             canonical(finding["subject"])
         )
         if finding["uncertainty"]:

@@ -3,9 +3,11 @@
 import hashlib
 import json
 from decimal import Decimal
+from types import SimpleNamespace
 
 from evaluation.cloud_llm_contexts import QAAnswer
 from evaluation.cloud_llm_preflight import (
+    OPENAI_SOL_CAPABILITIES,
     ComparisonConfig,
     estimate_input_tokens,
     preflight,
@@ -91,10 +93,15 @@ def prepared_extraction(corpus, question_id, plan_id, sources):
 
 
 def partition(corpus, question_id, config, settings, plan_id):
+    return _partition(
+        corpus, question_id, stage_config(config, settings, "extraction"), settings, plan_id
+    )
+
+
+def _partition(corpus, question_id, effective, settings, plan_id):
     """Pack whole pages per document; split only an individually oversized page, losslessly."""
     if question_id not in corpus.questions:
         raise ValueError("Exact original eligible question ID is required")
-    effective = stage_config(config, settings, "extraction")
     budget = min(
         settings.max_estimated_input_tokens,
         effective.usable_context_tokens - effective.max_output_tokens,
@@ -153,7 +160,88 @@ def partition(corpus, question_id, config, settings, plan_id):
     return batches
 
 
+def unpriced_partition(corpus, question_id, settings):
+    """Source-only preview with documented model/default estimator parameters, NEVER executable.
+
+    Do not invent missing prices or historical spending just to count batches. Priced plans still
+    require ComparisonConfig and cannot load this deliberately separate preview format.
+    """
+    if question_id not in corpus.questions:
+        raise ValueError("Exact original eligible question ID is required")
+    if max(settings.extraction_max_output_tokens, settings.synthesis_max_output_tokens) > (
+        OPENAI_SOL_CAPABILITIES.max_completion_tokens
+    ):
+        raise ValueError("Output limit exceeds documented model capability")
+    values = {
+        "base_url": OPENAI_SOL_CAPABILITIES.base_url,
+        "model": OPENAI_SOL_CAPABILITIES.model,
+        "reasoning_effort": "low",
+        "temperature": 0.0,
+        "max_output_tokens": settings.extraction_max_output_tokens,
+        "usable_context_tokens": OPENAI_SOL_CAPABILITIES.context_window_tokens,
+        **{
+            key: ComparisonConfig.model_fields[key].default
+            for key in (
+                "request_timeout_seconds",
+                "token_safety_multiplier",
+                "request_overhead_tokens",
+            )
+        },
+    }
+    effective = SimpleNamespace(**values)
+    preview_id = digest(
+        [
+            "UNPRICED_SOURCE_PREVIEW",
+            corpus.provenance,
+            question_id,
+            settings.model_dump(),
+            {k: str(v) for k, v in values.items()},
+        ]
+    )
+    steps = _partition(corpus, question_id, effective, settings, preview_id)
+    rows, requests = [], []
+    for number, step in enumerate(steps, 1):
+        payload = prepared_payload(effective, step, response_model=AtomicExtraction)
+        tokens, wire = estimate_input_tokens(payload, effective)
+        rows.append(
+            {
+                "batch_id": step.batch_id,
+                "sequence": number,
+                "document_name": step.sources[0].document_name,
+                "page_range": [step.sources[0].page_number, step.sources[-1].page_number],
+                "input_token_estimate": tokens,
+                "request_payload_sha256": hashlib.sha256(wire).hexdigest(),
+                "sources": [s.model_dump(exclude={"text"}) for s in step.sources],
+            }
+        )
+        requests.append({"prepared": step.model_dump(), "payload": payload})
+    return {
+        "schema_version": "staged-source-partition-preview-1",
+        "status": "UNPRICED_PREVIEW",
+        "preview_id": preview_id,
+        "question_id": question_id,
+        "provenance": corpus.provenance,
+        "settings": settings.model_dump(),
+        "generation_defaults": {k: str(v) for k, v in values.items()},
+        "model_capabilities": OPENAI_SOL_CAPABILITIES.model_dump(mode="json"),
+        "pages": page_inventory(corpus),
+        "batches": rows,
+        "planned_extraction_requests": len(steps),
+        "planned_optional_synthesis_requests": 1,
+        "planned_requests_including_optional_synthesis": len(steps) + 1,
+        "estimated_cost": None,
+        "api_calls": 0,
+        "api_execution_available": False,
+        "limitation": (
+            "Default-generation source preview only. Operator pricing/configuration and original "
+            "ledger are required for a priced full-plan dry-run and execution."
+        ),
+    }, requests
+
+
 def plan(corpus, question_id, config, settings):
+    if question_id not in corpus.questions:
+        raise ValueError("Exact original eligible question ID is required")
     if config.repetitions != 1:
         raise ValueError("Staged planning requires one request per step, without repetitions")
     inventory = page_inventory(corpus)

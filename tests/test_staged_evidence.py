@@ -22,6 +22,7 @@ from evaluation.staged_evidence_plan import (
     save_plan,
     stage_config,
     synthesis_preflight,
+    unpriced_partition,
 )
 from evaluation.staged_evidence_schemas import AtomicExtraction, StagedSettings
 
@@ -106,6 +107,18 @@ def test_plan_is_reproducible_full_family_and_includes_all_pages(staged):
         source = step.sources[0]
         assert source.text == corpus_data.pages[source.document_id][source.page_number]
         assert source.chunk_id is None and source.char_start == 0
+
+
+def test_unpriced_preview_uses_identical_batching_without_fabricating_prices(staged, monkeypatch):
+    import httpx
+
+    monkeypatch.setattr(httpx, "AsyncClient", lambda *a, **k: pytest.fail("Preview attempted HTTP"))
+    corpus_data, _, settings, manifest, steps, _ = staged
+    preview, requests = unpriced_partition(corpus_data, manifest["question_id"], settings)
+    assert preview["status"] == "UNPRICED_PREVIEW" and preview["estimated_cost"] is None
+    assert preview["api_calls"] == 0 and not preview["api_execution_available"]
+    assert [b["batch_id"] for b in preview["batches"]] == [s.batch_id for s in steps]
+    assert preview["planned_extraction_requests"] == len(requests) == len(steps)
 
 
 def test_oversized_pages_split_losslessly_with_complete_wire_budget(staged):
@@ -254,7 +267,7 @@ def test_consolidation_deduplicates_formatting_retains_citations_and_distinct_pu
     for step in steps:
         f = finding(step)
         if step == steps[1]:
-            f.update(subject=" TEST   ACT ", exact_identifier="TEST ACT § 4")
+            f.update(subject=" TEST   ACT ", exact_identifier="Test   Act § 4")
         if step == steps[2]:
             f["purpose"] = "A separate original definition purpose"
         attempts[step.batch_id] = accepted(step, corpus_data, [f])
@@ -298,6 +311,17 @@ def test_conflicting_relationships_remain_separate_for_human_review(staged):
     assert result["issues"][0]["kind"] == "POTENTIAL_RELATIONSHIP_CONFLICT"
 
 
+def test_case_sensitive_provision_labels_are_not_collapsed(staged):
+    corpus_data, _, _, manifest, steps, _ = staged
+    attempts = {}
+    for i, step in enumerate(steps):
+        f = finding(step)
+        f["exact_identifier"] = "Test Act § 4(a)" if i == 0 else "Test Act § 4(A)"
+        attempts[step.batch_id] = accepted(step, corpus_data, [f])
+    result = consolidate(manifest, attempts)
+    assert result["unique_consolidated_reference_count"] == 2
+
+
 def test_synthesis_uses_only_verified_evidence_and_fails_oversized_context(staged):
     corpus_data, config, settings, manifest, steps, _ = staged
     attempts = {s.batch_id: accepted(s, corpus_data, [finding(s)]) for s in steps}
@@ -329,4 +353,31 @@ def test_synthesis_uses_only_verified_evidence_and_fails_oversized_context(stage
     )
     assert validate_synthesis(answer, synthesis, corpus_data)["citation_status"] == "VERIFIED_QUOTE"
     answer.evidence[0].quote = "Unsupported legal conclusion"
+    assert validate_synthesis(answer, synthesis, corpus_data)["citation_status"] == "INVALID_QUOTE"
+
+
+def test_synthesis_cannot_use_stored_page_text_outside_extracted_quotes(staged):
+    corpus_data, _, _, manifest, steps, _ = staged
+    attempts = {}
+    for step in steps:
+        f = finding(step)
+        f["evidence"][0]["quote"] = step.sources[0].text[:3]
+        attempts[step.batch_id] = accepted(step, corpus_data, [f])
+    synthesis = prepared_synthesis(manifest, consolidate(manifest, attempts), corpus_data)
+    from evaluation.cloud_llm_contexts import QAAnswer
+
+    source = steps[0].sources[0]
+    answer = QAAnswer(
+        question_id=synthesis.question_id,
+        status="ANSWERED",
+        answer="Original synthetic answer.",
+        evidence=[
+            {
+                "document_id": source.document_id,
+                "page_number": source.page_number,
+                "quote": source.text,
+                "chunk_id": None,
+            }
+        ],
+    )
     assert validate_synthesis(answer, synthesis, corpus_data)["citation_status"] == "INVALID_QUOTE"
