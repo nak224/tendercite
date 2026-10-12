@@ -69,7 +69,9 @@ def redact(value, key):
     return value
 
 
-def response_record(response, question, corpus, config):
+def response_record(
+    response, question, corpus, config, *, response_model=QAAnswer, validate_output=validate_answer
+):
     record = {
         "http_status": response.http_status,
         "provider_request_id": response.request_id,
@@ -158,9 +160,9 @@ def response_record(response, question, corpus, config):
         except (ValueError, TypeError):
             record["generation_status"] = "INVALID_STRUCTURED_JSON"
             raise ValueError("Completion content is not valid structured JSON") from None
-        answer = QAAnswer.model_validate(content)
+        answer = response_model.model_validate(content)
         record["structured_answer"] = answer.model_dump()
-        record["citation_validation"] = validate_answer(answer, question, corpus)
+        record["citation_validation"] = validate_output(answer, question, corpus)
         record["response_validity"] = "VALID_STRUCTURED_ANSWER"
         record["generation_status"] = "VALID_STRUCTURED_ANSWER"
         record["evidence_status"] = record["citation_validation"]["citation_status"]
