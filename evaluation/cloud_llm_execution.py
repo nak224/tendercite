@@ -1,4 +1,4 @@
-"""Opt-in, exactly one question pair, no automatic retries or uncertain-cost continuation."""
+"""Guarded pair or one proven truncation retry; no automatic retries or uncertain costs."""
 
 import hashlib
 import json
@@ -19,12 +19,29 @@ from evaluation.ted_acquisition import timestamp
 from tendercite.services.llm.openai_compatible import OpenAICompatibleLLM, ResponseLimitError
 
 
-def validate_execution(config, report, questions, *, confirmed, environment):
+def validate_execution(
+    config,
+    report,
+    questions,
+    *,
+    confirmed,
+    environment,
+    retry_strategy=None,
+    original_attempt_id=None,
+    retry_authorized=False,
+):
     selected = (
         len(questions) == 2
         and questions[0].question_id == questions[1].question_id
         and [q.strategy for q in questions] == ["e5_rag", "full_context"]
     )
+    if retry_strategy or original_attempt_id or retry_authorized:
+        selected = bool(
+            len(questions) == 1
+            and questions[0].strategy == retry_strategy
+            and original_attempt_id
+            and retry_authorized
+        )
     blockers = execution_blockers(
         config,
         ready=report["status"] == "READY_DRY_RUN",
@@ -61,7 +78,13 @@ def response_record(response, question, corpus, config):
         "raw_response_sha256": hashlib.sha256(response.body).hexdigest(),
         "response_validity": "INVALID_OR_INCOMPLETE",
         "accounting_status": "UNCERTAIN",
+        "generation_status": "INVALID_RESPONSE_STRUCTURE"
+        if 200 <= response.http_status < 300
+        else "PROVIDER_HTTP_ERROR",
+        "configured_output_limit": config.max_output_tokens,
     }
+    if not 200 <= response.http_status < 300:
+        record["primary_cause"] = "http_error"
     accounting = None
     try:
         body = json.loads(response.body)
@@ -72,6 +95,7 @@ def response_record(response, question, corpus, config):
         if "error" in body:
             record["original_provider_error"] = body["error"]
         if not 200 <= response.http_status < 300:
+            record["generation_status"] = "PROVIDER_HTTP_ERROR"
             provider_error = body.get("error")
             provider_error = provider_error if isinstance(provider_error, dict) else {}
             record["primary_cause"] = (
@@ -95,9 +119,19 @@ def response_record(response, question, corpus, config):
             and re.fullmatch(re.escape(config.model) + r"-\d{4}-\d{2}-\d{2}", model)
         ):
             raise ValueError("Actual model is missing or differs from configured model")
+        choices = body.get("choices")
+        if isinstance(choices, list) and len(choices) == 1 and isinstance(choices[0], dict):
+            record["completion_status"] = choices[0].get("finish_reason")
+            if record["completion_status"] == "length":
+                record["generation_status"] = "OUTPUT_TOKEN_TRUNCATION"
+            elif record["completion_status"] == "content_filter" or (
+                isinstance(choices[0].get("message"), dict) and choices[0]["message"].get("refusal")
+            ):
+                record["generation_status"] = "PROVIDER_REFUSAL"
         accounting = account_usage(body.get("usage"), config)
         record["accounting"] = accounting
         record["accounting_status"] = "USAGE_RECORDED_NOT_INVOICE"
+        record["actual_output_tokens"] = accounting["completion_tokens"]
         if accounting["completion_tokens"] > config.max_output_tokens:
             raise ValueError("Provider completion usage exceeds configured output-token limit")
         if response.http_status != 200:
@@ -111,13 +145,29 @@ def response_record(response, question, corpus, config):
         record["provider_native_metadata"] = {
             key: message[key] for key in ("annotations", "citations") if key in message
         }
-        if choice.get("finish_reason") != "stop" or message.get("refusal"):
+        if choice.get("finish_reason") == "length":
+            record["generation_status"] = "OUTPUT_TOKEN_TRUNCATION"
+            raise ValueError("Completion was truncated: provider finish_reason is length")
+        if message.get("refusal") or choice.get("finish_reason") == "content_filter":
+            record["generation_status"] = "PROVIDER_REFUSAL"
+            raise ValueError("Completion was refused or filtered")
+        if choice.get("finish_reason") != "stop":
             raise ValueError("Completion was truncated, refused or incomplete")
-        answer = QAAnswer.model_validate_json(message.get("content"))
+        try:
+            content = json.loads(message.get("content"))
+        except (ValueError, TypeError):
+            record["generation_status"] = "INVALID_STRUCTURED_JSON"
+            raise ValueError("Completion content is not valid structured JSON") from None
+        answer = QAAnswer.model_validate(content)
         record["structured_answer"] = answer.model_dump()
         record["citation_validation"] = validate_answer(answer, question, corpus)
         record["response_validity"] = "VALID_STRUCTURED_ANSWER"
-    except (ValueError, TypeError, KeyError, AttributeError, ValidationError) as exc:
+        record["generation_status"] = "VALID_STRUCTURED_ANSWER"
+        record["evidence_status"] = record["citation_validation"]["citation_status"]
+    except ValidationError as exc:
+        record["generation_status"] = "INVALID_JSON_SCHEMA"
+        record["error"] = str(exc)
+    except (ValueError, TypeError, KeyError, AttributeError) as exc:
         # Schema errors can contain source content; they are kept only in ignored local outputs.
         record["error"] = str(exc)
     return record, accounting
@@ -135,8 +185,22 @@ async def execute_pair(
     environment,
     transport: httpx.AsyncBaseTransport | None = None,
     retry_reconciled=False,
+    retry_strategy=None,
+    original_attempt_id=None,
+    retry_authorized=False,
 ):
-    validate_execution(config, report, questions, confirmed=confirmed, environment=environment)
+    validate_execution(
+        config,
+        report,
+        questions,
+        confirmed=confirmed,
+        environment=environment,
+        retry_strategy=retry_strategy,
+        original_attempt_id=original_attempt_id,
+        retry_authorized=retry_authorized,
+    )
+    if retry_strategy and retry_reconciled:
+        raise ValueError("Truncation retry cannot bypass the zero-cost pair reconciliation gate")
     if any(
         (output_dir / name).exists()
         for name in ("e5_rag.json", "full_context.json", "execution.json")
@@ -168,8 +232,15 @@ async def execute_pair(
         reasoning_effort=config.reasoning_effort,
     )
     with experiment_lock(path):
+        if retry_strategy and not path.exists():
+            raise ValueError("Truncation retry requires the existing experiment ledger")
         ledger = ExperimentLedger(path, config, corpus)
-        ledger.assert_pair_new(questions[0].question_id, retry_reconciled=retry_reconciled)
+        retry = None
+        if retry_strategy:
+            retry = ledger.assert_truncated_retry(questions[0], original_attempt_id, corpus, config)
+            run["retry"] = retry
+        else:
+            ledger.assert_pair_new(questions[0].question_id, retry_reconciled=retry_reconciled)
         run["attempt_id"] = str(uuid4())
         run["retry_reconciled"] = retry_reconciled
         pair_estimate = Decimal(report["estimated_experiment_cost_with_margin"])
@@ -185,6 +256,7 @@ async def execute_pair(
                     output_dir,
                     attempt_id=run["attempt_id"],
                     retry_reconciled=retry_reconciled,
+                    truncated_retry_key=retry["original_reservation_key"] if retry else None,
                 )
             except ValueError as exc:
                 run["error"] = str(exc)
@@ -204,6 +276,8 @@ async def execute_pair(
                     "error": str(exc),
                     "error_type": type(exc).__name__,
                     "latency_seconds": time.perf_counter() - started,
+                    "generation_status": "TRANSPORT_ERROR",
+                    "configured_output_limit": config.max_output_tokens,
                 }
                 if isinstance(exc, ResponseLimitError):
                     record["raw_response_truncated"] = True
@@ -221,6 +295,7 @@ async def execute_pair(
                     "source_provenance": corpus.provenance,
                     "reservation_key": entry["key"],
                     "attempt_id": run["attempt_id"],
+                    "retry": retry,
                 }
             )
             # Preserve output before releasing any reservation. A filesystem/crash failure leaves
@@ -234,6 +309,8 @@ async def execute_pair(
                     "accounting_status": record["accounting_status"],
                     "ledger_status": entry["status"],
                     "response_validity": record["response_validity"],
+                    "generation_status": record.get("generation_status"),
+                    "evidence_status": record.get("evidence_status"),
                     "usage_derived_cost": None
                     if accounting is None
                     else accounting["usage_derived_cost"],
@@ -248,7 +325,7 @@ async def execute_pair(
                 )
                 break
         else:
-            run["status"] = "COMPLETED_PAIR"
+            run["status"] = "COMPLETED_STRATEGY_RETRY" if retry else "COMPLETED_PAIR"
         run["persistent_committed_cost_or_reservations"] = str(ledger.committed())
         run["remaining_budget"] = str(Decimal("20") - ledger.committed())
         run["known_usage_derived_subtotal"] = str(

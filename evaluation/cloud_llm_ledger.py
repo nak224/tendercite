@@ -11,6 +11,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from evaluation import external_benchmark
+from evaluation.cloud_llm_retry import validate_truncated_response
 from evaluation.external_benchmark import confined
 from evaluation.external_qa_spans import read_local_json
 from evaluation.ted_acquisition import timestamp
@@ -252,7 +253,37 @@ class ExperimentLedger:
                 "Question pair already attempted; automatic repeats/resumes are disabled"
             )
 
-    def reserve(self, question, estimate, output_dir, *, attempt_id=None, retry_reconciled=False):
+    def assert_truncated_retry(self, question, original_attempt_id, corpus, config):
+        if any(
+            self.effective_status(e) not in ("SETTLED", "MANUALLY_RECONCILED_ZERO")
+            for e in self.data["entries"]
+        ):
+            raise ValueError(
+                "Uncertain/interrupted/over-estimate accounting blocks truncation retry"
+            )
+        prior = [
+            e
+            for e in self.data["entries"]
+            if e["question_id"] == question.question_id and e["strategy"] == question.strategy
+        ]
+        matched = [e for e in prior if self.attempt_id(e) == original_attempt_id]
+        if len(matched) != 1 or matched[0]["status"] != "SETTLED":
+            raise ValueError("Exact settled original question/strategy/attempt is required")
+        entry = matched[0]
+        if prior[-1] is not entry:
+            raise ValueError("Original strategy already has a subsequent attempt; inspect latest")
+        return validate_truncated_response(entry, question, corpus, config)
+
+    def reserve(
+        self,
+        question,
+        estimate,
+        output_dir,
+        *,
+        attempt_id=None,
+        retry_reconciled=False,
+        truncated_retry_key=None,
+    ):
         cost = amount(estimate)
         if self.committed() + cost > self.limit:
             raise ValueError("Next request cannot fit the remaining persistent 20 USD budget")
@@ -261,7 +292,17 @@ class ExperimentLedger:
             for e in self.data["entries"]
             if e["question_id"] == question.question_id and e["strategy"] == question.strategy
         ]
-        if prior and (not retry_reconciled or any(e["key"] not in self.manual_zero for e in prior)):
+        truncation_retry = bool(
+            truncated_retry_key
+            and prior
+            and prior[-1]["key"] == truncated_retry_key
+            and prior[-1]["status"] == "SETTLED"
+        )
+        if (
+            prior
+            and not truncation_retry
+            and (not retry_reconciled or any(e["key"] not in self.manual_zero for e in prior))
+        ):
             raise ValueError("Request already attempted")
         attempt_id = attempt_id or str(uuid4())
         key = hashlib.sha256(
@@ -279,6 +320,11 @@ class ExperimentLedger:
             "reserved_at": timestamp(),
             "output_dir": str(output_dir),
         }
+        if truncated_retry_key:
+            if not truncation_retry:
+                raise ValueError("Original truncation reservation does not match latest strategy")
+            entry["retry_of_key"] = truncated_retry_key
+            entry["retry_of_attempt"] = self.attempt_id(prior[-1])
         self.data["entries"].append(entry)
         atomic_save(self.path, self.data)  # Durable BEFORE any network request.
         return entry
@@ -288,6 +334,9 @@ class ExperimentLedger:
             entry["provider_request_id"] = record.get("provider_request_id")
             entry["http_status"] = record.get("http_status")
             entry["provider_error_code"] = record.get("provider_error_code")
+            _, entry["response_file_sha256"] = read_local_json(
+                Path(entry["output_dir"]) / f"{entry['strategy']}.json"
+            )
         if accounting is None:
             entry["status"] = "UNCERTAIN"  # Reservation remains committed.
         else:

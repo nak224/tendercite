@@ -4,7 +4,7 @@
   "model": "REPLACE_WITH_SELECTED_MODEL",
   "api_key_env": "TENDERCITE_LLM_API_KEY",
   "temperature": 0.0,
-  "max_output_tokens": 2048,
+  "max_output_tokens": 4096,
   "request_timeout_seconds": 90.0,
   "rag_top_k": 12,
   "usable_context_tokens": null,

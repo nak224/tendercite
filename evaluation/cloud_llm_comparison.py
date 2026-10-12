@@ -1,4 +1,4 @@
-"""Cloud QA comparison: local dry-run by default, explicit guarded question-pair execution."""
+"""Cloud QA comparison: dry-run by default; guarded pairs or one truncation retry."""
 
 import argparse
 import asyncio
@@ -7,12 +7,14 @@ import json
 import logging
 import os
 import platform
+from decimal import Decimal
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from evaluation.cloud_llm_contexts import build_comparison_questions, load_comparison_corpus
 from evaluation.cloud_llm_execution import execute_pair, validate_execution
+from evaluation.cloud_llm_ledger import ExperimentLedger, experiment_lock, ledger_path
 from evaluation.cloud_llm_preflight import configured_from_environment, preflight
 from evaluation.external_benchmark import confined
 from evaluation.external_qa_spans import read_local_json, write_new_json
@@ -30,6 +32,9 @@ def run_dry(
     execute=False,
     previous_preflight=None,
     retry_reconciled=False,
+    strategy=None,
+    retry_truncated_attempt=None,
+    authorize_truncated_retry=False,
 ):
     output_dir = confined(output_dir)
     if output_dir.exists():
@@ -47,14 +52,38 @@ def run_dry(
             raise ValueError("Execution requires an explicit --question-id")
         if retry_reconciled and not execute:
             raise ValueError("--retry-reconciled requires explicit --execute")
+        if strategy and not question_id:
+            raise ValueError("--strategy requires an exact --question-id")
+        if retry_truncated_attempt and (not strategy or not question_id):
+            raise ValueError("Truncation retry requires question, strategy and original attempt ID")
+        if authorize_truncated_retry and not retry_truncated_attempt:
+            raise ValueError("Retry authorization requires an original truncation attempt")
+        if retry_reconciled and retry_truncated_attempt:
+            raise ValueError("Zero-cost pair retry and truncation retry are separate workflows")
         if question_id:
             questions = [q for q in questions if q.question_id == question_id]
             if len(questions) != 2:
                 raise ValueError("Selected question ID is not in the original eligible cohort")
+        if strategy:
+            questions = [q for q in questions if q.strategy == strategy]
         record, prompts = preflight(
             config, corpus, questions, transmission_confirmed=transmission_confirmed
         )
         record["config_file_sha256"] = config_hash
+        if retry_truncated_attempt:
+            with experiment_lock(ledger_path()):
+                ledger = ExperimentLedger.existing(ledger_path())
+                record["truncation_retry"] = ledger.assert_truncated_retry(
+                    questions[0], retry_truncated_attempt, corpus, config
+                )
+                record["persistent_committed_cost_or_reservations"] = str(ledger.committed())
+                record["available_experiment_budget"] = str(ledger.limit - ledger.committed())
+                if (
+                    ledger.committed() + Decimal(record["estimated_experiment_cost_with_margin"])
+                    > ledger.limit
+                ):
+                    record["status"] = "BLOCKED_PREFLIGHT"
+                    record["failures"].append("persistent_experiment_budget_exceeded")
         record["previous_dry_run"] = {"available": False}
         if previous_preflight:
             previous, previous_hash = read_local_json(previous_preflight)
@@ -81,7 +110,14 @@ def run_dry(
         write_new_json(output_dir / "prompts.json", {"requests": prompts})
         if execute:
             validate_execution(
-                config, record, questions, confirmed=transmission_confirmed, environment=os.environ
+                config,
+                record,
+                questions,
+                confirmed=transmission_confirmed,
+                environment=os.environ,
+                retry_strategy=strategy if retry_truncated_attempt else None,
+                original_attempt_id=retry_truncated_attempt,
+                retry_authorized=authorize_truncated_retry,
             )
             # Persist the reviewed estimates/provenance BEFORE any request can be attempted.
             record.update(runtime_metadata())
@@ -98,6 +134,9 @@ def run_dry(
                     confirmed=transmission_confirmed,
                     environment=os.environ,
                     retry_reconciled=retry_reconciled,
+                    retry_strategy=strategy if retry_truncated_attempt else None,
+                    original_attempt_id=retry_truncated_attempt,
+                    retry_authorized=authorize_truncated_retry,
                 )
             )
     except ValidationError as exc:
@@ -140,6 +179,7 @@ def runtime_metadata():
                 "cloud_llm_execution.py",
                 "cloud_llm_usage.py",
                 "cloud_llm_ledger.py",
+                "cloud_llm_retry.py",
             )
         },
     }
@@ -157,6 +197,17 @@ def main(argv=None):
         "--execute", action="store_true", help="Explicit operator opt-in; one pair only"
     )
     cli.add_argument("--question-id", help="Original eligible ID; required for execution")
+    cli.add_argument(
+        "--strategy",
+        choices=("e5_rag", "full_context"),
+        help="One-arm dry-run or explicit truncation retry",
+    )
+    cli.add_argument("--retry-truncated-attempt", help="Exact settled original attempt ID")
+    cli.add_argument(
+        "--authorize-truncated-retry",
+        action="store_true",
+        help="Explicit operator authorization for one paid truncation retry",
+    )
     cli.add_argument(
         "--retry-reconciled",
         action="store_true",
@@ -185,6 +236,9 @@ def main(argv=None):
             execute=args.execute,
             previous_preflight=args.previous_preflight,
             retry_reconciled=args.retry_reconciled,
+            strategy=args.strategy,
+            retry_truncated_attempt=args.retry_truncated_attempt,
+            authorize_truncated_retry=args.authorize_truncated_retry,
         )
     except (OSError, ValueError) as exc:
         logging.error("Preflight not started: %s", exc)
@@ -214,7 +268,11 @@ def main(argv=None):
             indent=2,
         )
     )
-    return 0 if report["status"] in ("READY_DRY_RUN", "COMPLETED_PAIR") else 1
+    return (
+        0
+        if report["status"] in ("READY_DRY_RUN", "COMPLETED_PAIR", "COMPLETED_STRATEGY_RETRY")
+        else 1
+    )
 
 
 if __name__ == "__main__":
