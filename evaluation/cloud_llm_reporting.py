@@ -245,14 +245,39 @@ def attempt_row(ledger, entry, corpus, spans, human_reviews, used_reviews):
 
 
 def comparison_report(
-    ledger, corpus, *, spans=None, gold=None, human_reviews=None, latest_valid=False
+    ledger,
+    corpus,
+    *,
+    spans=None,
+    gold=None,
+    human_reviews=None,
+    latest_valid=False,
+    staged_plan=None,
 ):
     if ledger.data["binding"]["provenance"] != corpus.provenance:
         raise ValueError("Experiment ledger belongs to different source/retrieval provenance")
     used_reviews = set()
     reviews = human_reviews or {}
+    # Import only evaluation helpers; this never loads model weights or creates an HTTP client.
+    from evaluation.staged_evidence_reporting import staged_report, uninspected_staged_row
+
+    staged = (
+        staged_report(
+            ledger,
+            staged_plan,
+            corpus,
+            spans=spans,
+            human_reviews=reviews,
+            used_reviews=used_reviews,
+        )
+        if staged_plan
+        else None
+    )
+    staged_rows = {r["reservation_key"]: r for r in staged["attempts"]} if staged else {}
     rows = [
-        attempt_row(ledger, e, corpus, spans or {}, reviews, used_reviews)
+        staged_rows.get(e["key"]) or uninspected_staged_row(ledger, e)
+        if e.get("staged_step")
+        else attempt_row(ledger, e, corpus, spans or {}, reviews, used_reviews)
         for e in ledger.data["entries"]
     ]
     if set(reviews) != used_reviews:
@@ -282,7 +307,10 @@ def comparison_report(
                 "selected_attempts": {
                     k: v["reservation_key"] if v else None for k, v in selected.items()
                 },
-                "attempt_count": sum(len(groups[(qid, s)]) for s in ("e5_rag", "full_context")),
+                "attempt_count": sum(r["question_id"] == qid for r in rows),
+                "pair_attempt_count": sum(
+                    len(groups[(qid, s)]) for s in ("e5_rag", "full_context")
+                ),
                 "displayed_comparison_cost_usd": str(amount(rc) + amount(fc))
                 if rc is not None and fc is not None
                 else None,
@@ -293,6 +321,19 @@ def comparison_report(
                 if fc is not None and rc is not None
                 else None,
                 "semantic_accuracy": "NOT_ASSESSED",
+                "staged_method": {
+                    "plan_id": staged["plan_id"],
+                    "extraction_completion_status": staged["evidence"]["status"],
+                    "pipeline_status": staged["pipeline_status"],
+                    "usage_derived_cost_usd": staged["efficiency"]["all_stages"][
+                        "usage_derived_cost_usd"
+                    ],
+                    "completed_extraction_batches": staged["evidence"]["completed_batches"],
+                    "consolidated_findings": staged["evidence"]["consolidated_finding_count"],
+                    "prompt_comparison": "CHANGED_EXPERIMENTAL_METHOD",
+                }
+                if staged and staged["question_id"] == qid
+                else None,
             }
         )
     known_spend = sum(
@@ -331,6 +372,7 @@ def comparison_report(
         },
         "attempts": rows,
         "comparisons": comparisons,
+        "staged": staged,
         "interpretation": (
             "Verified quotes and reviewed-span containment establish textual occurrence, "
             "not answer correctness or completeness. Upstream document references are "
@@ -405,6 +447,32 @@ def write_reports(directory, report):
             "No API calls were made by reporting.",
         ]
     )
+    if staged := report.get("staged"):
+        evidence = staged["evidence"]
+        lines.extend(
+            [
+                "",
+                "## Staged extraction and consolidation",
+                "",
+                staged["experimental_method"],
+                f"Pipeline: {staged['pipeline_status']}.",
+                f"Batches: {evidence['completed_batches']}/{evidence['planned_batches']}; "
+                f"complete pages: {evidence['source_pages_completed']}/"
+                f"{evidence['source_pages_planned']}.",
+                f"Raw findings: {evidence['raw_finding_count']}; consolidated findings: "
+                f"{evidence['consolidated_finding_count']}; duplicate findings removed: "
+                f"{evidence['duplicate_findings_removed']}.",
+                f"Valid/invalid citations: {evidence['valid_citation_count']}/"
+                f"{evidence['invalid_citation_count']}; "
+                f"unresolved issues: {len(evidence['issues'])}.",
+                "Staged usage-derived cost: "
+                f"{staged['efficiency']['all_stages']['usage_derived_cost_usd']} USD.",
+                "Independent benchmark evidence: "
+                f"{staged['independent_benchmark_evidence']['status']}.",
+                "Failed but billable calls remain in cumulative cost. "
+                "Semantic correctness: NOT_ASSESSED.",
+            ]
+        )
     (directory / "comparison.md").write_text(
         "\n".join(lines) + "\n", encoding="utf-8", newline="\n"
     )
@@ -419,6 +487,7 @@ def run(
     annotations=None,
     validation=None,
     human_review=None,
+    staged_plan_dir=None,
     **cohort,
 ):
     output_dir = confined(output_dir)
@@ -429,10 +498,19 @@ def run(
         annotations, validation, acquisition_dir, retrieval_results, corpus
     )
     reviews, review_hash = load_human_reviews(human_review, corpus)
+    from evaluation.staged_evidence_plan import load_plan
+
+    staged_plan = load_plan(staged_plan_dir, corpus) if staged_plan_dir else None
     with experiment_lock(ledger_path()):
         ledger = ExperimentLedger.existing(ledger_path())
         report = comparison_report(
-            ledger, corpus, spans=spans, gold=gold, human_reviews=reviews, latest_valid=latest_valid
+            ledger,
+            corpus,
+            spans=spans,
+            gold=gold,
+            human_reviews=reviews,
+            latest_valid=latest_valid,
+            staged_plan=staged_plan,
         )
         _, report["ledger_sha256"] = read_local_json(ledger_path())
     report["human_review_file_sha256"] = review_hash
@@ -453,6 +531,11 @@ def main(argv=None):
     cli.add_argument("--annotations", type=Path)
     cli.add_argument("--validation", type=Path)
     cli.add_argument("--human-review", type=Path)
+    cli.add_argument(
+        "--staged-plan",
+        type=Path,
+        help="Immutable staged plan to revalidate alongside pair history",
+    )
     cli.add_argument("--family", default=FAMILY)
     cli.add_argument("--dataset-revision", default=DATASET_REVISION)
     cli.add_argument("--expected-cases", type=int, default=9)
@@ -467,6 +550,7 @@ def main(argv=None):
             annotations=args.annotations,
             validation=args.validation,
             human_review=args.human_review,
+            staged_plan_dir=args.staged_plan,
             family=args.family,
             revision=args.dataset_revision,
             expected_cases=args.expected_cases,

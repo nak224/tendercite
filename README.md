@@ -184,6 +184,13 @@ occurrence, human review, displayed comparison costs and cumulative spend. Dry-r
 default; Codex/CI make no paid calls. A valid local configuration/key, explicit
 document-transmission permission and provider-side budget controls remain pilot prerequisites.
 
+The evaluation-only [staged evidence workflow](docs/evaluation/staged-evidence-extraction.md)
+partitions every parseable source page into bounded batches, validates atomic findings and
+consolidates them offline before optional final synthesis. Execution defaults to one explicitly
+authorized request and shares the original 20 USD ledger. Offline reports compare all three
+methods while retaining failed-call costs and coverage gaps. The real source preview covers
+137 pages in 54 extraction batches; configured pricing and actual staged evaluation remain pending.
+
 ## Docker
 
 ```bash
