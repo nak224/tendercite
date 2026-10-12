@@ -1,0 +1,8 @@
+{
+  "config_version": "staged-evidence-config-1",
+  "max_estimated_input_tokens": 16000,
+  "max_pages_per_batch": 6,
+  "extraction_max_output_tokens": 4096,
+  "synthesis_max_estimated_input_tokens": 32000,
+  "synthesis_max_output_tokens": 4096
+}

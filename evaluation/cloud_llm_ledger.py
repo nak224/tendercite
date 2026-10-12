@@ -178,6 +178,7 @@ class ExperimentLedger:
         ):
             raise ValueError("Malformed or duplicate ledger entries")
         for entry in entries:
+            self.validate_staged_metadata(entry["strategy"], entry.get("staged_step"))
             amount(entry["reserved_cost"])
             if entry["status"] not in ("RESERVED", "UNCERTAIN", "SETTLED", "OVER_ESTIMATE"):
                 raise ValueError("Invalid ledger accounting state")
@@ -237,6 +238,47 @@ class ExperimentLedger:
             else entry["reserved_cost"]
         )
 
+    @staticmethod
+    def validate_staged_metadata(strategy, metadata):
+        staged = strategy.startswith(("staged_extract_v1_", "staged_synthesis_v1_"))
+        if not staged and metadata is None:
+            return
+        if not staged or not isinstance(metadata, dict):
+            raise ValueError("Staged request requires its own namespaced step metadata")
+        stage = metadata.get("stage")
+        prefix = "staged_extract_v1_" if stage == "extraction" else "staged_synthesis_v1_"
+        if (
+            metadata.get("version") != "staged-ledger-step-1"
+            or metadata.get("transmission_confirmed") is not True
+            or stage not in ("extraction", "synthesis")
+            or any(
+                not re.fullmatch(r"[0-9a-f]{64}", str(metadata.get(key, "")))
+                for key in (
+                    "plan_id",
+                    "step_id",
+                    "request_payload_sha256",
+                    "input_source_sha256",
+                    "configuration_sha256",
+                    "plan_file_sha256",
+                )
+            )
+            or strategy != prefix + metadata["step_id"]
+            or (
+                stage == "extraction"
+                and not re.fullmatch(r"batch-[0-9a-f]{24}", str(metadata.get("batch_id", "")))
+            )
+            or (stage == "synthesis" and metadata.get("batch_id") is not None)
+        ):
+            raise ValueError("Invalid staged step identity/provenance")
+        confined(Path(metadata["plan_dir"]))
+
+    def assert_accounting_ready(self):
+        if any(
+            self.effective_status(e) not in ("SETTLED", "MANUALLY_RECONCILED_ZERO")
+            for e in self.data["entries"]
+        ):
+            raise ValueError("Ledger has uncertain/interrupted/over-estimate accounting")
+
     def assert_pair_new(self, question_id, *, retry_reconciled=False):
         if any(
             self.effective_status(e) not in ("SETTLED", "MANUALLY_RECONCILED_ZERO")
@@ -245,7 +287,11 @@ class ExperimentLedger:
             raise ValueError(
                 "Ledger has uncertain/interrupted/over-estimate accounting; reconcile first"
             )
-        prior = [e for e in self.data["entries"] if e["question_id"] == question_id]
+        prior = [
+            e
+            for e in self.data["entries"]
+            if e["question_id"] == question_id and e["strategy"] in ("e5_rag", "full_context")
+        ]
         if retry_reconciled and not prior:
             raise ValueError("Explicit retry requires a previously reconciled failed attempt")
         if prior and (not retry_reconciled or any(e["key"] not in self.manual_zero for e in prior)):
@@ -283,7 +329,9 @@ class ExperimentLedger:
         attempt_id=None,
         retry_reconciled=False,
         truncated_retry_key=None,
+        staged_step=None,
     ):
+        self.validate_staged_metadata(question.strategy, staged_step)
         cost = amount(estimate)
         if self.committed() + cost > self.limit:
             raise ValueError("Next request cannot fit the remaining persistent 20 USD budget")
@@ -320,6 +368,8 @@ class ExperimentLedger:
             "reserved_at": timestamp(),
             "output_dir": str(output_dir),
         }
+        if staged_step is not None:
+            entry["staged_step"] = staged_step
         if truncated_retry_key:
             if not truncation_retry:
                 raise ValueError("Original truncation reservation does not match latest strategy")

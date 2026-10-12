@@ -1,5 +1,10 @@
 # Guarded cloud LLM comparison (Milestones 3B-d1 / 3B-d2 / 3B-d2a / 3B-d3)
 
+Milestone 3B-d4 adds a separate [staged evidence workflow](staged-evidence-extraction.md):
+bounded extraction of all parseable source pages, offline consolidation and optional synthesis.
+It shares this experiment's original ledger/prices and can be included in offline reporting
+with `--staged-plan`. It uses new prompts and does not replace the pair/retry workflow below.
+
 The CLI defaults to an offline dry-run. An explicitly authorized operator can now execute
 **one original eligible question with both strategies**, or explicitly retry one settled
 truncated strategy, using OpenAI Chat Completions and

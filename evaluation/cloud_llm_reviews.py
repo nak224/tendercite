@@ -13,7 +13,7 @@ from evaluation.validate_external_qa_spans import validate_review
 class HumanVerdict(StrictModel):
     attempt_id: str = Field(min_length=1)
     question_id: str = Field(min_length=1)
-    strategy: Literal["e5_rag", "full_context"]
+    strategy: Literal["e5_rag", "full_context", "staged_extraction", "staged_synthesis"]
     response_file_sha256: Digest
     reviewer_alias: Alias
     reviewed_by_human: Literal[True]
