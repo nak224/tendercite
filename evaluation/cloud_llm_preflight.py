@@ -199,7 +199,7 @@ def configured_from_environment(value: dict, environment=None) -> ComparisonConf
     return ComparisonConfig.model_validate(data)
 
 
-def prepared_payload(config: ComparisonConfig, question) -> dict:
+def prepared_payload(config: ComparisonConfig, question, *, response_model=QAAnswer) -> dict:
     # Payload-only reuse of the same adapter: neither keys nor HTTP clients are needed.
     adapter = OpenAICompatibleLLM(
         base_url=config.base_url,
@@ -209,7 +209,7 @@ def prepared_payload(config: ComparisonConfig, question) -> dict:
         request_timeout=config.request_timeout_seconds,
         reasoning_effort=config.reasoning_effort,
     )
-    return adapter.build_payload(**question.prompts(), response_model=QAAnswer)
+    return adapter.build_payload(**question.prompts(), response_model=response_model)
 
 
 def estimate_input_tokens(payload: dict, config: ComparisonConfig) -> tuple[int, bytes]:
@@ -252,11 +252,19 @@ def execution_blockers(
     return blockers
 
 
-def preflight(config, corpus, questions, *, transmission_confirmed=False, environment=None):
+def preflight(
+    config,
+    corpus,
+    questions,
+    *,
+    transmission_confirmed=False,
+    environment=None,
+    response_model=QAAnswer,
+):
     environment = os.environ if environment is None else environment
     rows, prompts, total = [], [], Decimal("0")
     for question in questions:
-        payload = prepared_payload(config, question)
+        payload = prepared_payload(config, question, response_model=response_model)
         tokens, wire = estimate_input_tokens(payload, config)
         input_cost = Decimal(tokens) * config.pricing.input_per_million / 1_000_000
         output_cost = (
