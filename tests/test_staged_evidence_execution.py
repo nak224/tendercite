@@ -118,6 +118,7 @@ def test_one_request_default_reservation_wire_accounting_and_continuation(saved)
             entry["status"] == "RESERVED" and entry["staged_step"]["batch_id"] == steps[0].batch_id
         )
         assert entry["staged_step"]["plan_id"] == manifest["plan_id"]
+        assert entry["staged_step"]["transmission_confirmed"] is True
         with pytest.raises(ValueError, match="locked"):
             with experiment_lock(ledger_path()):
                 pass
@@ -126,6 +127,15 @@ def test_one_request_default_reservation_wire_accounting_and_continuation(saved)
         )
 
     first = invoke(saved, handler)
+    from pathlib import Path
+
+    preflight_record = json.loads(
+        (Path(first["ledger"]).parents[1] / "paid-mock-1/preflight.json").read_text()
+    )
+    assert preflight_record["transmission_permission_declaration"]["confirmed"] is True
+    assert preflight_record["operator_execution_authorization"]["execute"] is True
+    assert preflight_record["credential_environment_present"] is True
+    assert not preflight_record["execution_blockers"]
     assert first["api_calls_attempted"] == len(calls) == 1
     assert first["status"] == "COMPLETED_SELECTED_STEPS"
     before = copy.deepcopy(ExperimentLedger.existing(ledger_path()).data["entries"])

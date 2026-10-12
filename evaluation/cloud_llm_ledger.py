@@ -249,6 +249,7 @@ class ExperimentLedger:
         prefix = "staged_extract_v1_" if stage == "extraction" else "staged_synthesis_v1_"
         if (
             metadata.get("version") != "staged-ledger-step-1"
+            or metadata.get("transmission_confirmed") is not True
             or stage not in ("extraction", "synthesis")
             or any(
                 not re.fullmatch(r"[0-9a-f]{64}", str(metadata.get(key, "")))

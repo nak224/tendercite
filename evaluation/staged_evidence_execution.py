@@ -201,6 +201,16 @@ def validate_gates(config, manifest, report, question_id, confirmed, environment
     if blockers:
         raise ValueError("Staged execution blocked: " + "; ".join(blockers))
     check_reservation_rates(config)
+    # Persist the operator's actual authorization, rather than the offline defaults. No keys.
+    report["execution_blockers"] = []
+    report["api_execution_available"] = True
+    report["credential_environment_present"] = True
+    report["transmission_permission_declaration"]["confirmed"] = confirmed
+    report["operator_execution_authorization"] = {
+        "execute": True,
+        "transmission_confirmed": confirmed,
+        "question_id": question_id,
+    }
 
 
 async def transmit_steps(
@@ -278,6 +288,7 @@ async def transmit_steps(
     for step, row, request in zip(steps, report["request_preflight"], requests, strict=True):
         metadata = {
             "version": "staged-ledger-step-1",
+            "transmission_confirmed": True,
             "plan_id": manifest["plan_id"],
             "step_id": step.step_id,
             "stage": step.stage,
@@ -345,6 +356,7 @@ async def transmit_steps(
             response_schema_version=EXTRACTION_SCHEMA_VERSION
             if step.stage == "extraction"
             else SYNTHESIS_SCHEMA_VERSION,
+            transmission_permission_declaration=report["transmission_permission_declaration"],
         )
         write_new_json(output_dir / f"{step.strategy}.json", redact(record, key))
         ledger.reconcile(entry, accounting, record=redact(record, key))
