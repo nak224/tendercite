@@ -226,6 +226,9 @@ def test_exception_claim_without_explicit_subordinate_source_clause_is_insuffici
         "The supplier must notify transfers; unless a court prohibits notification.",
         "The supplier must notify transfers unless a court prohibits notification "
         "unless an authority permits disclosure.",
+        "Inform the controller and retain a log unless a court prohibits notification.",
+        "The supplier must notify transfers and then record the log "
+        "unless a court prohibits notification.",
     ],
 )
 def test_exception_without_one_same_clause_parent_stays_unresolved(legal, parent_quote):

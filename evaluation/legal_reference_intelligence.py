@@ -418,6 +418,13 @@ ACTION_FAMILIES = (
 
 def _parent_action(text):
     """Recognize one explicit directive action; leave unfamiliar/compound parents unresolved."""
+    if re.search(
+        r"\b(?:and|or)\s+(?:then\s+)?(?:(?:shall|must)\s+)?"
+        r"(?:inform|notify|submit|retain|keep|record|provide|transfer|report)\b",
+        text,
+        re.I,
+    ):
+        return None
     if re.match(r"^(?:Inform|Notify)\b", text, re.I):
         return ACTION_FAMILIES[0]
     directives = list(re.finditer(r"\b(?:shall|must|(?:is|are) required to)\s+(\w+)\b", text, re.I))
