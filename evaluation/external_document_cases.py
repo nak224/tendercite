@@ -36,7 +36,8 @@ def prepare_cases(
     ):
         raise ValueError("Acquisition manifest/report does not match the pinned revision/family")
     # A partial PDF failure is allowed, but missing/corrupt metadata is not.
-    validation = acquisition.validate_local(directory)
+    # Eligibility/reporting rechecks source bytes without overwriting acquisition history.
+    validation = acquisition.validate_local(directory, persist=False)
     inventory = {spec["filename"]: spec for spec in manifest["inventory"]}
     files = {file["filename"]: file for file in manifest["files"]}
     qa = files[acquisition.QA_FILENAME]

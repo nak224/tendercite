@@ -4,6 +4,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from evaluation.cloud_llm_ledger import amount
+from evaluation.legal_reference_intelligence import citation_status, derive_legal_references
 from evaluation.staged_evidence_consolidation import consolidate, prepared_synthesis
 from evaluation.staged_evidence_execution import extraction_attempts, recorded_step
 from evaluation.staged_evidence_plan import synthesis_preflight
@@ -38,7 +39,7 @@ def uninspected_staged_row(ledger, entry):
     }
 
 
-def stage_row(ledger, attempt, corpus, human_reviews, used_reviews):
+def stage_row(ledger, attempt, corpus, human_reviews, used_reviews, estimated=None):
     entry, record = attempt["entry"], attempt["record"]
     row = uninspected_staged_row(ledger, entry)
     row.update(
@@ -72,7 +73,17 @@ def stage_row(ledger, attempt, corpus, human_reviews, used_reviews):
         row[out] = accounting.get(key)
     validation = record.get("citation_validation", {})
     citations = validation.get("citations", [])
-    row["citation_status"] = validation.get("citation_status", "NOT_ASSESSED")
+    row["citation_status"] = citation_status(validation)
+    row["estimated_vs_reported"] = {
+        "conservative_input_tokens": estimated.get("input_token_estimate") if estimated else None,
+        "maximum_output_tokens": estimated.get("max_output_tokens") if estimated else None,
+        "reserved_cost_with_margin_usd": entry["reserved_cost"],
+        "provider_input_tokens": row["input_tokens"],
+        "provider_completion_tokens": row["output_tokens"],
+        "provider_reasoning_tokens_subset": row["reasoning_tokens"],
+        "usage_derived_cost_usd": row["usage_derived_cost_usd"],
+        "final_billing": "REQUIRES_PROVIDER_DASHBOARD_RECONCILIATION",
+    }
     row["evidence_count"] = len(citations)
     row["evidence_count_status"] = (
         "VALIDATED_STRUCTURED_RECORDS" if record.get("structured_answer") else "NOT_AVAILABLE"
@@ -196,12 +207,26 @@ def gold_coverage(spans, manifest, steps, attempts, consolidated, corpus):
     }
 
 
-def staged_report(ledger, loaded, corpus, *, spans=None, human_reviews=None, used_reviews=None):
+def staged_report(
+    ledger,
+    loaded,
+    corpus,
+    *,
+    spans=None,
+    human_reviews=None,
+    used_reviews=None,
+    legal_alias_map=None,
+    legal_meaning_reviews=None,
+):
     manifest, config, settings, steps, _, file_hash = loaded
     attempts = extraction_attempts(ledger, manifest, steps, config, settings, corpus)
     consolidated = consolidate(manifest, attempts)
     reviews, used = human_reviews or {}, used_reviews if used_reviews is not None else set()
-    rows = [stage_row(ledger, attempt, corpus, reviews, used) for attempt in attempts.values()]
+    preflights = {b["batch_id"]: b["preflight"] for b in manifest["batches"]}
+    rows = [
+        stage_row(ledger, attempt, corpus, reviews, used, preflights[bid])
+        for bid, attempt in attempts.items()
+    ]
     synthesis_entries = [
         e
         for e in ledger.data["entries"]
@@ -215,7 +240,9 @@ def staged_report(ledger, loaded, corpus, *, spans=None, human_reviews=None, use
             attempt = recorded_step(
                 ledger, entry, step, report["request_preflight"][0], effective, corpus, manifest
             )
-            rows.append(stage_row(ledger, attempt, corpus, reviews, used))
+            rows.append(
+                stage_row(ledger, attempt, corpus, reviews, used, report["request_preflight"][0])
+            )
         else:
             row = uninspected_staged_row(ledger, entry)
             row["artifact_error"] = (
@@ -273,6 +300,12 @@ def staged_report(ledger, loaded, corpus, *, spans=None, human_reviews=None, use
             ),
         },
         "evidence": consolidated,
+        "legal_references": derive_legal_references(
+            consolidated,
+            corpus,
+            alias_map=legal_alias_map,
+            meaning_reviews=legal_meaning_reviews,
+        ),
         "evidence_distribution": [
             {"document_id": doc, "page_number": page} for doc, page in evidence_sources
         ],

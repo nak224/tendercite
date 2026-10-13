@@ -26,10 +26,11 @@ Ignored local artifacts: `staged-evidence-inventory-1/source-inventory.json` and
 Exact source text, hashes and prepared payloads remain local.
 
 The operator's original ledger, paid responses, COMPLETE human review and populated pricing
-configuration are absent here. No cost or balance was invented. The operator reported roughly
-1.230299 USD committed / 18.769701 USD remaining; only their real ledger can establish those
-amounts. Staged extraction/synthesis, recall, semantic accuracy and provider performance are
-**unmeasured**. The new prompts have not been exercised against a real provider.
+configuration are absent here. The operator subsequently reported three successful extraction
+pilots (specifications pp. 1–3 and 21–23; framework pp. 40–41). Their original artifacts are
+required to verify usage, costs and source classifications locally; see the
+[3B-d5 offline legal-reference guide](legal-reference-intelligence.md). No cost or balance was
+seeded. Full-pipeline recall, semantic accuracy and spending remain unmeasured.
 
 ## Deterministic workflow
 
@@ -38,7 +39,16 @@ bytes/hashes, eligibility, pinned E5 metadata, production PDF parsing, chunk rec
 and stable document IDs are checked again. E5 is not rerun. All three parseable PDFs contribute;
 upstream answers, expected references and reviewed spans never select source pages.
 
-Optional staged settings are in `evaluation/staged-evidence-config.example.json`:
+Optional staged settings are in `evaluation/staged-evidence-config.example.json`. Omit
+`--stage-config` to use defaults. The confined JSON reader cannot read the committed example
+directly from `evaluation/`: copy it into ignored external storage before customizing it:
+
+```powershell
+Copy-Item .\evaluation\staged-evidence-config.example.json .\data\evaluation\external\staged-settings-local.json
+```
+
+Pass `--stage-config .\data\evaluation\external\staged-settings-local.json` only for a new
+preview/plan using that local copy. Existing immutable plans use their stored settings.
 
 | Setting | Default |
 | --- | ---: |
@@ -165,13 +175,13 @@ Source inventory and unpriced preview (no key, ledger or provider call required)
 
 ```powershell
 .\.venv\Scripts\python.exe -m evaluation.staged_evidence inventory --acquisition-dir $corpusDir --retrieval-results $retrievalFile --output-dir .\data\evaluation\external\staged-evidence-inventory-operator-1
-.\.venv\Scripts\python.exe -m evaluation.staged_evidence partition --question-id $questionId --stage-config .\evaluation\staged-evidence-config.example.json --acquisition-dir $corpusDir --retrieval-results $retrievalFile --output-dir .\data\evaluation\external\staged-evidence-preview-operator-1
+.\.venv\Scripts\python.exe -m evaluation.staged_evidence partition --question-id $questionId --acquisition-dir $corpusDir --retrieval-results $retrievalFile --output-dir .\data\evaluation\external\staged-evidence-preview-operator-1
 ```
 
 **First priced full-plan dry-run and inspection**, using original rate assumptions:
 
 ```powershell
-.\.venv\Scripts\python.exe -m evaluation.staged_evidence plan --dry-run --question-id $questionId --config $comparisonConfig --stage-config .\evaluation\staged-evidence-config.example.json --acquisition-dir $corpusDir --retrieval-results $retrievalFile --output-dir $stagedPlanDir
+.\.venv\Scripts\python.exe -m evaluation.staged_evidence plan --dry-run --question-id $questionId --config $comparisonConfig --acquisition-dir $corpusDir --retrieval-results $retrievalFile --output-dir $stagedPlanDir
 .\.venv\Scripts\python.exe -m evaluation.staged_evidence inspect --plan-dir $stagedPlanDir --acquisition-dir $corpusDir --retrieval-results $retrievalFile --output-dir .\data\evaluation\external\staged-evidence-inspection-1
 code (Join-Path $stagedPlanDir 'plan.json') (Join-Path $stagedPlanDir 'inspection.json')
 ```
@@ -235,6 +245,9 @@ text occurrence, not factual/legal correctness or independently verified answer 
 Optional `--human-review $humanReviewFile` reuses separate hash-bound human verdicts, now also
 accepting `staged_extraction`/`staged_synthesis`, exact attempt ID and response-file hash. Human
 declarations never overwrite model outputs. See [the comparison guide](cloud-llm-comparison.md).
+Reporting also exports a separately versioned [legal-reference layer](legal-reference-intelligence.md)
+and a DRAFT meaning-review template. Successful empty batches display
+`NO_CITATIONS_APPLICABLE`; the original validation/consolidation bytes remain unchanged.
 
 ## Rights and validation limits
 

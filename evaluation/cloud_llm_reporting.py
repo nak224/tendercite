@@ -253,7 +253,11 @@ def comparison_report(
     human_reviews=None,
     latest_valid=False,
     staged_plan=None,
+    legal_alias_map=None,
+    legal_meaning_reviews=None,
 ):
+    if (legal_alias_map is not None or legal_meaning_reviews is not None) and staged_plan is None:
+        raise ValueError("Legal annotations require an immutable --staged-plan")
     if ledger.data["binding"]["provenance"] != corpus.provenance:
         raise ValueError("Experiment ledger belongs to different source/retrieval provenance")
     used_reviews = set()
@@ -269,6 +273,8 @@ def comparison_report(
             spans=spans,
             human_reviews=reviews,
             used_reviews=used_reviews,
+            legal_alias_map=legal_alias_map,
+            legal_meaning_reviews=legal_meaning_reviews,
         )
         if staged_plan
         else None
@@ -331,6 +337,7 @@ def comparison_report(
                     "completed_extraction_batches": staged["evidence"]["completed_batches"],
                     "consolidated_findings": staged["evidence"]["consolidated_finding_count"],
                     "prompt_comparison": "CHANGED_EXPERIMENTAL_METHOD",
+                    "legal_reference_summary": staged["legal_references"]["summary"],
                 }
                 if staged and staged["question_id"] == qid
                 else None,
@@ -473,6 +480,31 @@ def write_reports(directory, report):
                 "Semantic correctness: NOT_ASSESSED.",
             ]
         )
+        from evaluation.legal_reference_intelligence import review_template
+
+        layer = staged["legal_references"]
+        write_new_json(directory / "legal-references.json", layer)
+        write_new_json(directory / "legal-meaning-review-template.json", review_template(layer))
+        lines.extend(
+            [
+                "",
+                "## Derived legal references (offline)",
+                "",
+                "Source-backed identity grouping; every original finding/quote remains auditable. "
+                "Legal meaning requires independent human review; no semantic accuracy score.",
+            ]
+        )
+        lines.extend(f"- {key}: {value}" for key, value in layer["summary"].items())
+        lines.extend(
+            [
+                "",
+                "See legal-references.json for exact quotations, provisions, alias provenance, "
+                "links and unresolved cases. Start human review in "
+                "legal-meaning-review-template.json.",
+                "Per-attempt estimated_vs_reported retains conservative input/output limits, "
+                "reserved cost and actual provider token usage/cost without extrapolation.",
+            ]
+        )
     (directory / "comparison.md").write_text(
         "\n".join(lines) + "\n", encoding="utf-8", newline="\n"
     )
@@ -488,6 +520,8 @@ def run(
     validation=None,
     human_review=None,
     staged_plan_dir=None,
+    legal_alias_map=None,
+    legal_meaning_review=None,
     **cohort,
 ):
     output_dir = confined(output_dir)
@@ -501,6 +535,10 @@ def run(
     from evaluation.staged_evidence_plan import load_plan
 
     staged_plan = load_plan(staged_plan_dir, corpus) if staged_plan_dir else None
+    aliases, alias_hash = read_local_json(legal_alias_map) if legal_alias_map else (None, None)
+    meanings, meaning_hash = (
+        read_local_json(legal_meaning_review) if legal_meaning_review else (None, None)
+    )
     with experiment_lock(ledger_path()):
         ledger = ExperimentLedger.existing(ledger_path())
         report = comparison_report(
@@ -511,9 +549,13 @@ def run(
             human_reviews=reviews,
             latest_valid=latest_valid,
             staged_plan=staged_plan,
+            legal_alias_map=aliases,
+            legal_meaning_reviews=meanings,
         )
         _, report["ledger_sha256"] = read_local_json(ledger_path())
     report["human_review_file_sha256"] = review_hash
+    report["legal_alias_map_file_sha256"] = alias_hash
+    report["legal_meaning_review_file_sha256"] = meaning_hash
     write_reports(output_dir, report)
     return report
 
@@ -531,6 +573,12 @@ def main(argv=None):
     cli.add_argument("--annotations", type=Path)
     cli.add_argument("--validation", type=Path)
     cli.add_argument("--human-review", type=Path)
+    cli.add_argument(
+        "--legal-alias-map", type=Path, help="Hash-bound operator-reviewed alias mapping"
+    )
+    cli.add_argument(
+        "--legal-meaning-review", type=Path, help="Separate hash-bound legal meaning review"
+    )
     cli.add_argument(
         "--staged-plan",
         type=Path,
@@ -551,6 +599,8 @@ def main(argv=None):
             validation=args.validation,
             human_review=args.human_review,
             staged_plan_dir=args.staged_plan,
+            legal_alias_map=args.legal_alias_map,
+            legal_meaning_review=args.legal_meaning_review,
             family=args.family,
             revision=args.dataset_revision,
             expected_cases=args.expected_cases,
