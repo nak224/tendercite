@@ -267,7 +267,7 @@ def acquire(
     return validate_local(directory)
 
 
-def validate_local(directory: Path) -> dict:
+def validate_local(directory: Path, *, persist=True) -> dict:
     directory = confined(directory)
     manifest = json.loads(confined(directory, "manifest.json").read_text(encoding="utf-8"))
     if not isinstance(manifest, dict) or (
@@ -347,5 +347,6 @@ def validate_local(directory: Path) -> dict:
         "retrieval_scores": None,
         "llm_evaluation_performed": False,
     }
-    write_json(confined(directory, "validation.json"), result)
+    if persist:
+        write_json(confined(directory, "validation.json"), result)
     return result
