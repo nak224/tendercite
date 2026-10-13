@@ -298,7 +298,7 @@ def _role(finding, instrument_key):
     return next(iter(roles), "CONTEXTUAL_REFERENCE"), None
 
 
-def _instrument_link(row, reference, kind):
+def _instrument_link(row, reference, kind, provision=None):
     finding = row["original_consolidated_finding"]
     for item in finding["evidence"]:
         quote = normalized(item["citation"]["quote"])
@@ -316,13 +316,16 @@ def _instrument_link(row, reference, kind):
                     re.I,
                 ) and OBLIGATION.search(quote[m["end"] :])
             else:
+                claimed = [provision] if provision is not None else row["provisions"]
                 supported = any(
                     re.search(
-                        re.escape(p["written"]) + r"\s+(?:of|of the|der|des)\s*$",
+                        re.escape(source_part["written"]) + r"\s+(?:of|of the|der|des)\s*$",
                         quote[: m["start"]],
                         re.I,
                     )
-                    for p in row["provisions"]
+                    for source_part in provisions(quote)
+                    for p in claimed
+                    if source_part["key"] == p["key"]
                 )
             if supported:
                 return _proof(finding, item["citation"])
@@ -336,18 +339,18 @@ def _links(rows, references):
         if row["citation_status"] != "VERIFIED_QUOTE" or not reference:
             continue
         if reference["specificity"] == "IDENTIFIED_INSTRUMENT":
-            for kind, wanted in (
-                ("provision_of", bool(row["provisions"])),
-                ("obligation_under", row["mention_role"] == "OPERATIVE_REQUIREMENT"),
-            ):
-                if not wanted:
-                    continue
-                proof = _instrument_link(row, reference, kind)
+            requested = [("provision_of", p) for p in row["provisions"]]
+            if row["mention_role"] == "OPERATIVE_REQUIREMENT":
+                requested.append(("obligation_under", None))
+            for kind, provision in requested:
+                proof = _instrument_link(row, reference, kind, provision)
                 record = {
                     "kind": kind,
                     "from_finding_id": row["finding_id"],
                     "to_reference_id": reference["canonical_reference_id"],
                 }
+                if provision is not None:
+                    record["from_provision_id"] = provision["canonical_provision_id"]
                 if proof:
                     links.append({**record, "provenance": proof, "semantic_review": "PENDING"})
                 else:
@@ -364,6 +367,16 @@ def _links(rows, references):
                         "semantic_review": "PENDING",
                     }
                 )
+        else:
+            unresolved.extend(
+                {
+                    "kind": "provision_of",
+                    "from_finding_id": row["finding_id"],
+                    "from_provision_id": p["canonical_provision_id"],
+                    "reason": "instrument_identity_unresolved",
+                }
+                for p in row["provisions"]
+            )
         if row["mention_role"] not in ("EXCEPTION", "PROCEDURAL_CONDITION"):
             continue
         kind = "exception_to" if row["mention_role"] == "EXCEPTION" else "condition_of"
@@ -480,7 +493,8 @@ def derive_legal_references(consolidation, corpus, *, alias_map=None, meaning_re
                     **p,
                     "canonical_provision_id": "provision-" + digest([ref_id, p["key"]])[:24],
                     "specificity": "SPECIFIC_PROVISION",
-                    "parent_reference_id": ref_id,
+                    "claimed_parent_reference_id": ref_id,
+                    "parent_reference_id": None,
                 }
                 for p in parts
             ],
@@ -529,6 +543,7 @@ def derive_legal_references(consolidation, corpus, *, alias_map=None, meaning_re
         )
         ref["unresolved_abbreviations"] = sorted(set(ref["unresolved_abbreviations"] + acronyms))
     links, unresolved_links = _links(rows, references)
+    reference_provisions = defaultdict(dict)
     for row in rows:
         row["supported_relationships"] = [
             link for link in links if link["from_finding_id"] == row["finding_id"]
@@ -536,6 +551,22 @@ def derive_legal_references(consolidation, corpus, *, alias_map=None, meaning_re
         row["unresolved_relationships"] = [
             link for link in unresolved_links if link["from_finding_id"] == row["finding_id"]
         ]
+        for provision in row["provisions"]:
+            proof = [
+                link
+                for link in row["supported_relationships"]
+                if link.get("from_provision_id") == provision["canonical_provision_id"]
+            ]
+            provision["association_status"] = "SOURCE_SUPPORTED" if proof else "UNRESOLVED"
+            provision["relationship_provenance"] = proof
+            provision["parent_reference_id"] = row["canonical_reference_id"] if proof else None
+            if row["canonical_reference_id"] is not None:
+                bucket = reference_provisions[row["canonical_reference_id"]]
+                previous = bucket.get(provision["canonical_provision_id"])
+                if previous is None or (proof and previous["association_status"] == "UNRESOLVED"):
+                    bucket[provision["canonical_provision_id"]] = provision
+    for ref_id, reference in references.items():
+        reference["provisions"] = list(reference_provisions[ref_id].values())
     reviews = _bound_annotations(meaning_reviews, MeaningReviews, consolidation)
     by_id, seen = {r["finding_id"]: r for r in rows}, set()
     if reviews:
@@ -621,8 +652,17 @@ def derive_legal_references(consolidation, corpus, *, alias_map=None, meaning_re
             "accepted_raw_findings": consolidation["accepted_raw_finding_count"],
             "distinct_normalized_instruments": len(instruments),
             "provisions_per_instrument": {
+                r["canonical_reference_id"]: sum(
+                    p["association_status"] == "SOURCE_SUPPORTED" for p in r["provisions"]
+                )
+                for r in instruments
+            },
+            "claimed_provisions_per_instrument": {
                 r["canonical_reference_id"]: len(r["provisions"]) for r in instruments
             },
+            "unresolved_provision_associations": sum(
+                p["association_status"] == "UNRESOLVED" for row in rows for p in row["provisions"]
+            ),
             "requirements_per_instrument": {
                 r["canonical_reference_id"]: sum(
                     f["counted_as_operative_legal_requirement"]

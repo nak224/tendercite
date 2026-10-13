@@ -237,6 +237,78 @@ def test_provision_under_explicitly_defined_alias(legal):
     assert any(link["kind"] == "provision_of" for link in result["links"])
 
 
+def test_uncited_provision_claim_is_kept_but_parent_is_not_applied(legal):
+    core, corpus = legal([[requirement(identifier=f"Article 4 of {REG}")]])
+    layer = derive_legal_references(core, corpus)
+    reference = layer["references"][0]
+    provision = reference["provisions"][0]
+    assert provision["key"] == "article:4"
+    assert provision["parent_reference_id"] is None
+    assert provision["claimed_parent_reference_id"] == reference["canonical_reference_id"]
+    assert provision["association_status"] == "UNRESOLVED"
+    assert list(layer["summary"]["provisions_per_instrument"].values()) == [0]
+    assert list(layer["summary"]["claimed_provisions_per_instrument"].values()) == [1]
+    assert not any(link["kind"] == "provision_of" for link in layer["links"])
+
+
+def test_one_supported_article_does_not_prove_other_claimed_articles(legal):
+    core, corpus = legal(
+        [
+            [
+                requirement(
+                    f"Article 4 of {REG} defines what 'record' means.",
+                    identifier=f"Article 4 of {REG}; Article 141 of {REG}",
+                    relationship="DEFINITION",
+                )
+            ]
+        ]
+    )
+    layer = derive_legal_references(core, corpus)
+    parts = {p["key"]: p for p in layer["references"][0]["provisions"]}
+    assert parts["article:4"]["parent_reference_id"] is not None
+    assert parts["article:141"]["parent_reference_id"] is None
+    assert list(layer["summary"]["provisions_per_instrument"].values()) == [1]
+    assert layer["summary"]["unresolved_provision_associations"] == 1
+
+
+def test_provision_letter_case_is_preserved_when_verifying_a_parent(legal):
+    core, corpus = legal(
+        [
+            [
+                requirement(
+                    f"Article 4(1)(A) of {REG} defines what 'record' means.",
+                    identifier=f"Article 4(1)(a) of {REG}",
+                    relationship="DEFINITION",
+                )
+            ]
+        ]
+    )
+    layer = derive_legal_references(core, corpus)
+    assert layer["references"][0]["provisions"][0]["parent_reference_id"] is None
+    assert layer["summary"]["unresolved_provision_associations"] == 1
+
+
+def test_supported_provision_survives_an_unproven_duplicate_in_another_document(legal):
+    identifier = f"Article 4 of {REG}"
+    core, corpus = legal(
+        [
+            [
+                requirement(
+                    f"Article 4 of {REG} defines what 'record' means.",
+                    identifier=identifier,
+                    relationship="DEFINITION",
+                )
+            ],
+            [requirement(identifier=identifier)],
+        ]
+    )
+    layer = derive_legal_references(core, corpus)
+    assert len(layer["references"]) == 1
+    assert list(layer["summary"]["provisions_per_instrument"].values()) == [1]
+    assert layer["references"][0]["provisions"][0]["association_status"] == "SOURCE_SUPPORTED"
+    assert layer["associated_findings"][1]["provisions"][0]["parent_reference_id"] is None
+
+
 def test_ambiguous_fr_preserves_articles_without_expansion(legal):
     core, corpus = legal(
         [

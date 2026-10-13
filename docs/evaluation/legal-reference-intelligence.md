@@ -13,6 +13,10 @@ and provisions. Article 4 is a `SPECIFIC_PROVISION` with its own stable ID and p
 it does not disappear when instrument aliases merge. Every associated finding retains the
 original atomic records, consolidated ID, original names/identifiers, purposes, relationships,
 uncertainty, batch/attempt IDs, response-file hashes and exact PDF citations.
+Provision identities from the original atomic records remain visible as claims. Their
+`claimed_parent_reference_id` is separate from `parent_reference_id`: a parent is applied only
+with an individually source-supported `provision_of` link. Uncited or differently associated
+articles remain `UNRESOLVED`, even if another article in the same finding is supported.
 
 Reference specificity, mention role and original relationship are separate dimensions:
 
@@ -73,6 +77,9 @@ findings separately; historical/unspecified mentions and human-rejected/uncertai
 excluded. Alias-merge count is the number of distinct proven alias/reference associations,
 not repeated mentions. Raw atomic counts include quarantined outputs. Source coverage retains
 missing/failed batches and incomplete experiments, including all document/page inventories.
+Provision counts per instrument require a source-supported association; claimed counts and
+unresolved associations are reported separately. This verifies the stated source relationship,
+not independently reviewed legal meaning.
 
 ## Safe reuse of paid outputs
 
@@ -178,10 +185,11 @@ Actual operator artifact replay, semantic review, unsupported legal syntax, Wind
 validation and full-pipeline coverage remain open. A successful quote is not legal correctness,
 exhaustive extraction or production readiness.
 
-Local validation on 2026-10-13: `HF_HUB_OFFLINE=1 pytest` passed **666 tests**, with one
+Local validation on 2026-10-13: `HF_HUB_OFFLINE=1 pytest` passed **670 tests**, with one
 optional live TED test skipped. Ruff lint and formatting passed (145 Python files). The real
 offline CLI revalidated the available acquisition/retrieval inputs, then stopped at the missing
 original `staged-evidence-plan-1/plan.json`; the original experiment ledger is also absent.
 Input manifests/validation/retrieval bytes stayed unchanged, no output report or ledger was
 created, and no API call occurred. The ignored readiness record is
 `data/evaluation/external/legal-reference-readiness-cloud-1/availability.json`.
+The Docker build passed using the managed proxy and trusted CA mount.
