@@ -33,7 +33,11 @@ UNSPECIFIED = re.compile(
     r"\b(?:unspecified|applicable|national|Union|EU|Member[- ]State)"
     r"(?:\s+(?:or|and|Member[- ]State|Union|national))*\s+(?:laws?|legislation)\b"
     r"|^(?:laws?|legislation|Gesetze|Recht)$"
-    r"|\b(?:anwendbare[nrs]?|geltende[nrs]?|nationale[nrs]?)\s+(?:Gesetze|Recht|Rechtsvorschriften)\b",
+    r"|\b(?:anwendbare[nrs]?|geltende[nrs]?|nationale[nrs]?)\s+(?:Gesetze|Recht|Rechtsvorschriften)\b"
+    r"|(?:law of (?:the )?(?:Union|member[- ]state(?: to which the processor is subject)?))"
+    r"(?: (?:or|and) (?:the )?law of (?:the )?"
+    r"(?:Union|member[- ]state(?: to which the processor is subject)?))*"
+    r"|concerned law",
     re.I,
 )
 OBLIGATION = re.compile(r"\b(shall|must|required|muss|müssen|verpflichtet)\b", re.I)
@@ -207,7 +211,7 @@ def _aliases(consolidation, corpus, raw):
         for f in findings
         if f["kind"] == "LEGAL_REFERENCE"
         for value in (f["subject"], f["exact_identifier"])
-        if not instrument_matches(value) and not provisions(value) and not UNSPECIFIED.search(value)
+        if not instrument_matches(value) and not provisions(value) and not _unspecified_label(value)
     }
     for finding in findings:
         if not _evidence_valid(finding, corpus):
@@ -290,7 +294,19 @@ def _identity(finding, aliases, valid):
             for e in finding["evidence"]
         ):
             return next(iter(alias_keys)), "IDENTIFIED_INSTRUMENT", associations, None
-    if not keys and any(UNSPECIFIED.search(normalized(v)) for v in (finding["subject"], written)):
+    labels = [_unspecified_label(v) for v in (finding["subject"], written)]
+    if (
+        not keys
+        and not associations
+        and all(labels)
+        and all(
+            any(
+                re.search(r"(?<!\w)" + re.escape(label) + r"(?!\w)", quote, re.I)
+                for quote in (normalized(e["citation"]["quote"]) for e in finding["evidence"])
+            )
+            for label in labels
+        )
+    ):
         return None, "UNSPECIFIED_LEGAL_REFERENCE", [], "no_identifiable_instrument"
     return (
         None,
@@ -298,6 +314,12 @@ def _identity(finding, aliases, valid):
         associations,
         "instrument_identity_not_explicitly_established",
     )
+
+
+def _unspecified_label(value):
+    # Match the entire claimed label, not generic words inside an unsupported named law.
+    label = re.sub(r"^the\s+", "", normalized(value), flags=re.I)
+    return label if UNSPECIFIED.fullmatch(label) else None
 
 
 def _role(finding, instrument_key):

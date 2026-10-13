@@ -241,3 +241,55 @@ def test_exception_without_one_same_clause_parent_stays_unresolved(legal, parent
     layer = derive_legal_references(core, corpus)
     assert not any(link["kind"] == "exception_to" for link in layer["links"])
     assert any(link["kind"] == "exception_to" for link in layer["unresolved_links"])
+
+
+@pytest.mark.parametrize(
+    "law",
+    [
+        "the law of the Union",
+        "the law of the member state to which the processor is subject",
+        "the concerned law",
+        "the law of the Union or the law of the member state to which the processor is subject",
+        "applicable legislation",
+    ],
+)
+def test_quoted_generic_law_phrases_remain_explicitly_unspecified(legal, law):
+    quote = f"In this synthetic contract, the processor must comply with {law}."
+    core, corpus = legal([[requirement(quote, subject=law, identifier=law)]])
+    layer = derive_legal_references(core, corpus)
+    assert layer["references"][0]["specificity"] == "UNSPECIFIED_LEGAL_REFERENCE"
+    assert layer["references"][0]["instrument_key"] is None
+    assert layer["summary"]["distinct_normalized_instruments"] == 0
+    row = layer["associated_findings"][0]
+    assert not row["counted_as_operative_legal_requirement"]
+    assert row["original_consolidated_finding"] == core["findings"][0]
+    assert row["citation_status"] == "VERIFIED_QUOTE"
+    assert row["semantic_status"] == "SEMANTIC_REVIEW_PENDING"
+
+
+@pytest.mark.parametrize(
+    "subject,identifier,quote",
+    [
+        ("the concerned law", "the concerned law", "The supplier must retain the sample log."),
+        ("the law of the Union", "the law of the Union", "The supplier must notify the authority."),
+        ("National Law 2099", "National Law 2099", "National Law 2099 requires sample records."),
+        ("Law of the Union 2099", "Law of the Union 2099", "Law of the Union 2099 governs logs."),
+        (
+            "Synthetic Public Records Law 2099",
+            "the concerned law",
+            "Synthetic Public Records Law 2099 is discussed alongside the concerned law.",
+        ),
+        (
+            "the concerned law",
+            "Synthetic Public Records Law 2099",
+            "Synthetic Public Records Law 2099 is discussed alongside the concerned law.",
+        ),
+    ],
+)
+def test_uncited_or_named_instrument_claim_is_not_downgraded_to_generic_law(
+    legal, subject, identifier, quote
+):
+    core, corpus = legal([[requirement(quote, subject=subject, identifier=identifier)]])
+    layer = derive_legal_references(core, corpus)
+    assert layer["references"][0]["specificity"] == "UNRESOLVED_REFERENCE"
+    assert layer["summary"]["unspecified_legal_references"] == 0
