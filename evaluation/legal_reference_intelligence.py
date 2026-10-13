@@ -38,6 +38,7 @@ UNSPECIFIED = re.compile(
 )
 OBLIGATION = re.compile(r"\b(shall|must|required|muss|müssen|verpflichtet)\b", re.I)
 EXCEPTION = re.compile(r"^(unless|except(?: where| when| if)?|es sei denn|außer)\b", re.I)
+EXCEPTION_MARKER = re.compile(r"\b(?:unless|except (?:where|when|if)|es sei denn|außer)\b", re.I)
 CONDITION = re.compile(r"^(if|provided that|wenn|sofern)\b", re.I)
 DEFINITION = re.compile(
     r"\b(?:means|bedeutet|bezeichnet)\b|\bdefined\s+(?:as|in|by|under)\b"
@@ -310,7 +311,8 @@ def _role(finding, instrument_key):
                 historical = True
         if historical:
             continue
-        if EXCEPTION.search(quote):
+        exception_parts = _exception_parts(quote)
+        if EXCEPTION.search(quote) or (exception_parts and _exception_focus(finding)):
             roles.add("EXCEPTION")
         elif CONDITION.search(quote) and finding["relationship"] in ("CONDITION", "PROCEDURE"):
             roles.add("PROCEDURAL_CONDITION")
@@ -325,7 +327,9 @@ def _role(finding, instrument_key):
             )
         ):
             roles.add("DEFINITION")
-        elif finding["relationship"] == "OBLIGATION" and OBLIGATION.search(quote):
+        elif finding["relationship"] == "OBLIGATION" and (
+            OBLIGATION.search(quote) or _parent_action(quote)
+        ):
             roles.add("OPERATIVE_REQUIREMENT")
     # Historical/operative conflicts stay unresolved rather than choosing the convenient role.
     if "HISTORICAL_REPEALED_MENTION" in roles and "OPERATIVE_REQUIREMENT" in roles:
@@ -335,6 +339,88 @@ def _role(finding, instrument_key):
     if len(roles) > 1:
         return "UNRESOLVED_MENTION", "conflicting_mention_role_signals"
     return next(iter(roles), "CONTEXTUAL_REFERENCE"), None
+
+
+def _exception_parts(quote):
+    """Bound explicit exceptions to a single sentence/clause, retaining normalized text.
+
+    This is a deliberately limited recognizer, not a grammatical/semantic parser.
+    Multiple connectors in one sentence and quoted/metalinguistic keywords stay unresolved.
+    """
+    text = normalized(quote)
+    parts = []
+    for sentence in re.split(r"(?<=[.!?;])\s+", text):
+        markers = list(EXCEPTION_MARKER.finditer(sentence))
+        if len(markers) != 1:
+            continue
+        marker = markers[0]
+        main = sentence[: marker.start()].strip().rstrip(",").strip()
+        subordinate = sentence[marker.start() :].rstrip(".!?;").strip()
+        if (
+            (marker.start() and sentence[marker.start() - 1] in "'\"")
+            or sentence[marker.end() :].lstrip().startswith(("'", '"'))
+            or not re.search(
+                r"\b(?:prohibits?|forbids?|prevents?|requires?|permits?|allows?|"
+                r"cannot|may not|is|are|untersagt|verbietet)\b",
+                subordinate,
+                re.I,
+            )
+        ):
+            continue
+        parts.append({"parent_clause": main, "exception_clause": subordinate})
+    return parts
+
+
+def _exception_focus(finding):
+    # The model's relationship is only a focus hint; explicit cited clauses are required.
+    return finding["relationship"] == "EXCLUSION" or bool(
+        re.search(
+            r"\b(?:unless|exception|restriction|prohibit\w*|forbid\w*|public interest|"
+            r"Ausnahme|untersagt|verbietet)\b",
+            normalized(finding["purpose"]),
+            re.I,
+        )
+    )
+
+
+ACTION_FAMILIES = (
+    r"inform\w*|notif\w*",
+    r"submit\w*",
+    r"retain\w*|keep\w*",
+    r"record\w*",
+    r"provid\w*",
+    r"transfer\w*",
+    r"report\w*",
+)
+
+
+def _parent_action(text):
+    """Recognize one explicit directive action; leave unfamiliar/compound parents unresolved."""
+    if re.match(r"^(?:Inform|Notify)\b", text, re.I):
+        return ACTION_FAMILIES[0]
+    directives = list(re.finditer(r"\b(?:shall|must|(?:is|are) required to)\s+(\w+)\b", text, re.I))
+    if len(directives) == 1:
+        action = directives[0][1]
+        return next((a for a in ACTION_FAMILIES if re.fullmatch(a, action, re.I)), None)
+    return None
+
+
+def _exception_link(child, parent, parent_finding):
+    child_text, parent_text = normalized(child["quote"]), normalized(parent["quote"])
+    if child_text not in parent_text:
+        return None
+    # Full paragraph equality is allowed only with an explicit, bounded subordinate
+    # clause and an independently distinguishable parent focus in the original finding.
+    matches = []
+    for part in _exception_parts(parent_text):
+        action = _parent_action(part["parent_clause"])
+        if (
+            action
+            and part["exception_clause"] in child_text
+            and re.search(r"\b(?:" + action + r")\b", parent_finding["purpose"], re.I)
+        ):
+            matches.append(part)
+    return matches[0] if len(matches) == 1 else None
 
 
 def _instrument_link(row, reference, kind, provision=None):
@@ -430,23 +516,37 @@ def _links(rows, references):
             for child_e in row["source_citations"]:
                 for parent_e in parent["source_citations"]:
                     child, whole = child_e["citation"], parent_e["citation"]
-                    # Exact subordinate-clause containment, with distinct parent text and an
-                    # explicit connective; shared documents/instruments alone never suffice.
-                    if (
-                        (child["document_id"], child["page_number"], child["pdf_sha256"])
-                        == (whole["document_id"], whole["page_number"], whole["pdf_sha256"])
-                        and normalized(child["quote"]) != normalized(whole["quote"])
-                        and normalized(child["quote"]) in normalized(whole["quote"])
-                        and (EXCEPTION if kind == "exception_to" else CONDITION).search(
-                            normalized(child["quote"])
-                        )
+                    if (child["document_id"], child["page_number"], child["pdf_sha256"]) != (
+                        whole["document_id"],
+                        whole["page_number"],
+                        whole["pdf_sha256"],
                     ):
+                        continue
+                    clause = None
+                    if kind == "exception_to":
+                        clause = _exception_link(
+                            child, whole, parent["original_consolidated_finding"]
+                        )
+                        supported_clause = clause is not None
+                    else:
+                        supported_clause = (
+                            normalized(child["quote"]) != normalized(whole["quote"])
+                            and normalized(child["quote"]) in normalized(whole["quote"])
+                            and CONDITION.search(normalized(child["quote"]))
+                        )
+                    if supported_clause:
+                        provenance = {"child": child_e, "parent": parent_e}
+                        if clause:
+                            provenance["clause_support"] = {
+                                **clause,
+                                "text_basis": "WHITESPACE_NORMALIZED_QUOTATION",
+                            }
                         supported.append(
                             {
                                 "kind": kind,
                                 "from_finding_id": row["finding_id"],
                                 "to_finding_id": parent["finding_id"],
-                                "provenance": {"child": child_e, "parent": parent_e},
+                                "provenance": provenance,
                                 "semantic_review": "PENDING",
                             }
                         )

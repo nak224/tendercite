@@ -3,6 +3,8 @@
 # Imported pytest fixture is intentionally rebound as test parameters.
 # ruff: noqa: F811
 
+import copy
+
 import pytest
 from test_legal_reference_intelligence import (  # noqa: F401
     ALIAS,
@@ -118,3 +120,124 @@ def test_definition_label_without_affirmative_source_construction_is_not_enough(
         derive_legal_references(core, corpus)["associated_findings"][0]["mention_role"]
         == "CONTEXTUAL_REFERENCE"
     )
+
+
+def exception_paragraph():
+    return (
+        "This synthetic annex uses sample data. Inform the controller if the processor is "
+        "required to transfer sample records unless the concerned law prohibits such "
+        "information on important public interest grounds. A separate paragraph follows."
+    )
+
+
+@pytest.mark.parametrize("full_paragraph", [True, False])
+@pytest.mark.parametrize("relationship", ["CONDITION", "OBLIGATION"])
+def test_supported_embedded_exception_links_without_changing_original_findings(
+    legal, full_paragraph, relationship
+):
+    parent_quote = exception_paragraph()
+    child_quote = (
+        parent_quote
+        if full_paragraph
+        else "unless the concerned law prohibits such information "
+        "on important public interest grounds"
+    )
+    core, corpus = legal(
+        [
+            [
+                requirement(parent_quote, purpose="Inform the controller of sample transfers"),
+                requirement(
+                    child_quote, purpose="Law prohibits notification", relationship=relationship
+                ),
+            ]
+        ]
+    )
+    original = copy.deepcopy(core)
+    result = derive_legal_references(core, corpus)
+    assert core == original
+    parent, child = result["associated_findings"]
+    assert parent["mention_role"] == "OPERATIVE_REQUIREMENT"
+    assert child["mention_role"] == "EXCEPTION"
+    assert child["relationship"] == relationship
+    links = [link for link in result["links"] if link["kind"] == "exception_to"]
+    assert len(links) == 1
+    link = links[0]
+    assert link["to_finding_id"] == parent["finding_id"]
+    assert link["provenance"]["child"] == child["source_citations"][0]
+    assert link["provenance"]["parent"] == parent["source_citations"][0]
+    assert link["provenance"]["clause_support"]["parent_clause"].startswith("Inform")
+    assert link["semantic_review"] == "PENDING"
+
+
+def test_same_complete_paragraph_with_two_matching_parent_findings_is_ambiguous(legal):
+    quote = exception_paragraph()
+    core, corpus = legal(
+        [
+            [
+                requirement(quote, purpose="Inform the controller about records"),
+                requirement(quote, purpose="Notify the controller about transfers"),
+                requirement(quote, purpose="Public interest exception", relationship="CONDITION"),
+            ]
+        ]
+    )
+    layer = derive_legal_references(core, corpus)
+    assert not any(link["kind"] == "exception_to" for link in layer["links"])
+    pending = next(link for link in layer["unresolved_links"] if link["kind"] == "exception_to")
+    assert pending["reason"] == "ambiguous_parent"
+    assert len(pending["candidate_parent_ids"]) == 2
+
+
+@pytest.mark.parametrize("shared_document", [True, False])
+def test_same_source_location_or_instrument_without_matching_parent_wording_cannot_link(
+    legal, shared_document
+):
+    quote = exception_paragraph()
+    parent = requirement(quote, purpose="Retain the processor log")
+    child = requirement(quote, purpose="Public interest exception", relationship="CONDITION")
+    records = [[parent, child]] if shared_document else [[parent], [child]]
+    core, corpus = legal(records)
+    layer = derive_legal_references(core, corpus)
+    assert not any(link["kind"] == "exception_to" for link in layer["links"])
+    assert any(link["kind"] == "exception_to" for link in layer["unresolved_links"])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "The glossary says 'unless' is a keyword. The supplier must retain the log.",
+        "The annex mentions an exception, but provides no subordinate clause.",
+        "Inform the controller unless.",
+        "The annex discusses whether an exception might be necessary.",
+    ],
+)
+def test_exception_claim_without_explicit_subordinate_source_clause_is_insufficient(legal, quote):
+    core, corpus = legal(
+        [[requirement(quote, purpose="Public interest exception", relationship="CONDITION")]]
+    )
+    layer = derive_legal_references(core, corpus)
+    assert layer["associated_findings"][0]["mention_role"] != "EXCEPTION"
+    assert not any(link["kind"] == "exception_to" for link in layer["links"])
+
+
+@pytest.mark.parametrize(
+    "parent_quote",
+    [
+        "The supplier must notify transfers. unless a court prohibits notification.",
+        "The supplier must notify transfers; unless a court prohibits notification.",
+        "The supplier must notify transfers unless a court prohibits notification "
+        "unless an authority permits disclosure.",
+    ],
+)
+def test_exception_without_one_same_clause_parent_stays_unresolved(legal, parent_quote):
+    child_quote = "unless a court prohibits notification"
+    core, corpus = legal(
+        [
+            [
+                requirement(parent_quote, purpose="Notify"),
+                requirement(child_quote, purpose="Restriction", relationship="CONDITION"),
+            ]
+        ]
+    )
+    layer = derive_legal_references(core, corpus)
+    assert not any(link["kind"] == "exception_to" for link in layer["links"])
+    assert any(link["kind"] == "exception_to" for link in layer["unresolved_links"])
