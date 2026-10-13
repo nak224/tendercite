@@ -82,3 +82,39 @@ def test_ambiguous_or_unbounded_title_naming_does_not_merge(legal, change):
     result = derive_legal_references(core, corpus)
     assert result["summary"]["evidence_backed_alias_merges"] == 0
     assert result["summary"]["ambiguous_unresolved_references"] == 1
+
+
+def test_ascribed_meaning_definition_requires_quote_evidence(legal):
+    records = alias_records(long_title())
+    records[1] = [
+        requirement(
+            "In this synthetic annex, the labels have the meaning ascribed to them in "
+            f"Article 4 of the {ALIAS}.",
+            subject=ALIAS,
+            identifier=f"Article 4 of {ALIAS}",
+            relationship="DEFINITION",
+        )
+    ]
+    core, corpus = legal(records)
+    layer = derive_legal_references(core, corpus)
+    finding = layer["associated_findings"][1]
+    assert finding["mention_role"] == "DEFINITION"
+    assert finding["provisions"][0]["association_status"] == "SOURCE_SUPPORTED"
+    assert finding["semantic_status"] == "SEMANTIC_REVIEW_PENDING"
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "The meaning of this requirement is disputed.",
+        "No definition is provided in this synthetic annex.",
+        "These labels do not have the meaning ascribed to them in Article 4.",
+        "The labels are not defined in this synthetic annex.",
+    ],
+)
+def test_definition_label_without_affirmative_source_construction_is_not_enough(legal, quote):
+    core, corpus = legal([[requirement(quote, relationship="DEFINITION")]])
+    assert (
+        derive_legal_references(core, corpus)["associated_findings"][0]["mention_role"]
+        == "CONTEXTUAL_REFERENCE"
+    )

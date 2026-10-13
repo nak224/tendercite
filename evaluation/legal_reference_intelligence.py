@@ -39,6 +39,12 @@ UNSPECIFIED = re.compile(
 OBLIGATION = re.compile(r"\b(shall|must|required|muss|müssen|verpflichtet)\b", re.I)
 EXCEPTION = re.compile(r"^(unless|except(?: where| when| if)?|es sei denn|außer)\b", re.I)
 CONDITION = re.compile(r"^(if|provided that|wenn|sofern)\b", re.I)
+DEFINITION = re.compile(
+    r"\b(?:means|bedeutet|bezeichnet)\b|\bdefined\s+(?:as|in|by|under)\b"
+    r"|\bdefinition\s+of\b"
+    r"|\b(?:have|has)\s+the\s+meaning\s+(?:ascribed|assigned|given)\s+to\s+(?:them|it)\s+in\b",
+    re.I,
+)
 
 
 def normalized(value):
@@ -308,8 +314,15 @@ def _role(finding, instrument_key):
             roles.add("EXCEPTION")
         elif CONDITION.search(quote) and finding["relationship"] in ("CONDITION", "PROCEDURE"):
             roles.add("PROCEDURAL_CONDITION")
-        elif finding["relationship"] == "DEFINITION" and re.search(
-            r"\b(means|defined|definition|bedeutet|bezeichnet)\b", quote, re.I
+        elif (
+            finding["relationship"] == "DEFINITION"
+            and DEFINITION.search(quote)
+            and not re.search(
+                r"\b(?:not|never)\s+(?:defined|have the meaning|has the meaning)"
+                r"|\bno\s+definition",
+                quote,
+                re.I,
+            )
         ):
             roles.add("DEFINITION")
         elif finding["relationship"] == "OBLIGATION" and OBLIGATION.search(quote):
