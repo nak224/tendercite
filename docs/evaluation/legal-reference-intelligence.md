@@ -52,23 +52,47 @@ unresolved until humans supply the separate mapping described below.
 An end-of-title parenthetical can identify a single main instrument when the cited title starts
 with that identifier and explicitly mentions another instrument only as repealed. The alias is
 never assigned to that nearest repealed identifier. Ambiguous multi-instrument text stays unresolved.
+Explicit parenthetical naming clauses also work after a long-form title within surrounding
+paragraph prose. Recognition is bounded to the current sentence/clause and 1,600 characters
+after the identifier, with one non-historical instrument and title wording (`of`/`on`). An
+intervening sentence, semicolon, obligation or second non-historical instrument prevents this
+association. Repealed identifiers inside that title never inherit its alias.
 
 For example, source text explicitly stating `Regulation (EU) 2016/679 (General Data Protection
 Regulation)` permits the alias association. Without such evidence the name stays unresolved.
 “FR” is not expanded from model knowledge. An explicit numbered instrument/FR equivalence
 or reviewed mapping is needed; unspecified Union/member-state laws remain unspecified.
+This includes quoted expressions such as `the law of the Union`, `the law of the member state
+to which the processor is subject` and `the concerned law`. Both original name/identifier
+claims must be generic expressions supported by the cited wording. Generic words inside an
+unsupported named statute, conflicting named claims or absent source wording remain unresolved;
+they do not become invented instrument identities or generic laws.
 `repealing Directive 95/46/EC` classifies that distinct directive as a historical/repealed mention
 **according to the cited text**. It does not establish current repeal status externally or turn
 a title mention into an operative obligation. Contradictory historical/operative signals remain
 flagged for human review.
 
+Definition classification requires both the original `DEFINITION` claim and affirmative
+definition wording in the accepted quote. This includes `have the meaning ascribed to them in
+Article 4 ...` (also assigned/given). Merely mentioning meaning, a missing definition or a
+negated definition does not support that classification.
+
 `provision_of` requires an explicit provision-of-instrument construction in cited text;
 `obligation_under` requires a stated under/pursuant-to/in-accordance-with relationship plus
 obligation wording. Proven aliases can provide the instrument name for either rule.
-`same_instrument_as` records the alias association and its proof. `condition_of`/`exception_to`
-require an exact subordinate clause (whitespace normalization only for this relationship check)
-inside a distinct cited parent statement on the same source page. A child must start with an
-explicit conditional/exception connective. Multiple plausible parents remain unresolved.
+`same_instrument_as` records the alias association and its proof. `condition_of` requires an
+explicit conditional connective at the beginning of a distinct child quotation contained in
+the cited parent statement. `exception_to` also supports subordinate exception clauses inside
+larger quotations, including identical full-paragraph parent/child citations. An explicit
+connective (such as `unless`) and a recognized predicate must occur within one sentence/clause.
+For embedded exceptions, the original purpose/relationship must distinguish the exception
+focus from the obligation; that model claim alone never supplies the source relationship.
+Linking requires clause containment, a source directive action and matching parent-purpose
+wording, all on the same document/page/hash. The small action vocabulary covers notification,
+submission, retention, recording, provision, transfer and reporting; compound directives,
+multiple connectors and unfamiliar actions may remain unresolved. The original citations are
+retained alongside explicitly marked whitespace-normalized clause support, without inferred
+PDF offsets. Multiple plausible parent findings remain unresolved.
 Shared instruments/pages alone never authorize substantive links. Unsupported wording may
 under-link; inspect `unresolved_links` rather than assuming an exception was absent.
 
@@ -185,11 +209,22 @@ Actual operator artifact replay, semantic review, unsupported legal syntax, Wind
 validation and full-pipeline coverage remain open. A successful quote is not legal correctness,
 exhaustive extraction or production readiness.
 
-Local validation on 2026-10-13: `HF_HUB_OFFLINE=1 pytest` passed **670 tests**, with one
-optional live TED test skipped. Ruff lint and formatting passed (145 Python files). The real
-offline CLI revalidated the available acquisition/retrieval inputs, then stopped at the missing
+The PR review fixes add generated-PDF regressions for long-title aliases, repealed/ambiguous
+identifiers, ascribed-meaning definitions, identical paragraph exceptions, distinct subordinate
+quotes, ambiguous/compound parents, false positives and cited/uncited generic-law expressions.
+Original paid prompt/schema versions and step identities are unchanged.
+Review-fix validation on 2026-10-13: `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 pytest`
+passed **711 tests**, with one optional live TED test skipped. This includes 41 new synthetic
+regression cases. `ruff check .` and `ruff format --check .` passed (146 Python files).
+
+The original milestone's offline CLI revalidated the available acquisition/retrieval inputs,
+then stopped at the missing
 original `staged-evidence-plan-1/plan.json`; the original experiment ledger is also absent.
 Input manifests/validation/retrieval bytes stayed unchanged, no output report or ledger was
 created, and no API call occurred. The ignored readiness record is
 `data/evaluation/external/legal-reference-readiness-cloud-1/availability.json`.
-The Docker build passed using the managed proxy and trusted CA mount.
+Its Docker build passed using the managed proxy and trusted CA mount. The review fixes still
+require an operator-side offline replay of the preserved actual plan/ledger/responses, using a
+fresh output directory such as `legal-reference-review-fixed-1`. That replay makes no paid
+requests and must not alter historical artifacts. Inspect the corrected alias, definition and
+exception candidates; no human meaning reviews are supplied by these fixes.
