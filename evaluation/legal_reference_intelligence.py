@@ -129,6 +129,32 @@ def _explicit_alias(quote, instrument, alias):
     )
     if any(re.search(p, text, re.I) for p in patterns):
         return True
+    # Scope explicit naming to one bounded title clause, not the whole paragraph or
+    # simply the nearest identifier (which may be a directive repealed by that title).
+    naming = re.compile(
+        rf"\(\s*(?:hereinafter(?: referred to as)?|also known as|called|im Folgenden)"
+        rf"\s+['\"]?(?:the\s+)?{a}['\"]?\s*\)",
+        re.I,
+    )
+    for clause in naming.finditer(text):
+        boundaries = list(re.finditer(r"[.!?;]\s+", text[: clause.start()]))
+        start = boundaries[-1].end() if boundaries else 0
+        scoped = [
+            m
+            for m in instrument_matches(text)
+            if start <= m["start"] and m["end"] <= clause.start()
+        ]
+        active = [m for m in scoped if not _historical(text, m)]
+        title = text[instrument["end"] : clause.start()]
+        if (
+            len(active) == 1
+            and active[0]["start"] == instrument["start"]
+            and 0 <= clause.start() - instrument["end"] <= 1600
+            and re.match(r"\s+(?:of|on)\b", title, re.I)
+            and re.search(r"\bon\b", title, re.I)
+            and not OBLIGATION.search(title)
+        ):
+            return True
     # A parenthetical at the end of a single-instrument title can follow a repealed
     # directive in that title. Never attach it to the nearest (historical) identifier.
     active = [m for m in instrument_matches(text) if not _historical(text, m)]
