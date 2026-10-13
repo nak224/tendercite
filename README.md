@@ -189,7 +189,11 @@ partitions every parseable source page into bounded batches, validates atomic fi
 consolidates them offline before optional final synthesis. Execution defaults to one explicitly
 authorized request and shares the original 20 USD ledger. Offline reports compare all three
 methods while retaining failed-call costs and coverage gaps. The real source preview covers
-137 pages in 54 extraction batches; configured pricing and actual staged evaluation remain pending.
+137 pages in 54 extraction batches. The separate
+[offline legal-reference layer](docs/evaluation/legal-reference-intelligence.md) preserves source-backed
+aliases, provisions, individual requirements and conservative condition/exception links, with
+hash-bound human meaning review. Three successful operator pilots were reported, but their paid
+artifacts/ledger are unavailable here; full-pipeline and semantic evaluation remain pending.
 
 ## Docker
 
