@@ -2,6 +2,8 @@
 
 import sqlite3
 from contextlib import contextmanager
+from datetime import UTC, datetime
+from uuid import uuid4
 
 from pydantic import ValidationError
 
@@ -9,9 +11,13 @@ from tendercite.domain.analysis import AnalysisRun
 from tendercite.domain.capability_mapping_records import (
     CapabilityMappingError,
     CapabilityMappingRecord,
+    MappingApprovalInput,
+    MappingDraftInput,
     MappingErrorCode,
     MappingInspection,
     MappingLifecycle,
+    MappingRevisionInput,
+    MappingRevocationInput,
     MappingStatus,
     MappingUnavailableReason,
     RequirementInterpretation,
@@ -68,16 +74,19 @@ class CapabilityMappingRepositoryMixin:
         except ValidationError:
             raise CapabilityMappingError(MappingErrorCode.INVALID_INPUT) from None
 
-    def _mapping_sources(self, conn, analysis_id, finding_id, snapshot_hash):
-        analysis_row = conn.execute(
-            "SELECT payload FROM analyses WHERE id=?", (analysis_id,)
-        ).fetchone()
+    def _mapping_sources(self, conn, analysis_id, finding_id, snapshot_hash, *, cache=None):
+        cache = {} if cache is None else cache
+        analysis_row = (
+            conn.execute("SELECT payload FROM analyses WHERE id=?", (analysis_id,)).fetchone()
+            if "analysis" not in cache
+            else True
+        )
         finding_row = conn.execute(
             "SELECT payload, analysis_run_id FROM findings WHERE id=?", (finding_id,)
         ).fetchone()
         if not analysis_row or not finding_row or finding_row["analysis_run_id"] != analysis_id:
             raise CapabilityMappingError(MappingErrorCode.INVALID_SCOPE)
-        analysis = AnalysisRun.model_validate_json(analysis_row["payload"])
+        analysis = cache.get("analysis") or AnalysisRun.model_validate_json(analysis_row["payload"])
         finding = Finding.model_validate_json(finding_row["payload"])
         if (
             analysis.id != analysis_id
@@ -101,12 +110,15 @@ class CapabilityMappingRepositoryMixin:
                 "REJECT": ReviewStatus.REJECTED,
             }[event.action]
             finding.reviewed_value = event.reviewed_value
-        row = conn.execute(
-            "SELECT * FROM capability_snapshots WHERE content_hash=?", (snapshot_hash,)
-        ).fetchone()
-        if not row:
-            raise CapabilityMappingError(MappingErrorCode.SNAPSHOT_NOT_FOUND)
-        return analysis, finding, event, self._stored_capability(row), review_row
+        if "snapshot" not in cache:
+            row = conn.execute(
+                "SELECT * FROM capability_snapshots WHERE content_hash=?", (snapshot_hash,)
+            ).fetchone()
+            if not row:
+                raise CapabilityMappingError(MappingErrorCode.SNAPSHOT_NOT_FOUND)
+            cache["snapshot"] = self._stored_capability(row)
+        cache["analysis"] = analysis
+        return analysis, finding, event, cache["snapshot"], review_row
 
     @staticmethod
     def _mapping_row(conn, mapping_id):
@@ -222,3 +234,201 @@ class CapabilityMappingRepositoryMixin:
                 (str(mapping_id),),
             ).fetchall()
             return [self._stored_mapping(conn, row) for row in rows]
+
+    @staticmethod
+    def _check_skills(snapshot, skills):
+        if not set(skills) <= {s.skill_id for s in snapshot.skill_catalog}:
+            raise CapabilityMappingError(MappingErrorCode.UNKNOWN_SKILL)
+
+    @staticmethod
+    def _insert_mapping_revision(conn, record, review_sequence):
+        conn.execute(
+            "INSERT INTO capability_mapping_revisions "
+            "(mapping_id, revision, status, review_sequence, payload) VALUES (?, ?, ?, ?, ?)",
+            (
+                str(record.mapping_id),
+                record.revision,
+                record.status.value,
+                review_sequence,
+                record.model_dump_json(),
+            ),
+        )
+
+    def create_capability_mapping_draft(self, request: MappingDraftInput):
+        request = self._validate_mapping_input(request, MappingDraftInput)
+        with self._mapping_transaction(write=True) as conn:
+            _, finding, event, snapshot, review_row = self._mapping_sources(
+                conn, request.analysis_id, request.finding_id, request.snapshot_hash
+            )
+            binding = _binding(finding, event)
+            _check_binding(binding, request)
+            self._check_skills(snapshot, request.skill_ids)
+            exists = conn.execute(
+                "SELECT 1 FROM capability_mappings "
+                "WHERE analysis_id=? AND finding_id=? AND snapshot_hash=?",
+                (request.analysis_id, request.finding_id, request.snapshot_hash),
+            ).fetchone()
+            if exists:
+                raise CapabilityMappingError(MappingErrorCode.ALREADY_EXISTS)
+            now = datetime.now(UTC)
+            record = CapabilityMappingRecord(
+                mapping_id=uuid4(),
+                analysis_id=request.analysis_id,
+                finding_id=request.finding_id,
+                snapshot_hash=request.snapshot_hash,
+                operator=request.operator,
+                skill_ids=request.skill_ids,
+                review_binding=binding,
+                revision=1,
+                status=MappingLifecycle.DRAFT,
+                created_at=now,
+                recorded_at=now,
+                approved_at=None,
+                rationale=request.rationale,
+                operator_alias=request.operator_alias,
+            )
+            conn.execute(
+                "INSERT INTO capability_mappings VALUES (?, ?, ?, ?, ?)",
+                (
+                    str(record.mapping_id),
+                    record.analysis_id,
+                    record.finding_id,
+                    record.snapshot_hash,
+                    record.created_at.isoformat(),
+                ),
+            )
+            self._insert_mapping_revision(
+                conn, record, review_row["sequence"] if review_row else None
+            )
+            return record
+
+    def _expected_mapping(self, conn, request):
+        row = self._mapping_row(conn, request.mapping_id)
+        if row is None:
+            raise CapabilityMappingError(MappingErrorCode.NOT_FOUND)
+        record = self._stored_mapping(conn, row)
+        if record.revision != request.expected_revision:
+            raise CapabilityMappingError(MappingErrorCode.CONFLICT)
+        return record, row
+
+    @staticmethod
+    def _next_record(current, request, status, **changes):
+        now = datetime.now(UTC)
+        values = current.model_dump()
+        values.update(
+            revision=current.revision + 1,
+            status=status,
+            recorded_at=now,
+            approved_at=now if status == MappingLifecycle.APPROVED else None,
+            rationale=request.rationale,
+            operator_alias=request.operator_alias,
+            **changes,
+        )
+        return CapabilityMappingRecord.model_validate(values)
+
+    def revise_capability_mapping(self, request: MappingRevisionInput):
+        request = self._validate_mapping_input(request, MappingRevisionInput)
+        with self._mapping_transaction(write=True) as conn:
+            current, _ = self._expected_mapping(conn, request)
+            _, finding, event, snapshot, review_row = self._mapping_sources(
+                conn, current.analysis_id, current.finding_id, current.snapshot_hash
+            )
+            binding = _binding(finding, event)
+            _check_binding(binding, request)
+            self._check_skills(snapshot, request.skill_ids)
+            record = self._next_record(
+                current,
+                request,
+                MappingLifecycle.DRAFT,
+                review_binding=binding,
+                operator=request.operator,
+                skill_ids=request.skill_ids,
+            )
+            self._insert_mapping_revision(
+                conn, record, review_row["sequence"] if review_row else None
+            )
+            return record
+
+    def approve_capability_mapping(self, request: MappingApprovalInput):
+        request = self._validate_mapping_input(request, MappingApprovalInput)
+        with self._mapping_transaction(write=True) as conn:
+            current, _ = self._expected_mapping(conn, request)
+            if current.status != MappingLifecycle.DRAFT:
+                raise CapabilityMappingError(MappingErrorCode.INVALID_TRANSITION)
+            _, finding, event, snapshot, review_row = self._mapping_sources(
+                conn, current.analysis_id, current.finding_id, current.snapshot_hash
+            )
+            binding = _binding(finding, event)
+            _check_binding(binding, request)
+            if binding != current.review_binding:
+                raise CapabilityMappingError(MappingErrorCode.REVIEW_CONFLICT)
+            if not _eligible(finding, event):
+                raise CapabilityMappingError(MappingErrorCode.INELIGIBLE)
+            self._check_skills(snapshot, current.skill_ids)
+            record = self._next_record(current, request, MappingLifecycle.APPROVED)
+            self._insert_mapping_revision(conn, record, review_row["sequence"])
+            return record
+
+    def revoke_capability_mapping(self, request: MappingRevocationInput):
+        request = self._validate_mapping_input(request, MappingRevocationInput)
+        with self._mapping_transaction(write=True) as conn:
+            current, row = self._expected_mapping(conn, request)
+            if current.status == MappingLifecycle.REVOKED:
+                raise CapabilityMappingError(MappingErrorCode.INVALID_TRANSITION)
+            record = self._next_record(current, request, MappingLifecycle.REVOKED)
+            self._insert_mapping_revision(conn, record, row["review_sequence"])
+            return record
+
+    def list_capability_mappings(self, *, analysis_id=None, snapshot_hash=None, limit=50):
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise CapabilityMappingError(MappingErrorCode.INVALID_INPUT)
+        if snapshot_hash is not None:
+            self._check_capability_hash(snapshot_hash)
+        with self._mapping_transaction() as conn:
+            rows = conn.execute(
+                "SELECT analysis_id, finding_id, snapshot_hash FROM capability_mappings "
+                "WHERE (? IS NULL OR analysis_id=?) AND (? IS NULL OR snapshot_hash=?) "
+                "ORDER BY analysis_id, finding_id, snapshot_hash LIMIT ?",
+                (analysis_id, analysis_id, snapshot_hash, snapshot_hash, limit),
+            ).fetchall()
+            return [
+                self._inspection(conn, r["analysis_id"], r["finding_id"], r["snapshot_hash"])
+                for r in rows
+            ]
+
+    def stale_capability_mappings(self, **filters):
+        return [
+            m for m in self.list_capability_mappings(**filters) if m.status == MappingStatus.STALE
+        ]
+
+    def load_persisted_matching_inputs(self, request):
+        """One consistent read snapshot; no approvals can leak across requirement revisions."""
+        from tendercite.domain.capability_matching import CapabilityMatchingRequest
+
+        request = self._validate_mapping_input(request, CapabilityMatchingRequest)
+        if request.mappings:
+            raise CapabilityMappingError(MappingErrorCode.INVALID_INPUT)
+        with self._mapping_transaction() as conn:
+            findings, inspections = [], []
+            cache = {}
+            for finding_id in sorted(request.finding_ids):
+                sources = self._mapping_sources(
+                    conn, request.analysis_id, finding_id, request.snapshot_hash, cache=cache
+                )
+                analysis, finding, _, snapshot, _ = sources
+                findings.append(finding)
+                inspections.append(
+                    self._inspection(
+                        conn, request.analysis_id, finding_id, request.snapshot_hash, sources
+                    )
+                )
+            return analysis, findings, snapshot, tuple(inspections)
+
+    def usable_capability_mappings(self, request):
+        from tendercite.domain.capability_matching import CapabilityMatchingRequest
+
+        request = self._validate_mapping_input(request, CapabilityMatchingRequest)
+        if request.mappings:
+            raise CapabilityMappingError(MappingErrorCode.INVALID_INPUT)
+        _, _, _, inspections = self.load_persisted_matching_inputs(request)
+        return tuple(m.record for m in inspections if m.status == MappingStatus.APPROVED)
