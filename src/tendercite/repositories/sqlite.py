@@ -7,6 +7,8 @@ from pathlib import Path
 from tendercite.domain.capabilities_v1 import CapabilitySnapshot, canonical_json
 from tendercite.domain.capability_storage import CapabilityImportResult, CapabilitySnapshotMetadata
 from tendercite.domain.models import ChunkRead, DocumentRead, PageRead
+from tendercite.repositories.capability_mapping_schema import MAPPING_SCHEMA_SQL
+from tendercite.repositories.capability_mappings import CapabilityMappingRepositoryMixin
 from tendercite.services.capabilities import (
     CapabilityError,
     CapabilityErrorCode,
@@ -16,7 +18,7 @@ from tendercite.services.capabilities import (
 MAX_CAPABILITY_LIST_LIMIT = 100
 
 
-class SqliteRepository:
+class SqliteRepository(CapabilityMappingRepositoryMixin):
     def __init__(self, database_path: Path, *, read_only: bool = False) -> None:
         self.database_path = database_path
         self.read_only = read_only
@@ -116,6 +118,7 @@ class SqliteRepository:
                     ON capability_snapshots(imported_at DESC, content_hash ASC);
                 """
             )
+            conn.executescript(MAPPING_SCHEMA_SQL)
 
     def import_capability_snapshot(self, snapshot: CapabilitySnapshot) -> CapabilityImportResult:
         # Revalidate even programmatically constructed/copied models before starting a write.
