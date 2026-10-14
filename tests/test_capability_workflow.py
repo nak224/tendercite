@@ -22,7 +22,13 @@ from pydantic import ValidationError
 from tendercite.domain.capability_mapping_records import CapabilityMappingError, MappingDraftInput
 from tendercite.domain.capability_matching import RecordedSkillCoverage
 from tendercite.domain.capability_workflow import AssessmentSelection, MappingSelection
-from tendercite.domain.models import GroundingStatus, RequirementType, ReviewedValue, ReviewStatus
+from tendercite.domain.models import (
+    AssessmentRequest,
+    GroundingStatus,
+    RequirementType,
+    ReviewedValue,
+    ReviewStatus,
+)
 from tendercite.domain.review import ReviewRequest
 from tendercite.repositories.sqlite import SqliteRepository
 from tendercite.services.capability_workflow import (
@@ -372,3 +378,42 @@ def test_report_reuses_one_read_snapshot_and_no_network(repo, monkeypatch):
     assert sum("FROM capability_snapshots" in s for s in statements) == 1
     assert not any(s.startswith(("INSERT", "UPDATE", "DELETE", "CREATE")) for s in statements)
     assert json.loads(report.model_dump_json())["qualification"] == "NOT_VERIFIED"
+
+
+def test_existing_assessment_and_all_source_records_remain_unchanged(repo):
+    approved_mapping(repo)
+    repo.set_assessment(
+        "finding-1", AssessmentRequest(status="FULFILLED", rationale="Synthetic operator decision")
+    )
+    before = repo.database_path.read_bytes()
+    matrix = repo.list_matrix("analysis-1")
+    assessment_overview(
+        analysis_id="analysis-1", snapshot_hash=snapshot().content_hash, repository=repo
+    )
+    assessment_report(assessment(), repository=repo)
+    repo.list_analysis_metadata()
+    assert repo.database_path.read_bytes() == before
+    assert repo.list_matrix("analysis-1") == matrix
+
+
+def test_empty_analysis_overview_still_verifies_snapshot_identity(repo):
+    repo.save_analysis(analysis(analysis_id="empty-analysis"))
+    overview = assessment_overview(
+        analysis_id="empty-analysis", snapshot_hash=snapshot().content_hash, repository=repo
+    )
+    assert overview.findings == () and overview.analysis_finding_ids == ()
+    assert overview.snapshot.workforce_member_count == 3
+
+
+def test_reports_never_call_llms_or_load_embedding_models(repo, monkeypatch):
+    from tendercite.services.llm.openai_compatible import OpenAICompatibleLLM
+    from tendercite.services.retrieval.embeddings import SentenceTransformerEmbeddingProvider
+
+    def forbidden(*_args, **_kwargs):
+        pytest.fail("Workflow attempted LLM/model access")
+
+    monkeypatch.setattr(OpenAICompatibleLLM, "request_completion", forbidden)
+    monkeypatch.setattr(SentenceTransformerEmbeddingProvider, "__init__", forbidden)
+    prepare_mapping_draft(selection(), repository=repo)
+    approved_mapping(repo)
+    assessment_report(assessment(), repository=repo)
