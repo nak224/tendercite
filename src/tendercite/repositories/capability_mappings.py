@@ -498,6 +498,28 @@ class CapabilityMappingRepositoryMixin:
                 analysis, snapshot, tuple(findings), tuple(inspections), tuple(bindings)
             )
 
+    def list_analysis_metadata(self, *, limit=50):
+        """Bounded local selection metadata; never export queries or requirement text."""
+        from tendercite.domain.capability_workflow import AnalysisInventory, AnalysisMetadata
+
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise CapabilityMappingError(MappingErrorCode.INVALID_INPUT)
+        with self._mapping_transaction() as conn:
+            rows = conn.execute("SELECT id, payload FROM analyses ORDER BY id LIMIT ?", (limit,))
+            metadata = []
+            for row in rows:
+                analysis = AnalysisRun.model_validate_json(row["payload"])
+                if analysis.id != row["id"]:
+                    raise CapabilityMappingError(MappingErrorCode.STORAGE_INTEGRITY)
+                metadata.append(
+                    AnalysisMetadata(
+                        analysis_id=analysis.id,
+                        created_at=analysis.created_at,
+                        finding_count=len(analysis.findings),
+                    )
+                )
+            return AnalysisInventory(analyses=tuple(metadata))
+
     def usable_capability_mappings(self, request):
         from tendercite.domain.capability_matching import CapabilityMatchingRequest
 

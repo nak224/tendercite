@@ -132,6 +132,19 @@ def test_invalid_argument_is_not_echoed(capsys):
     assert "private-synthetic-marker" not in capsys.readouterr().err
 
 
+def test_analysis_inventory_is_bounded_and_metadata_only(repo, capsys):
+    before = repo.database_path.read_bytes()
+    assert invoke(repo, "analyses", "--limit", "1") == 0
+    console = capsys.readouterr()
+    body = json.loads(console.out)
+    assert body["analyses"][0]["analysis_id"] == "analysis-1"
+    assert body["analyses"][0]["finding_count"] == 1
+    assert "PostgreSQL" not in console.out and "query" not in console.out
+    assert repo.database_path.read_bytes() == before
+    assert invoke(repo, "analyses", "--limit", "101") == 2
+    assert json.loads(capsys.readouterr().err)["error"] == "INVALID_MAPPING_INPUT"
+
+
 def test_export_refuses_overwrite_and_preserves_existing_bytes(tmp_path):
     output = tmp_path / "private.json"
     output.write_bytes(b"original private contents")
@@ -219,6 +232,11 @@ def test_checkout_artifacts_are_restricted_and_excluded_from_git_and_docker(tmp_
     (foreign / ".git/HEAD").write_text("ref: refs/heads/main\n")
     with pytest.raises(CapabilityError, match="UNSAFE_INPUT"):
         private_workflow_path(foreign / "selection.json")
+    build = tmp_path / "foreign-docker-build"
+    build.mkdir()
+    (build / "Dockerfile").write_text("FROM scratch\n")
+    with pytest.raises(CapabilityError, match="UNSAFE_INPUT"):
+        private_workflow_path(build / "selection.json")
 
 
 def test_windows_directory_handles_deny_rename_and_reparse(monkeypatch):

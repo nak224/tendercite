@@ -42,6 +42,8 @@ def private_workflow_path(value):
         if marker.is_file() or (marker / "HEAD").is_file():
             if parent != CHECKOUT or not path.is_relative_to(parent / "data/capabilities/workflow"):
                 raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
+        if (parent / "Dockerfile").is_file() and parent != CHECKOUT:
+            raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
     # Source installs without a .git directory still have a Docker build context.
     if (CHECKOUT / "Dockerfile").exists() and path.is_relative_to(CHECKOUT):
         if not path.is_relative_to(CHECKOUT / "data/capabilities/workflow"):
@@ -62,6 +64,10 @@ def _read_only_repository(database):
 
 
 def _run(args):
+    if args.command == "analyses":
+        repository = _read_only_repository(args.database)
+        inventory = repository.list_analysis_metadata(limit=args.limit)
+        return {"status": "LISTED", **inventory.model_dump(mode="json")}
     output = private_workflow_path(args.output)
     request = None
     if args.command != "overview":
@@ -105,6 +111,7 @@ def main(argv=None):
     parser = SafeParser(description=__doc__)
     parser.add_argument("--database", help="Existing local .db; defaults to TENDERCITE_DATA_DIR")
     commands = parser.add_subparsers(dest="command", required=True, parser_class=SafeParser)
+    commands.add_parser("analyses").add_argument("--limit", type=int, default=50)
     overview = commands.add_parser("overview")
     overview.add_argument("--analysis-id", required=True)
     overview.add_argument("--snapshot-hash", required=True)

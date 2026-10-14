@@ -1,5 +1,6 @@
 """Private assessment-support contracts, independent of qualification or decisions."""
 
+from datetime import datetime
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
@@ -29,6 +30,19 @@ from tendercite.domain.models import EvidenceRef, GroundingStatus, ReviewStatus
 class WorkflowScope(MappingModel):
     analysis_id: LocalId
     snapshot_hash: SnapshotHash
+
+
+class AnalysisMetadata(MappingModel):
+    analysis_id: LocalId
+    created_at: datetime
+    finding_count: Annotated[int, Field(ge=0)]
+
+
+class AnalysisInventory(MappingModel):
+    schema_version: Literal["capability-workflow-analysis-inventory-1"] = (
+        "capability-workflow-analysis-inventory-1"
+    )
+    analyses: tuple[AnalysisMetadata, ...]
 
 
 class MappingSelection(SkillSelection, WorkflowScope):
