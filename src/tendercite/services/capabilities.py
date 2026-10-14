@@ -268,18 +268,27 @@ def private_artifact_path(value, *, subdirectory):
     """Share the local workflow's Git/build-context boundary with curated intake."""
     if subdirectory not in ("data/capabilities/workflow", "data/curated"):
         raise CapabilityError(CapabilityErrorCode.INVALID_ARGUMENTS)
+    # Capability handoff artifacts can remain beside a curated intake. Both roots
+    # are Git-ignored and excluded from Docker; schemas still govern their meaning.
+    directories = (
+        (subdirectory, "data/curated")
+        if subdirectory == "data/capabilities/workflow"
+        else (subdirectory,)
+    )
     checkout = Path(__file__).absolute().parents[3]
     path = local_json_path(value)
     for parent in path.parents:
         marker = parent / ".git"
         # Empty sandbox protective directories do not represent Git repositories.
         if marker.is_file() or (marker / "HEAD").is_file():
-            if parent != checkout or not path.is_relative_to(parent / subdirectory):
+            if parent != checkout or not any(
+                path.is_relative_to(parent / root) for root in directories
+            ):
                 raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
         if (parent / "Dockerfile").is_file() and parent != checkout:
             raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
     if (checkout / "Dockerfile").exists() and path.is_relative_to(checkout):
-        if not path.is_relative_to(checkout / subdirectory):
+        if not any(path.is_relative_to(checkout / root) for root in directories):
             raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
     return path
 
