@@ -15,7 +15,7 @@ from tendercite.domain.capability_workflow import AssessmentSelection, MappingSe
 from tendercite.services.capabilities import (
     CapabilityError,
     CapabilityErrorCode,
-    local_json_path,
+    private_artifact_path,
     write_private_json,
 )
 from tendercite.services.capability_matching import CapabilityMatchingError
@@ -25,8 +25,6 @@ from tendercite.services.capability_workflow import (
     prepare_mapping_draft,
 )
 
-CHECKOUT = Path(__file__).absolute().parents[3]
-
 
 def private_workflow_path(value):
     """Checkout artifacts belong only in Git-ignored, Docker-excluded private data.
@@ -34,21 +32,7 @@ def private_workflow_path(value):
     Outside a checkout, explicit local destinations are allowed. Other Git checkouts
     are rejected rather than assuming their ignore/build-context rules are safe.
     """
-    path = local_json_path(value)
-    for parent in path.parents:
-        marker = parent / ".git"
-        # Managed workspaces can contain empty protective .git directories that
-        # are not repositories. Real checkouts have HEAD or a worktree gitfile.
-        if marker.is_file() or (marker / "HEAD").is_file():
-            if parent != CHECKOUT or not path.is_relative_to(parent / "data/capabilities/workflow"):
-                raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
-        if (parent / "Dockerfile").is_file() and parent != CHECKOUT:
-            raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
-    # Source installs without a .git directory still have a Docker build context.
-    if (CHECKOUT / "Dockerfile").exists() and path.is_relative_to(CHECKOUT):
-        if not path.is_relative_to(CHECKOUT / "data/capabilities/workflow"):
-            raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
-    return path
+    return private_artifact_path(value, subdirectory="data/capabilities/workflow")
 
 
 def _read_only_repository(database):

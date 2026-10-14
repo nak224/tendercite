@@ -250,6 +250,40 @@ def read_capability_snapshot(value: str | Path) -> CapabilitySnapshot:
     return validate_capability_json(read_local_json_bytes(value))
 
 
+def read_local_model(value, contract, *, max_bytes=MAX_SNAPSHOT_BYTES):
+    """Shared bounded, duplicate-aware JSON-mode contract loading."""
+    raw = read_local_json_bytes(value, max_bytes=max_bytes)
+    try:
+        data = json.loads(
+            raw.decode("utf-8"), object_pairs_hook=_unique_object, parse_constant=_nonfinite
+        )
+        return contract.model_validate_json(json.dumps(data, ensure_ascii=False, allow_nan=False))
+    except CapabilityError:
+        raise
+    except (ValueError, UnicodeError, RecursionError, OverflowError):
+        raise CapabilityError(CapabilityErrorCode.INVALID_CONTRACT) from None
+
+
+def private_artifact_path(value, *, subdirectory):
+    """Share the local workflow's Git/build-context boundary with curated intake."""
+    if subdirectory not in ("data/capabilities/workflow", "data/curated"):
+        raise CapabilityError(CapabilityErrorCode.INVALID_ARGUMENTS)
+    checkout = Path(__file__).absolute().parents[3]
+    path = local_json_path(value)
+    for parent in path.parents:
+        marker = parent / ".git"
+        # Empty sandbox protective directories do not represent Git repositories.
+        if marker.is_file() or (marker / "HEAD").is_file():
+            if parent != checkout or not path.is_relative_to(parent / subdirectory):
+                raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
+        if (parent / "Dockerfile").is_file() and parent != checkout:
+            raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
+    if (checkout / "Dockerfile").exists() and path.is_relative_to(checkout):
+        if not path.is_relative_to(checkout / subdirectory):
+            raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
+    return path
+
+
 def _open_local(path: Path, *, create: bool = False) -> int:
     try:
         if os.name == "posix":
