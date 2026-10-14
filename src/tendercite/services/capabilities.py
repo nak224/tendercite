@@ -5,8 +5,10 @@ import json
 import os
 import re
 import stat
+from contextlib import contextmanager
 from enum import StrEnum
 from pathlib import Path
+from uuid import uuid4
 
 from pydantic import ValidationError
 
@@ -101,7 +103,7 @@ def local_json_path(value: str | Path) -> Path:
     return Path(os.path.abspath(path))  # Lexical, never resolve through a symlink.
 
 
-def _open_posix(path: Path, *, create: bool = False) -> int:
+def _open_posix_directory(path: Path) -> int:
     if (
         not hasattr(os, "O_NOFOLLOW")
         or not hasattr(os, "O_DIRECTORY")
@@ -112,17 +114,27 @@ def _open_posix(path: Path, *, create: bool = False) -> int:
     directory_flags = os.O_RDONLY | guards | os.O_DIRECTORY
     directory = os.open(path.anchor, directory_flags)
     try:
-        for component in path.parts[1:-1]:
+        for component in path.parts[1:]:
             next_directory = os.open(component, directory_flags, dir_fd=directory)
             os.close(directory)
             directory = next_directory
+        return directory
+    except BaseException:
+        os.close(directory)
+        raise
+
+
+def _open_posix(path: Path, *, create: bool = False) -> int:
+    directory = _open_posix_directory(path.parent)
+    try:
+        guards = os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL if create else os.O_RDONLY | os.O_NONBLOCK
         return os.open(path.name, guards | flags, 0o600, dir_fd=directory)
     finally:
         os.close(directory)
 
 
-def _open_windows(path: Path, *, create: bool = False) -> int:
+def _open_windows(path: Path, *, create: bool = False, directory: bool = False) -> int:
     """Open without following the final reparse point; reject redirected ancestors.
 
     Read-only sharing prevents writes/deletion while this handle is held. Native
@@ -164,8 +176,8 @@ def _open_windows(path: Path, *, create: bool = False) -> int:
         raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
     handle = create_file(
         str(path),
-        0x40000000 if create else 0x80000000,
-        0 if create else 1,
+        0x80 if directory else 0x40000000 if create else 0x80000000,
+        3 if directory else 0 if create else 1,
         None,
         1 if create else 3,
         0x00200000 | 0x02000000,
@@ -179,7 +191,8 @@ def _open_windows(path: Path, *, create: bool = False) -> int:
         actual = buffer.value.removeprefix("\\\\?\\")
         if (
             not attributes(handle, 9, ctypes.byref(tag), ctypes.sizeof(tag))
-            or tag.attributes & (0x400 | 0x10)  # REPARSE_POINT or DIRECTORY.
+            or tag.attributes & 0x400  # REPARSE_POINT.
+            or bool(tag.attributes & 0x10) != directory
             or file_type(handle) != 1  # FILE_TYPE_DISK.
             or not 0 < size < len(buffer)
             or os.path.normcase(actual) != os.path.normcase(str(path))
@@ -268,3 +281,80 @@ def write_capability_snapshot(path: str | Path, snapshot: CapabilitySnapshot) ->
     finally:
         if fd is not None:
             os.close(fd)
+
+
+@contextmanager
+def _windows_locked_parents(path):
+    """Hold all ancestors against deletion/rename while publishing on Windows."""
+    handles = []
+    try:
+        for parent in reversed(path.parents):
+            handles.append(_open_windows(parent, directory=True))
+        yield
+    finally:
+        for handle in reversed(handles):
+            os.close(handle)
+
+
+def write_private_json(path: str | Path, model) -> None:
+    """Publish complete JSON exclusively; partial writes never occupy the final path.
+
+    Reuse guarded directory/file opens. POSIX publication uses an anchored exclusive
+    hard link; Windows rename refuses replacement while ancestor handles deny rename.
+    No permissive fallback when the filesystem cannot publish safely.
+    """
+    path = local_json_path(path)
+    raw = (model.model_dump_json(indent=2) + "\n").encode("utf-8")
+    if len(raw) > MAX_SNAPSHOT_BYTES:
+        raise CapabilityError(CapabilityErrorCode.INPUT_TOO_LARGE)
+    temporary = path.with_name(f".tendercite-{uuid4().hex}.json")
+    directory = None
+    created = False
+    try:
+        if os.name == "posix":
+            directory = _open_posix_directory(path.parent)
+            fd = os.open(
+                temporary.name,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                0o600,
+                dir_fd=directory,
+            )
+            created = True
+            with os.fdopen(fd, "wb") as stream:
+                stream.write(raw)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.link(
+                temporary.name,
+                path.name,
+                src_dir_fd=directory,
+                dst_dir_fd=directory,
+                follow_symlinks=False,
+            )
+            os.fsync(directory)
+        elif os.name == "nt":
+            with _windows_locked_parents(path):
+                try:
+                    fd = _open_local(temporary, create=True)
+                    created = True
+                    with os.fdopen(fd, "wb") as stream:
+                        stream.write(raw)
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                    os.rename(temporary, path)  # Windows: fails if destination exists.
+                finally:
+                    if created and temporary.exists():
+                        temporary.unlink()
+        else:
+            raise CapabilityError(CapabilityErrorCode.UNSUPPORTED_PLATFORM)
+    except CapabilityError:
+        raise
+    except OSError:
+        raise CapabilityError(CapabilityErrorCode.OUTPUT_FAILED) from None
+    finally:
+        if directory is not None:
+            try:
+                if created:
+                    os.unlink(temporary.name, dir_fd=directory)
+            finally:
+                os.close(directory)
