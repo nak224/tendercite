@@ -76,17 +76,19 @@ class CapabilityMappingRepositoryMixin:
 
     def _mapping_sources(self, conn, analysis_id, finding_id, snapshot_hash, *, cache=None):
         cache = {} if cache is None else cache
-        analysis_row = (
-            conn.execute("SELECT payload FROM analyses WHERE id=?", (analysis_id,)).fetchone()
-            if "analysis" not in cache
-            else True
-        )
+        if "analysis" not in cache:
+            analysis_row = conn.execute(
+                "SELECT payload FROM analyses WHERE id=?", (analysis_id,)
+            ).fetchone()
+            if not analysis_row:
+                raise CapabilityMappingError(MappingErrorCode.INVALID_SCOPE)
+            cache["analysis"] = AnalysisRun.model_validate_json(analysis_row["payload"])
         finding_row = conn.execute(
             "SELECT payload, analysis_run_id FROM findings WHERE id=?", (finding_id,)
         ).fetchone()
-        if not analysis_row or not finding_row or finding_row["analysis_run_id"] != analysis_id:
+        if not finding_row or finding_row["analysis_run_id"] != analysis_id:
             raise CapabilityMappingError(MappingErrorCode.INVALID_SCOPE)
-        analysis = cache.get("analysis") or AnalysisRun.model_validate_json(analysis_row["payload"])
+        analysis = cache["analysis"]
         finding = Finding.model_validate_json(finding_row["payload"])
         if (
             analysis.id != analysis_id
@@ -117,11 +119,25 @@ class CapabilityMappingRepositoryMixin:
             if not row:
                 raise CapabilityMappingError(MappingErrorCode.SNAPSHOT_NOT_FOUND)
             cache["snapshot"] = self._stored_capability(row)
-        cache["analysis"] = analysis
         return analysis, finding, event, cache["snapshot"], review_row
 
     @staticmethod
-    def _mapping_row(conn, mapping_id):
+    def _mapping_schema_available(conn):
+        names = {
+            row[0]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' "
+                "AND name IN ('capability_mappings', 'capability_mapping_revisions')"
+            )
+        }
+        if len(names) == 1:
+            raise CapabilityMappingError(MappingErrorCode.STORAGE_INTEGRITY)
+        return bool(names)
+
+    @classmethod
+    def _mapping_row(cls, conn, mapping_id):
+        if not cls._mapping_schema_available(conn):
+            return None
         return conn.execute(
             "SELECT m.*, r.revision, r.status, r.review_sequence, r.payload "
             "FROM capability_mappings m "
@@ -166,11 +182,15 @@ class CapabilityMappingRepositoryMixin:
         _, finding, event, snapshot, _ = sources or self._mapping_sources(
             conn, analysis_id, finding_id, snapshot_hash
         )
-        row = conn.execute(
-            "SELECT mapping_id FROM capability_mappings "
-            "WHERE analysis_id=? AND finding_id=? AND snapshot_hash=?",
-            (analysis_id, finding_id, snapshot_hash),
-        ).fetchone()
+        row = (
+            conn.execute(
+                "SELECT mapping_id FROM capability_mappings "
+                "WHERE analysis_id=? AND finding_id=? AND snapshot_hash=?",
+                (analysis_id, finding_id, snapshot_hash),
+            ).fetchone()
+            if self._mapping_schema_available(conn)
+            else None
+        )
         record = (
             self._stored_mapping(conn, self._mapping_row(conn, row["mapping_id"])) if row else None
         )
@@ -227,6 +247,8 @@ class CapabilityMappingRepositoryMixin:
 
     def capability_mapping_history(self, mapping_id):
         with self._mapping_transaction() as conn:
+            if not self._mapping_schema_available(conn):
+                return []
             rows = conn.execute(
                 "SELECT m.*, r.revision, r.status, r.review_sequence, r.payload "
                 "FROM capability_mappings m JOIN capability_mapping_revisions r USING(mapping_id) "
@@ -385,6 +407,8 @@ class CapabilityMappingRepositoryMixin:
         if snapshot_hash is not None:
             self._check_capability_hash(snapshot_hash)
         with self._mapping_transaction() as conn:
+            if not self._mapping_schema_available(conn):
+                return []
             rows = conn.execute(
                 "SELECT analysis_id, finding_id, snapshot_hash FROM capability_mappings "
                 "WHERE (? IS NULL OR analysis_id=?) AND (? IS NULL OR snapshot_hash=?) "
