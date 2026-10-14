@@ -21,3 +21,5 @@ data/evaluation/
 # Original procurement PDFs stay local, including custom input/corpus directories.
 *.[pP][dD][fF]
 data/*.db-*
+# Pseudonymous workforce imports and explicit local exports stay private.
+data/capabilities/
