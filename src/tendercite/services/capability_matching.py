@@ -11,7 +11,9 @@ from tendercite.domain.capability_matching import (
     CandidateSkillCoverage,
     CapabilityMatchingRequest,
     CapabilityMatchingResult,
+    EvidenceLimitation,
     FindingSkillCoverage,
+    LimitationCode,
     NonEvaluationReason,
     RecordedSkillCoverage,
     RequirementSkillMapping,
@@ -73,6 +75,8 @@ def _eligibility(finding: Finding, mapping: RequirementSkillMapping | None):
         reasons.append(NonEvaluationReason.UNREVIEWED)
     elif finding.review_status == ReviewStatus.REJECTED:
         reasons.append(NonEvaluationReason.REJECTED)
+    elif finding.review_status not in (ReviewStatus.CONFIRMED, ReviewStatus.MODIFIED):
+        raise CapabilityMatchingError(MatchingErrorCode.INCONSISTENT_REVIEW)
     if finding.grounding_status == GroundingStatus.INVALID_QUOTE:
         reasons.append(NonEvaluationReason.INVALID_QUOTE)
     elif finding.grounding_status == GroundingStatus.MISSING_EVIDENCE:
@@ -80,6 +84,54 @@ def _eligibility(finding: Finding, mapping: RequirementSkillMapping | None):
     if mapping is None:
         reasons.append(NonEvaluationReason.UNMAPPED)
     return tuple(reasons)
+
+
+_LIMITATIONS = (
+    (
+        LimitationCode.SKILLS_UNVERIFIED,
+        "Internal assignments are not independent professional experience "
+        "or qualification evidence.",
+    ),
+    (
+        LimitationCode.PROFICIENCY_NOT_DURATION,
+        "Proficiency is not years of experience; required experience duration is not verified.",
+    ),
+    (
+        LimitationCode.CERTIFICATIONS_UNVERIFIED,
+        "No independent certificate, reference or other qualification verification is supported.",
+    ),
+    (
+        LimitationCode.REVIEW_NOT_FULFILLMENT,
+        "Requirement review does not establish requirement fulfillment or bidder eligibility.",
+    ),
+    (
+        LimitationCode.MISSING_NOT_ABSENCE,
+        "A missing assignment means no record in this snapshot, "
+        "not an absence of the person's skill.",
+    ),
+    (
+        LimitationCode.CAPACITY_NOT_EVALUATED,
+        "No capacity, daily feasibility, reservation, historical availability "
+        "or commitment is assessed.",
+    ),
+)
+
+
+def _limitations(finding: Finding) -> tuple[EvidenceLimitation, ...]:
+    values = list(_LIMITATIONS)
+    original = ReviewedValue(
+        statement=finding.statement,
+        category=finding.category,
+        requirement_type=finding.requirement_type,
+    )
+    if finding.review_status == ReviewStatus.MODIFIED or original != finding.effective_value:
+        values.append(
+            (
+                LimitationCode.REVIEWED_MEANING_UNVERIFIED,
+                "Original quote occurrence does not verify the changed reviewed interpretation.",
+            )
+        )
+    return tuple(EvidenceLimitation(code=code, explanation=text) for code, text in values)
 
 
 def _candidate(member: WorkforceMember, mapping: RequirementSkillMapping) -> CandidateSkillCoverage:
@@ -164,7 +216,7 @@ def match_capabilities(
                 coverage=coverage,
                 non_evaluation_reasons=reasons,
                 candidates=candidates,
-                limitations=(),
+                limitations=_limitations(finding),
             )
         )
     return CapabilityMatchingResult(
