@@ -54,8 +54,9 @@ Snapshots remain separate even when they share catalog UUIDs.
 Choose the analysis ID from this inventory or the previously returned `AnalysisRun.id`.
 Requirements emitted by external QA, staged cloud LLM or legal-reference evaluation pipelines
 are **not automatically persisted AnalysisRun findings**. No bridge from those evaluation
-formats is introduced here. Do not copy their IDs or treat their simulated/human review formats
-as interchangeable with TenderCite's append-only finding reviews.
+formats is introduced here. The separate [manual intake](curated-tender-intake.md) accepts explicit
+candidates against normal ingested document IDs and starts them UNREVIEWED. Do not copy evaluation
+IDs or treat their simulated/human review formats as interchangeable with finding reviews.
 
 ## Private local files
 
@@ -64,8 +65,8 @@ source quotes and catalog labels require an explicitly named private export. Rep
 pseudonymous person UUIDs and their matched/missing skill UUIDs; keep them private. They contain
 no names, emails, raw capacity records or unrelated individual assignments.
 
-Inside this checkout, workflow inputs/outputs are permitted only under
-`data/capabilities/workflow/`, already Git-ignored and excluded from the Docker build context.
+Inside this checkout, workflow inputs/outputs are permitted under `data/capabilities/workflow/`
+or `data/curated/` for the manual-intake handoff, both Git-ignored and Docker-excluded.
 Explicit local paths outside checkouts/build contexts are also supported. Other Git checkouts
 and detected Docker build directories are rejected. These guards do not discover every possible
 custom build context: do not use a private directory as a Docker context or force-add its files.

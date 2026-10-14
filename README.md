@@ -218,6 +218,12 @@ and reports recorded individual coverage using current approved mappings. Run
 `python -m examples.local_capability_workflow` for a disposable synthetic end-to-end example.
 Qualification remains unverified, capacity unevaluated and missing/stale mappings explicit.
 
+The [curated tender intake](docs/integrations/curated-tender-intake.md) validates manually entered
+requirements against existing document hashes and stored pages, then atomically creates an ordinary
+analysis with UNREVIEWED findings. It uses no LLM or embeddings and preserves distinct intake
+revisions. Run `python -m examples.curated_tender_intake --directory data/curated/demo` for a
+generated-PDF example through explicit review, mapping approval and private reporting.
+
 ## Docker
 
 ```bash
