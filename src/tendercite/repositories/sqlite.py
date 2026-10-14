@@ -1,20 +1,38 @@
+import re
 import sqlite3
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
+from tendercite.domain.capabilities_v1 import CapabilitySnapshot, canonical_json
+from tendercite.domain.capability_storage import CapabilityImportResult, CapabilitySnapshotMetadata
 from tendercite.domain.models import ChunkRead, DocumentRead, PageRead
+from tendercite.services.capabilities import (
+    CapabilityError,
+    CapabilityErrorCode,
+    validate_capability_json,
+)
+
+MAX_CAPABILITY_LIST_LIMIT = 100
 
 
 class SqliteRepository:
-    def __init__(self, database_path: Path) -> None:
+    def __init__(self, database_path: Path, *, read_only: bool = False) -> None:
         self.database_path = database_path
-        self.database_path.parent.mkdir(parents=True, exist_ok=True)
-        self._initialize()
+        self.read_only = read_only
+        if not read_only:
+            self.database_path.parent.mkdir(parents=True, exist_ok=True)
+            self._initialize()
 
     @contextmanager
     def _connect(self):
-        connection = sqlite3.connect(self.database_path, timeout=30)
+        connection = (
+            sqlite3.connect(
+                self.database_path.absolute().as_uri() + "?mode=ro", uri=True, timeout=30
+            )
+            if self.read_only
+            else sqlite3.connect(self.database_path, timeout=30)
+        )
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         try:
@@ -80,8 +98,131 @@ class SqliteRepository:
                 );
                 CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
                 CREATE INDEX IF NOT EXISTS idx_chunks_page ON chunks(document_id, page_number);
+                CREATE TABLE IF NOT EXISTS capability_snapshots (
+                    content_hash TEXT PRIMARY KEY NOT NULL
+                        CHECK(length(content_hash)=71 AND substr(content_hash,1,7)='sha256:'
+                            AND substr(content_hash,8) NOT GLOB '*[^0-9a-f]*'),
+                    schema_version TEXT NOT NULL CHECK(schema_version='1.0'),
+                    source_system TEXT NOT NULL CHECK(source_system='team-capacity-engine'),
+                    assessment_period_start TEXT NOT NULL CHECK(length(assessment_period_start)=10),
+                    assessment_period_end TEXT NOT NULL
+                        CHECK(length(assessment_period_end)=10
+                            AND assessment_period_end>=assessment_period_start),
+                    canonical_json TEXT NOT NULL
+                        CHECK(length(CAST(canonical_json AS BLOB)) BETWEEN 1 AND 16777216),
+                    imported_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_capabilities_imported
+                    ON capability_snapshots(imported_at DESC, content_hash ASC);
                 """
             )
+
+    def import_capability_snapshot(self, snapshot: CapabilitySnapshot) -> CapabilityImportResult:
+        # Revalidate even programmatically constructed/copied models before starting a write.
+        snapshot = validate_capability_json(canonical_json(snapshot))
+        content = canonical_json(snapshot).decode("utf-8")
+        period = snapshot.assessment_period
+        if self.read_only:
+            raise CapabilityError(CapabilityErrorCode.DATABASE_FAILED)
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            cursor = conn.execute(
+                """INSERT INTO capability_snapshots(
+                    content_hash, schema_version, source_system, assessment_period_start,
+                    assessment_period_end, canonical_json, imported_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(content_hash) DO NOTHING""",
+                (
+                    snapshot.content_hash,
+                    snapshot.schema_version,
+                    snapshot.source_system,
+                    period.start_date.isoformat(),
+                    period.end_date.isoformat(),
+                    content,
+                    datetime.now(UTC).isoformat(),
+                ),
+            )
+            row = conn.execute(
+                "SELECT * FROM capability_snapshots WHERE content_hash=?", (snapshot.content_hash,)
+            ).fetchone()
+            stored = self._stored_capability(row)
+            if stored != snapshot or row["canonical_json"] != content:
+                raise CapabilityError(CapabilityErrorCode.STORAGE_INTEGRITY)
+            return CapabilityImportResult(cursor.rowcount == 1, self._capability_metadata(row))
+
+    @staticmethod
+    def _check_capability_hash(content_hash: str) -> None:
+        if not isinstance(content_hash, str) or not re.fullmatch(
+            r"sha256:[0-9a-f]{64}", content_hash
+        ):
+            raise CapabilityError(CapabilityErrorCode.INVALID_ARGUMENTS)
+
+    @staticmethod
+    def _capability_metadata(row) -> CapabilitySnapshotMetadata:
+        try:
+            imported = datetime.fromisoformat(row["imported_at"])
+            start, end = (
+                date.fromisoformat(row[k])
+                for k in ("assessment_period_start", "assessment_period_end")
+            )
+            if (
+                not re.fullmatch(r"sha256:[0-9a-f]{64}", row["content_hash"])
+                or row["schema_version"] != "1.0"
+                or row["source_system"] != "team-capacity-engine"
+                or imported.utcoffset() != timedelta(0)
+                or not 1 <= (end - start).days + 1 <= 366
+                or start.isoformat() != row["assessment_period_start"]
+                or end.isoformat() != row["assessment_period_end"]
+            ):
+                raise ValueError("Invalid snapshot metadata")
+            return CapabilitySnapshotMetadata(
+                row["content_hash"],
+                row["schema_version"],
+                row["source_system"],
+                start,
+                end,
+                imported,
+            )
+        except (ValueError, TypeError, KeyError):
+            raise CapabilityError(CapabilityErrorCode.STORAGE_INTEGRITY) from None
+
+    @classmethod
+    def _stored_capability(cls, row) -> CapabilitySnapshot:
+        try:
+            metadata = cls._capability_metadata(row)
+            snapshot = validate_capability_json(row["canonical_json"].encode("utf-8"))
+            if (
+                canonical_json(snapshot).decode("utf-8") != row["canonical_json"]
+                or snapshot.content_hash != metadata.content_hash
+                or snapshot.schema_version != metadata.schema_version
+                or snapshot.source_system != metadata.source_system
+                or snapshot.assessment_period.start_date != metadata.assessment_period_start
+                or snapshot.assessment_period.end_date != metadata.assessment_period_end
+            ):
+                raise CapabilityError(CapabilityErrorCode.STORAGE_INTEGRITY)
+            return snapshot
+        except (CapabilityError, ValueError, TypeError, AttributeError):
+            raise CapabilityError(CapabilityErrorCode.STORAGE_INTEGRITY) from None
+
+    def get_capability_snapshot(self, content_hash: str) -> CapabilitySnapshot | None:
+        self._check_capability_hash(content_hash)
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM capability_snapshots WHERE content_hash=?", (content_hash,)
+            ).fetchone()
+        return self._stored_capability(row) if row else None
+
+    def list_capability_snapshots(self, *, limit: int = 50) -> list[CapabilitySnapshotMetadata]:
+        if type(limit) is not int or not 1 <= limit <= MAX_CAPABILITY_LIST_LIMIT:
+            raise CapabilityError(CapabilityErrorCode.INVALID_ARGUMENTS)
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT content_hash, schema_version, source_system, assessment_period_start, "
+                "assessment_period_end, imported_at FROM capability_snapshots "
+                "ORDER BY imported_at DESC, content_hash ASC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [self._capability_metadata(row) for row in rows]
 
     def save_document(
         self,
