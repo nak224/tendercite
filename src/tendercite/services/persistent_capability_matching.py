@@ -21,7 +21,12 @@ def match_persisted_capabilities(
     selection = CapabilityMatchingRequest(
         analysis_id=analysis_id, snapshot_hash=snapshot_hash, finding_ids=finding_ids, mappings=()
     )
-    analysis, findings, snapshot, inspections = repository.load_persisted_matching_inputs(selection)
+    return _match_persisted_inputs(selection, repository.load_persisted_matching_inputs(selection))
+
+
+def _match_persisted_inputs(selection, inputs):
+    """Shared adapter logic; workflow reports use the same transaction's source state."""
+    analysis, findings, snapshot, inspections = inputs
     request = CapabilityMatchingRequest(
         analysis_id=selection.analysis_id,
         snapshot_hash=selection.snapshot_hash,
@@ -53,3 +58,24 @@ def match_persisted_capabilities(
             )
         )
     return result.model_copy(update={"findings": tuple(rows)})
+
+
+def inspect_and_match_persisted_capabilities(*, selection, repository):
+    """Compose inspection and existing matching without a second, possibly changed read.
+
+    Empty selections have no matching result and never implicitly select all findings.
+    """
+    state = repository.load_capability_workflow_state(
+        selection.analysis_id, selection.snapshot_hash, finding_ids=selection.finding_ids
+    )
+    if not selection.finding_ids:
+        return state, None
+    request = CapabilityMatchingRequest(
+        analysis_id=selection.analysis_id,
+        snapshot_hash=selection.snapshot_hash,
+        finding_ids=selection.finding_ids,
+        mappings=(),
+    )
+    return state, _match_persisted_inputs(
+        request, (state.analysis, state.findings, state.snapshot, state.inspections)
+    )

@@ -25,7 +25,8 @@ from tendercite.repositories.sqlite import SqliteRepository
 from tendercite.services.capabilities import read_capability_snapshot
 
 
-def run_demo(directory: Path):
+def seed_demo(directory: Path):
+    """Create disposable self-authored analysis and pinned snapshot, with simulated review."""
     database = directory / "synthetic.db"
     if database.exists():
         raise ValueError("Use a fresh demo directory")
@@ -84,6 +85,12 @@ def run_demo(directory: Path):
     )
     # Simulation of explicit local review; no genuine human or legal verification is claimed.
     repo.add_review(finding.id, ReviewRequest(action="CONFIRM", comment="Synthetic review example"))
+    return repo, snapshot, finding
+
+
+def run_demo(directory: Path):
+    repo, snapshot, finding = seed_demo(directory)
+    database = repo.database_path
     identity = dict(
         analysis_id=finding.analysis_run_id,
         finding_id=finding.id,

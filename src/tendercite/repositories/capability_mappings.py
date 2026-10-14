@@ -2,12 +2,14 @@
 
 import sqlite3
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import uuid4
 
 from pydantic import ValidationError
 
 from tendercite.domain.analysis import AnalysisRun
+from tendercite.domain.capabilities_v1 import CapabilitySnapshot
 from tendercite.domain.capability_mapping_records import (
     CapabilityMappingError,
     CapabilityMappingRecord,
@@ -26,6 +28,17 @@ from tendercite.domain.capability_mapping_records import (
 )
 from tendercite.domain.models import Finding, GroundingStatus, ReviewStatus
 from tendercite.domain.review import ReviewEvent
+
+
+@dataclass(frozen=True)
+class CapabilityWorkflowState:
+    """One read snapshot; internal composition data, never a persisted decision."""
+
+    analysis: AnalysisRun
+    snapshot: CapabilitySnapshot
+    findings: tuple[Finding, ...]
+    inspections: tuple[MappingInspection, ...]
+    review_bindings: tuple[RequirementReviewBinding, ...]
 
 
 def _binding(finding, event):
@@ -432,21 +445,80 @@ class CapabilityMappingRepositoryMixin:
         request = self._validate_mapping_input(request, CapabilityMatchingRequest)
         if request.mappings:
             raise CapabilityMappingError(MappingErrorCode.INVALID_INPUT)
+        state = self.load_capability_workflow_state(
+            request.analysis_id, request.snapshot_hash, finding_ids=request.finding_ids
+        )
+        return state.analysis, list(state.findings), state.snapshot, state.inspections
+
+    def load_capability_workflow_state(self, analysis_id, snapshot_hash, *, finding_ids=None):
+        """Read every selected review, mapping and snapshot on the same connection.
+
+        None selects the analysis inventory; an empty tuple deliberately selects nothing.
+        This also verifies analysis/snapshot identity for empty assessments.
+        """
+        from tendercite.domain.capability_workflow import AssessmentSelection, WorkflowScope
+
+        scope = self._validate_mapping_input(
+            WorkflowScope(analysis_id=analysis_id, snapshot_hash=snapshot_hash), WorkflowScope
+        )
         with self._mapping_transaction() as conn:
-            findings, inspections = [], []
-            cache = {}
-            for finding_id in sorted(request.finding_ids):
+            row = conn.execute(
+                "SELECT payload FROM analyses WHERE id=?", (scope.analysis_id,)
+            ).fetchone()
+            if not row:
+                raise CapabilityMappingError(MappingErrorCode.INVALID_SCOPE)
+            analysis = AnalysisRun.model_validate_json(row["payload"])
+            inventory = tuple(f.id for f in analysis.findings)
+            if analysis.id != scope.analysis_id or len(set(inventory)) != len(inventory):
+                raise CapabilityMappingError(MappingErrorCode.STORAGE_INTEGRITY)
+            selection = AssessmentSelection(
+                **scope.model_dump(), finding_ids=inventory if finding_ids is None else finding_ids
+            )
+            row = conn.execute(
+                "SELECT * FROM capability_snapshots WHERE content_hash=?", (scope.snapshot_hash,)
+            ).fetchone()
+            if not row:
+                raise CapabilityMappingError(MappingErrorCode.SNAPSHOT_NOT_FOUND)
+            snapshot = self._stored_capability(row)
+            cache = {"analysis": analysis, "snapshot": snapshot}
+            findings, inspections, bindings = [], [], []
+            for finding_id in selection.finding_ids:
                 sources = self._mapping_sources(
-                    conn, request.analysis_id, finding_id, request.snapshot_hash, cache=cache
+                    conn, scope.analysis_id, finding_id, scope.snapshot_hash, cache=cache
                 )
-                analysis, finding, _, snapshot, _ = sources
+                _, finding, event, _, _ = sources
                 findings.append(finding)
+                bindings.append(_binding(finding, event))
                 inspections.append(
                     self._inspection(
-                        conn, request.analysis_id, finding_id, request.snapshot_hash, sources
+                        conn, scope.analysis_id, finding_id, scope.snapshot_hash, sources
                     )
                 )
-            return analysis, findings, snapshot, tuple(inspections)
+            return CapabilityWorkflowState(
+                analysis, snapshot, tuple(findings), tuple(inspections), tuple(bindings)
+            )
+
+    def list_analysis_metadata(self, *, limit=50):
+        """Bounded local selection metadata; never export queries or requirement text."""
+        from tendercite.domain.capability_workflow import AnalysisInventory, AnalysisMetadata
+
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise CapabilityMappingError(MappingErrorCode.INVALID_INPUT)
+        with self._mapping_transaction() as conn:
+            rows = conn.execute("SELECT id, payload FROM analyses ORDER BY id LIMIT ?", (limit,))
+            metadata = []
+            for row in rows:
+                analysis = AnalysisRun.model_validate_json(row["payload"])
+                if analysis.id != row["id"]:
+                    raise CapabilityMappingError(MappingErrorCode.STORAGE_INTEGRITY)
+                metadata.append(
+                    AnalysisMetadata(
+                        analysis_id=analysis.id,
+                        created_at=analysis.created_at,
+                        finding_count=len(analysis.findings),
+                    )
+                )
+            return AnalysisInventory(analyses=tuple(metadata))
 
     def usable_capability_mappings(self, request):
         from tendercite.domain.capability_matching import CapabilityMatchingRequest
