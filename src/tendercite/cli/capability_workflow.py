@@ -36,7 +36,10 @@ def private_workflow_path(value):
     """
     path = local_json_path(value)
     for parent in path.parents:
-        if (parent / ".git").exists():
+        marker = parent / ".git"
+        # Managed workspaces can contain empty protective .git directories that
+        # are not repositories. Real checkouts have HEAD or a worktree gitfile.
+        if marker.is_file() or (marker / "HEAD").is_file():
             if parent != CHECKOUT or not path.is_relative_to(parent / "data/capabilities/workflow"):
                 raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
     # Source installs without a .git directory still have a Docker build context.
