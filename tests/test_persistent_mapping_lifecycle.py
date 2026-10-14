@@ -1,6 +1,7 @@
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
-from threading import Barrier
+from contextlib import contextmanager
+from threading import Barrier, Event
 
 import pytest
 from matching_helpers import SKILL_A, SKILL_B
@@ -13,7 +14,11 @@ from persistent_mapping_helpers import (
     seeded_repository,
 )
 
-from tendercite.domain.capability_mapping_records import CapabilityMappingError, MappingStatus
+from tendercite.domain.capability_mapping_records import (
+    CapabilityMappingError,
+    MappingErrorCode,
+    MappingStatus,
+)
 from tendercite.domain.review import ReviewRequest
 from tendercite.repositories.sqlite import SqliteRepository
 
@@ -145,3 +150,47 @@ def test_draft_cannot_be_approved_against_a_new_review_without_revision(repo):
         repo.approve_capability_mapping(approval_input(revised)).review_binding.review_event_id
         == event.id
     )
+
+
+def test_approval_serializes_review_validation_and_persistence(repo, monkeypatch):
+    draft = repo.create_capability_mapping_draft(draft_input(repo))
+    reviewer = SqliteRepository(repo.database_path)
+    approval_locked, review_attempted = Event(), Event()
+    original_sources, original_connect = repo._mapping_sources, reviewer._connect
+
+    def sources(*args, **kwargs):
+        approval_locked.set()
+        assert review_attempted.wait(timeout=5)
+        return original_sources(*args, **kwargs)
+
+    @contextmanager
+    def reviewer_connection():
+        with original_connect() as conn:
+            conn.set_trace_callback(
+                lambda sql: review_attempted.set() if sql == "BEGIN IMMEDIATE" else None
+            )
+            yield conn
+
+    monkeypatch.setattr(repo, "_mapping_sources", sources)
+    monkeypatch.setattr(reviewer, "_connect", reviewer_connection)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        approval = pool.submit(repo.approve_capability_mapping, approval_input(draft))
+        assert approval_locked.wait(timeout=5)
+        review = pool.submit(reviewer.add_review, "finding-1", ReviewRequest(action="CONFIRM"))
+        approved = approval.result(timeout=10)
+        event = review.result(timeout=10)
+    monkeypatch.setattr(repo, "_mapping_sources", original_sources)
+    assert approved.review_binding.review_event_id != event.id
+    assert repo.get_capability_mapping(draft.mapping_id).status == MappingStatus.STALE
+
+
+def test_identity_and_first_revision_roll_back_together(repo, monkeypatch):
+    def fail(*_args):
+        raise CapabilityMappingError(MappingErrorCode.DATABASE_FAILED)
+
+    monkeypatch.setattr(repo, "_insert_mapping_revision", fail)
+    with pytest.raises(CapabilityMappingError, match="DATABASE_FAILED"):
+        repo.create_capability_mapping_draft(draft_input(repo))
+    with repo._connect() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM capability_mappings").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM capability_mapping_revisions").fetchone()[0] == 0
