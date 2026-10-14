@@ -349,6 +349,8 @@ def write_private_json(path: str | Path, model) -> None:
             raise CapabilityError(CapabilityErrorCode.UNSUPPORTED_PLATFORM)
     except CapabilityError:
         raise
+    except (AttributeError, ImportError, NotImplementedError):
+        raise CapabilityError(CapabilityErrorCode.UNSUPPORTED_PLATFORM) from None
     except OSError:
         raise CapabilityError(CapabilityErrorCode.OUTPUT_FAILED) from None
     finally:

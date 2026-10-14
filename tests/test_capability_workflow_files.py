@@ -6,6 +6,7 @@ import ntpath
 import os
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path, PureWindowsPath
 from types import SimpleNamespace
 
@@ -166,6 +167,18 @@ def test_interrupted_export_never_publishes_partial_final_file(tmp_path, monkeyp
     assert not output.exists() and list(tmp_path.iterdir()) == []
 
 
+@pytest.mark.skipif(os.name != "posix", reason="POSIX publication support")
+def test_unsupported_publication_fails_with_fixed_category(tmp_path, monkeypatch):
+    def unsupported(*_args, **_kwargs):
+        raise NotImplementedError("private-synthetic-marker")
+
+    monkeypatch.setattr(capabilities.os, "link", unsupported)
+    output = tmp_path / "report.json"
+    with pytest.raises(CapabilityError, match="UNSUPPORTED_PLATFORM"):
+        write_private_json(output, assessment())
+    assert not output.exists() and list(tmp_path.iterdir()) == []
+
+
 @pytest.mark.skipif(os.name != "posix", reason="Symlink and descriptor tests")
 @pytest.mark.parametrize("target", ["input", "output", "parent", "database"])
 def test_symlinks_fail_closed(repo, tmp_path, capsys, target):
@@ -269,3 +282,50 @@ def test_windows_directory_handles_deny_rename_and_reparse(monkeypatch):
     assert opened[0][2] == 3  # Share read/write, never FILE_SHARE_DELETE.
     assert opened[0][4] == 3  # OPEN_EXISTING: never create a parent.
     assert opened[0][5] & 0x00200000
+
+
+@pytest.mark.parametrize("exists", [False, True])
+def test_windows_publication_is_exclusive_and_under_locked_parents(tmp_path, monkeypatch, exists):
+    output = tmp_path / "report.json"
+    if exists:
+        output.write_bytes(b"existing private output")
+    locked = False
+
+    @contextmanager
+    def parents(path):
+        nonlocal locked
+        assert path == output
+        locked = True
+        try:
+            yield
+        finally:
+            locked = False
+
+    def open_temporary(path, *, create):
+        assert locked and create
+        return os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+
+    def exclusive_rename(source, destination):
+        assert locked
+        assert json.loads(source.read_text())["finding_ids"] == ["finding-1"]
+        if destination.exists():
+            raise FileExistsError
+        os.rename(source, destination)
+
+    monkeypatch.setattr(capabilities, "local_json_path", lambda _: output)
+    monkeypatch.setattr(capabilities, "_windows_locked_parents", parents)
+    monkeypatch.setattr(capabilities, "_open_local", open_temporary)
+    monkeypatch.setattr(
+        capabilities,
+        "os",
+        SimpleNamespace(name="nt", fdopen=os.fdopen, fsync=os.fsync, rename=exclusive_rename),
+    )
+    if exists:
+        with pytest.raises(CapabilityError, match="OUTPUT_FAILED"):
+            write_private_json(output, assessment())
+        assert output.read_bytes() == b"existing private output"
+    else:
+        write_private_json(output, assessment())
+        assert json.loads(output.read_text())["finding_ids"] == ["finding-1"]
+    assert list(tmp_path.glob(".tendercite-*.json")) == []
+    assert not locked
