@@ -193,7 +193,10 @@ def _open_windows(path: Path, *, create: bool = False) -> int:
             close(handle)
 
 
-def read_capability_snapshot(value: str | Path) -> CapabilitySnapshot:
+def read_local_json_bytes(value: str | Path, *, max_bytes: int = MAX_SNAPSHOT_BYTES) -> bytes:
+    """Bounded regular-file read; retain the importer's local-path and race safeguards."""
+    if type(max_bytes) is not int or not 1 <= max_bytes <= MAX_SNAPSHOT_BYTES:
+        raise CapabilityError(CapabilityErrorCode.INVALID_ARGUMENTS)
     path = local_json_path(value)
     fd = None
     try:
@@ -203,10 +206,10 @@ def read_capability_snapshot(value: str | Path) -> CapabilitySnapshot:
             before = os.fstat(stream.fileno())
             if not stat.S_ISREG(before.st_mode):
                 raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
-            if before.st_size > MAX_SNAPSHOT_BYTES:
+            if before.st_size > max_bytes:
                 raise CapabilityError(CapabilityErrorCode.INPUT_TOO_LARGE)
-            raw = stream.read(MAX_SNAPSHOT_BYTES + 1)
-            if len(raw) > MAX_SNAPSHOT_BYTES:
+            raw = stream.read(max_bytes + 1)
+            if len(raw) > max_bytes:
                 raise CapabilityError(CapabilityErrorCode.INPUT_TOO_LARGE)
             after = os.fstat(stream.fileno())
             if (before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
@@ -215,7 +218,7 @@ def read_capability_snapshot(value: str | Path) -> CapabilitySnapshot:
                 after.st_ctime_ns,
             ) or len(raw) != after.st_size:
                 raise CapabilityError(CapabilityErrorCode.INPUT_CHANGED)
-        return validate_capability_json(raw)
+        return raw
     except CapabilityError:
         raise
     except OSError as exc:
@@ -228,6 +231,10 @@ def read_capability_snapshot(value: str | Path) -> CapabilitySnapshot:
     finally:
         if fd is not None:
             os.close(fd)
+
+
+def read_capability_snapshot(value: str | Path) -> CapabilitySnapshot:
+    return validate_capability_json(read_local_json_bytes(value))
 
 
 def _open_local(path: Path, *, create: bool = False) -> int:
