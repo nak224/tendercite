@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from tendercite.domain.capabilities_v1 import CapabilitySnapshot
+from tendercite.domain.capabilities_v1 import CapabilitySnapshot, canonical_json
 
 MAX_SNAPSHOT_BYTES = 16 * 1024 * 1024
 
@@ -101,26 +101,28 @@ def local_json_path(value: str | Path) -> Path:
     return Path(os.path.abspath(path))  # Lexical, never resolve through a symlink.
 
 
-def _open_posix(path: Path) -> int:
+def _open_posix(path: Path, *, create: bool = False) -> int:
     if (
         not hasattr(os, "O_NOFOLLOW")
         or not hasattr(os, "O_DIRECTORY")
         or os.open not in os.supports_dir_fd
     ):
         raise CapabilityError(CapabilityErrorCode.UNSUPPORTED_PLATFORM)
-    flags = os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
-    directory = os.open(path.anchor, flags | os.O_DIRECTORY)
+    guards = os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
+    directory_flags = os.O_RDONLY | guards | os.O_DIRECTORY
+    directory = os.open(path.anchor, directory_flags)
     try:
         for component in path.parts[1:-1]:
-            next_directory = os.open(component, flags | os.O_DIRECTORY, dir_fd=directory)
+            next_directory = os.open(component, directory_flags, dir_fd=directory)
             os.close(directory)
             directory = next_directory
-        return os.open(path.name, flags | os.O_NONBLOCK, dir_fd=directory)
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL if create else os.O_RDONLY | os.O_NONBLOCK
+        return os.open(path.name, guards | flags, 0o600, dir_fd=directory)
     finally:
         os.close(directory)
 
 
-def _open_windows(path: Path) -> int:
+def _open_windows(path: Path, *, create: bool = False) -> int:
     """Open without following the final reparse point; reject redirected ancestors.
 
     Read-only sharing prevents writes/deletion while this handle is held. Native
@@ -131,8 +133,8 @@ def _open_windows(path: Path) -> int:
     from ctypes import wintypes
 
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-    create = kernel.CreateFileW
-    create.argtypes = [
+    create_file = kernel.CreateFileW
+    create_file.argtypes = [
         wintypes.LPCWSTR,
         wintypes.DWORD,
         wintypes.DWORD,
@@ -141,7 +143,7 @@ def _open_windows(path: Path) -> int:
         wintypes.DWORD,
         wintypes.HANDLE,
     ]
-    create.restype = wintypes.HANDLE
+    create_file.restype = wintypes.HANDLE
     close = kernel.CloseHandle
     close.argtypes, close.restype = [wintypes.HANDLE], wintypes.BOOL
     attributes = kernel.GetFileInformationByHandleEx
@@ -160,7 +162,15 @@ def _open_windows(path: Path) -> int:
 
     if drive_type(path.anchor) == 4:  # DRIVE_REMOTE, including mapped network drives.
         raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
-    handle = create(str(path), 0x80000000, 1, None, 3, 0x00200000 | 0x02000000, None)
+    handle = create_file(
+        str(path),
+        0x40000000 if create else 0x80000000,
+        0 if create else 1,
+        None,
+        1 if create else 3,
+        0x00200000 | 0x02000000,
+        None,
+    )
     if handle == ctypes.c_void_p(-1).value:
         raise CapabilityError(CapabilityErrorCode.FILE_READ_FAILED)
     try:
@@ -175,7 +185,7 @@ def _open_windows(path: Path) -> int:
             or os.path.normcase(actual) != os.path.normcase(str(path))
         ):
             raise CapabilityError(CapabilityErrorCode.UNSAFE_INPUT)
-        fd = msvcrt.open_osfhandle(handle, os.O_RDONLY | os.O_BINARY)
+        fd = msvcrt.open_osfhandle(handle, (os.O_WRONLY if create else os.O_RDONLY) | os.O_BINARY)
         handle = None  # Ownership transferred to the Python file descriptor.
         return fd
     finally:
@@ -187,12 +197,7 @@ def read_capability_snapshot(value: str | Path) -> CapabilitySnapshot:
     path = local_json_path(value)
     fd = None
     try:
-        if os.name == "posix":
-            fd = _open_posix(path)
-        elif os.name == "nt":
-            fd = _open_windows(path)
-        else:
-            raise CapabilityError(CapabilityErrorCode.UNSUPPORTED_PLATFORM)
+        fd = _open_local(path)
         with os.fdopen(fd, "rb") as stream:
             fd = None
             before = os.fstat(stream.fileno())
@@ -220,6 +225,39 @@ def read_capability_snapshot(value: str | Path) -> CapabilitySnapshot:
             else CapabilityErrorCode.FILE_READ_FAILED
         )
         raise CapabilityError(code) from None
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+
+def _open_local(path: Path, *, create: bool = False) -> int:
+    try:
+        if os.name == "posix":
+            return _open_posix(path, create=create)
+        if os.name == "nt":
+            return _open_windows(path, create=create)
+        raise CapabilityError(CapabilityErrorCode.UNSUPPORTED_PLATFORM)
+    except (ImportError, AttributeError, NotImplementedError):
+        raise CapabilityError(CapabilityErrorCode.UNSUPPORTED_PLATFORM) from None
+
+
+def write_capability_snapshot(path: str | Path, snapshot: CapabilitySnapshot) -> None:
+    """Explicit private export to a new local file; never overwrite an existing path."""
+    path = local_json_path(path)
+    raw = canonical_json(snapshot)
+    validate_capability_json(raw)
+    fd = None
+    try:
+        fd = _open_local(path, create=True)
+        with os.fdopen(fd, "wb") as stream:
+            fd = None
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except CapabilityError:
+        raise
+    except OSError:
+        raise CapabilityError(CapabilityErrorCode.OUTPUT_FAILED) from None
     finally:
         if fd is not None:
             os.close(fd)
