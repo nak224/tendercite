@@ -203,6 +203,11 @@ existing SQLite database. `python -m tendercite.cli.import_capabilities` support
 explicit synthetic-data import, bounded metadata listing and lookup/export by hash. Imports do
 not establish tender eligibility or change findings, assessments, capacity allocations or Go/No-Go.
 
+The [candidate matching core](docs/integrations/capability-matching.md) compares explicit `ALL_OF`
+skill UUID mappings for human-reviewed, grounded findings with one selected snapshot. It returns
+deterministic per-person assignment coverage while keeping qualification unverified and capacity
+unevaluated. Existing reviews and decisions remain unchanged.
+
 ## Docker
 
 ```bash
