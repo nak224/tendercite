@@ -195,6 +195,14 @@ aliases, provisions, individual requirements and conservative condition/exceptio
 hash-bound human meaning review. Three successful operator pilots were reported, but their paid
 artifacts/ledger are unavailable here; full-pipeline and semantic evaluation remain pending.
 
+## Local workforce snapshot import
+
+The [Team Capacity Engine integration](docs/integrations/team-capacity.md) independently validates
+schema 1.0 capability snapshots and their canonical hashes, then stores historical states in the
+existing SQLite database. `python -m tendercite.cli.import_capabilities` supports validation-only,
+explicit synthetic-data import, bounded metadata listing and lookup/export by hash. Imports do
+not establish tender eligibility or change findings, assessments, capacity allocations or Go/No-Go.
+
 ## Docker
 
 ```bash
