@@ -42,10 +42,9 @@ def validate_intake_sources(intake, *, documents, pages) -> ValidatedIntake:
         document = documents.get(source.document_id)
         if document is None:
             raise CuratedIntakeError(IntakeErrorCode.DOCUMENT_NOT_FOUND)
-        if (
-            document.sha256 != source.expected_pdf_sha256
-            or document.media_type != "application/pdf"
-        ):
+        if document.media_type != "application/pdf":
+            raise CuratedIntakeError(IntakeErrorCode.NOT_PDF)
+        if document.sha256 != source.expected_pdf_sha256:
             raise CuratedIntakeError(IntakeErrorCode.HASH_MISMATCH)
     cited = {(e.document_id, e.page_number) for f in intake.findings for e in f.evidence}
     if any(key not in pages for key in cited):
@@ -53,7 +52,11 @@ def validate_intake_sources(intake, *, documents, pages) -> ValidatedIntake:
     for source in intake.documents:
         document = documents[source.document_id]
         available = sorted(number for doc, number in pages if doc == source.document_id)
-        if document.page_count < 1 or available != list(range(1, document.page_count + 1)):
+        if (
+            len(available) != document.page_count
+            or not available
+            or any(number != index for index, number in enumerate(available, start=1))
+        ):
             raise CuratedIntakeError(IntakeErrorCode.PAGES_INCOMPLETE)
     evidence = []
     for candidate in intake.findings:
