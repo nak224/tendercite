@@ -212,6 +212,12 @@ Operator-controlled skill associations can be stored locally with immutable revi
 review-bound approvals. See the [persistent mapping workflow](docs/integrations/persistent-capability-mappings.md)
 and run `python examples/persistent_capability_mappings.py` for a synthetic offline CLI example.
 
+The [local assessment workflow](docs/integrations/local-capability-workflow.md) lists analysis
+metadata, privately exports reviewed findings and catalog skills, prepares explicit draft inputs,
+and reports recorded individual coverage using current approved mappings. Run
+`python -m examples.local_capability_workflow` for a disposable synthetic end-to-end example.
+Qualification remains unverified, capacity unevaluated and missing/stale mappings explicit.
+
 ## Docker
 
 ```bash
