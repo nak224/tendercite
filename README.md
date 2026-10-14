@@ -208,6 +208,10 @@ skill UUID mappings for human-reviewed, grounded findings with one selected snap
 deterministic per-person assignment coverage while keeping qualification unverified and capacity
 unevaluated. Existing reviews and decisions remain unchanged.
 
+Operator-controlled skill associations can be stored locally with immutable revisions and
+review-bound approvals. See the [persistent mapping workflow](docs/integrations/persistent-capability-mappings.md)
+and run `python examples/persistent_capability_mappings.py` for a synthetic offline CLI example.
+
 ## Docker
 
 ```bash
