@@ -9,6 +9,7 @@ from tendercite.domain.capability_storage import CapabilityImportResult, Capabil
 from tendercite.domain.models import ChunkRead, DocumentRead, PageRead
 from tendercite.repositories.capability_mapping_schema import MAPPING_SCHEMA_SQL
 from tendercite.repositories.capability_mappings import CapabilityMappingRepositoryMixin
+from tendercite.repositories.curated_intake import CuratedIntakeRepositoryMixin
 from tendercite.services.capabilities import (
     CapabilityError,
     CapabilityErrorCode,
@@ -18,11 +19,14 @@ from tendercite.services.capabilities import (
 MAX_CAPABILITY_LIST_LIMIT = 100
 
 
-class SqliteRepository(CapabilityMappingRepositoryMixin):
-    def __init__(self, database_path: Path, *, read_only: bool = False) -> None:
+class SqliteRepository(CapabilityMappingRepositoryMixin, CuratedIntakeRepositoryMixin):
+    def __init__(
+        self, database_path: Path, *, read_only: bool = False, initialize: bool = True
+    ) -> None:
         self.database_path = database_path
         self.read_only = read_only
-        if not read_only:
+        self.initialize = initialize
+        if not read_only and initialize:
             self.database_path.parent.mkdir(parents=True, exist_ok=True)
             self._initialize()
 
@@ -30,9 +34,12 @@ class SqliteRepository(CapabilityMappingRepositoryMixin):
     def _connect(self):
         connection = (
             sqlite3.connect(
-                self.database_path.absolute().as_uri() + "?mode=ro", uri=True, timeout=30
+                self.database_path.absolute().as_uri()
+                + ("?mode=ro" if self.read_only else "?mode=rw"),
+                uri=True,
+                timeout=30,
             )
-            if self.read_only
+            if self.read_only or not self.initialize
             else sqlite3.connect(self.database_path, timeout=30)
         )
         connection.row_factory = sqlite3.Row
@@ -350,17 +357,22 @@ class SqliteRepository(CapabilityMappingRepositoryMixin):
     def save_analysis(self, run) -> None:
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
-            for document_id in run.request.document_ids:
-                if (
-                    conn.execute("SELECT id FROM documents WHERE id=?", (document_id,)).fetchone()
-                    is None
-                ):
-                    raise ValueError("Source was deleted during analysis")
-            conn.execute("INSERT INTO analyses VALUES (?, ?)", (run.id, run.model_dump_json()))
-            conn.executemany(
-                "INSERT INTO findings VALUES (?, ?, ?)",
-                [(f.id, run.id, f.model_dump_json()) for f in run.findings],
-            )
+            self._insert_analysis(conn, run)
+
+    @staticmethod
+    def _insert_analysis(conn, run) -> None:
+        """Share insertion with intake without opening an independent transaction."""
+        for document_id in run.request.document_ids:
+            if (
+                conn.execute("SELECT id FROM documents WHERE id=?", (document_id,)).fetchone()
+                is None
+            ):
+                raise ValueError("Source was deleted during analysis")
+        conn.execute("INSERT INTO analyses VALUES (?, ?)", (run.id, run.model_dump_json()))
+        conn.executemany(
+            "INSERT INTO findings VALUES (?, ?, ?)",
+            [(f.id, run.id, f.model_dump_json()) for f in run.findings],
+        )
 
     def get_analysis(self, analysis_id: str):
         from tendercite.domain.analysis import AnalysisRun

@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from tendercite.domain.curated_intake import CuratedIntakeProvenance
 from tendercite.domain.models import Finding, RequirementCategory, RequirementType
 
 
@@ -79,3 +80,5 @@ class AnalysisRun(BaseModel):
     retrieved_chunk_ids: list[str]
     created_at: datetime
     findings: list[Finding]
+    # Optional for legacy/model analyses; manual intake is never model-generated output.
+    curated_intake: CuratedIntakeProvenance | None = None
