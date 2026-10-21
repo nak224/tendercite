@@ -26,8 +26,9 @@ Linux:
 TENDERCITE_RETRIEVAL_ENABLED=false TENDERCITE_DATA_DIR=data .venv/bin/python -m uvicorn tendercite.main:app --host 127.0.0.1 --port 8000
 ```
 
-The intake CLI opens SQLite directly and requires no server. Only the existing document/review
-operations below use loopback HTTP. No new public endpoint or second ingestion pipeline is added.
+The intake CLI opens SQLite directly and requires no server. The optional
+[local HTTP intake endpoints](curated-intake-http.md) expose the same validation and atomic commit
+for clients; no second ingestion pipeline or public-deployment security model is introduced.
 Upload through the existing UI or API. In another PowerShell terminal, with a permitted PDF
 (each command is one line):
 

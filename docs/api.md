@@ -17,6 +17,8 @@ Application paths use `/api/v1`; there is no authentication. Keep the service lo
 | POST | `/api/v1/evidence/validate` | Check document/page/quote occurrence |
 | POST | `/api/v1/search` | Semantic search with citation metadata |
 | POST | `/api/v1/analyses` | Retrieve, extract, validate and atomically persist results (201) |
+| POST | `/api/v1/curated-intakes/validate` | Validate typed manual intake against stored sources; no analysis persistence (200) |
+| POST | `/api/v1/curated-intakes/commit` | Explicitly acknowledged atomic manual intake; CREATED or ALREADY_PRESENT (200) |
 | GET | `/api/v1/analyses/{id}` | Immutable original run snapshot |
 | GET | `/api/v1/findings` | Current findings; optional `analysis_run_id` query filter |
 | GET | `/api/v1/findings/{id}` | Original output plus current `effective_value` and review state |
@@ -94,3 +96,6 @@ and current assessments. CSV/Markdown use one row per evidence reference; missin
 still produces a row. Unreviewed/rejected records retain their labels and lack matrix assignments.
 CSV neutralizes spreadsheet formula prefixes; Markdown escapes untrusted markup. Exports are
 attachments with fixed filenames. There is no upload-by-URL, arbitrary storage-path or secret API.
+
+Manual intake body limits, acknowledgement, typed summaries, safe error codes and synthetic examples:
+[curated intake HTTP API](integrations/curated-intake-http.md).
