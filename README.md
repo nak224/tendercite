@@ -237,8 +237,10 @@ persistent files remain. See [deployment](docs/deployment.md) for configuration 
 ## API
 
 OpenAPI is served at `/docs`. Core routes are under `/api/v1`: `documents`, `search`,
-`analyses`, `findings`, `findings/{id}/reviews`, `go-no-go`, `exports`. Liveness: `/health`.
+`analyses`, `findings`, `findings/{id}/reviews`, `curated-intakes`, `go-no-go`, `exports`. Liveness: `/health`.
 Examples and error semantics: [API documentation](docs/api.md).
+[Manual intake HTTP contract](docs/integrations/curated-intake-http.md) exposes existing source
+validation and explicitly acknowledged atomic commits, with no inference or automatic review.
 
 ## Limitations and responsible use
 
