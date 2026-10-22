@@ -8,12 +8,12 @@ from dataclasses import asdict
 
 from pydantic import ValidationError
 
-from tendercite.domain.capabilities_v1 import CapabilitySnapshot
 from tendercite.repositories.sqlite import SqliteRepository
 from tendercite.services.capabilities import (
     CapabilityError,
     CapabilityErrorCode,
     read_capability_snapshot,
+    snapshot_summary,
     write_capability_snapshot,
 )
 
@@ -22,18 +22,6 @@ class SafeParser(argparse.ArgumentParser):
     def error(self, _message):
         # argparse's default error text can echo personnel-bearing arguments/paths.
         raise CapabilityError(CapabilityErrorCode.INVALID_ARGUMENTS)
-
-
-def snapshot_summary(snapshot: CapabilitySnapshot) -> dict:
-    return {
-        "content_hash": snapshot.content_hash,
-        "schema_version": snapshot.schema_version,
-        "source_system": snapshot.source_system,
-        "assessment_period": snapshot.assessment_period.model_dump(mode="json"),
-        "member_count": len(snapshot.workforce_members),
-        "assignment_count": sum(len(m.skills) for m in snapshot.workforce_members),
-        "catalog_count": len(snapshot.skill_catalog),
-    }
 
 
 def _repository(*, read_only: bool = False) -> SqliteRepository:

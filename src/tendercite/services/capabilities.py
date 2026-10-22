@@ -88,6 +88,18 @@ def validate_capability_json(raw: bytes) -> CapabilitySnapshot:
         raise CapabilityError(CapabilityErrorCode.INVALID_JSON) from None
 
 
+def snapshot_summary(snapshot: CapabilitySnapshot) -> dict:
+    return {
+        "content_hash": snapshot.content_hash,
+        "schema_version": snapshot.schema_version,
+        "source_system": snapshot.source_system,
+        "assessment_period": snapshot.assessment_period.model_dump(mode="json"),
+        "member_count": len(snapshot.workforce_members),
+        "assignment_count": sum(len(m.skills) for m in snapshot.workforce_members),
+        "catalog_count": len(snapshot.skill_catalog),
+    }
+
+
 def local_json_path(value: str | Path) -> Path:
     text = os.fspath(value)
     if (
