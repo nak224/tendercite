@@ -179,3 +179,10 @@ image built successfully with the pinned dependencies and verified proxy CA trus
 The next matching milestone will need separate verified experience/qualification evidence and
 explicit human decisions. Matching, scoring, rankings, reservations, synchronization, UI and
 production authentication are outside this importer milestone.
+
+## Local HTTP validation and import
+
+[UI-1b.4b.1 HTTP contract](capability-snapshot-http.md) exposes the same validator/importer behind
+`TENDERCITE_CAPABILITY_SNAPSHOT_API_ENABLED=false` by default. Both endpoints accept raw snapshot
+JSON and return metadata only. Import requires an explicit synthetic-data header; no browser UI,
+server-to-server transfer, mapping approval or qualification inference is included.
