@@ -3,6 +3,11 @@ from fastapi import FastAPI
 from tendercite import __version__
 from tendercite.api.routes.analyses import router as analyses_router
 from tendercite.api.routes.capability_snapshots import router as capability_snapshots_router
+from tendercite.api.routes.capability_mapping_http import (
+    mappings_router,
+    snapshots_router as mapping_snapshots_router,
+    workflow_router as mapping_workflow_router,
+)
 from tendercite.api.routes.configuration import router as configuration_router
 from tendercite.api.routes.curated_intakes import router as curated_intakes_router
 from tendercite.api.routes.documents import router as documents_router
@@ -39,3 +44,7 @@ app.include_router(configuration_router, prefix="/api/v1")
 app.include_router(curated_intakes_router, prefix="/api/v1")
 
 app.include_router(capability_snapshots_router, prefix="/api/v1")
+
+app.include_router(mapping_snapshots_router, prefix="/api/v1")
+app.include_router(mapping_workflow_router, prefix="/api/v1")
+app.include_router(mappings_router, prefix="/api/v1")
