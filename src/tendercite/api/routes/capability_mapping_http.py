@@ -83,7 +83,7 @@ class MappingRoute(APIRoute):
         is_post = "POST" in self.methods
         allowed_query = (
             {"limit"}
-            if self.path == "/api/v1/capability-snapshots"
+            if self.path.endswith("/capability-snapshots")
             else {"analysis_id", "snapshot_hash"}
             if self.path.endswith("/overview")
             else set()
