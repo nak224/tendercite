@@ -6,7 +6,6 @@ from unittest.mock import Mock
 from uuid import UUID
 
 import pytest
-
 from matching_helpers import SKILL_B, finding, snapshot
 from persistent_mapping_helpers import seeded_repository
 

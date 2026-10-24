@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
 from tendercite import __version__
-from tendercite.api.routes.analyses import router as analyses_router
 from tendercite.api.routes import capability_mapping_http
+from tendercite.api.routes.analyses import router as analyses_router
 from tendercite.api.routes.capability_snapshots import router as capability_snapshots_router
 from tendercite.api.routes.configuration import router as configuration_router
 from tendercite.api.routes.curated_intakes import router as curated_intakes_router
