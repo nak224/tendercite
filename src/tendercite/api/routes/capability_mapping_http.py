@@ -242,7 +242,8 @@ def list_snapshots(
     repository: Repository, limit: Annotated[int, Query(ge=1, le=100)] = 50
 ) -> SnapshotListing:
     """Bounded metadata only. No people, assignment details or capacity values."""
-    return SnapshotListing(snapshots=tuple(repository.list_capability_snapshots(limit=limit)))
+    rows = repository.list_capability_snapshots(limit=limit)
+    return SnapshotListing(snapshots=tuple(SnapshotMetadata(**vars(row)) for row in rows))
 
 
 @workflow_router.get("/overview", response_model=AssessmentOverview)
