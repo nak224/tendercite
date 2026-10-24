@@ -203,6 +203,10 @@ existing SQLite database. `python -m tendercite.cli.import_capabilities` support
 explicit synthetic-data import, bounded metadata listing and lookup/export by hash. Imports do
 not establish tender eligibility or change findings, assessments, capacity allocations or Go/No-Go.
 
+The [local capability snapshot HTTP API](docs/integrations/capability-snapshot-http.md) exposes
+metadata-only validation and explicit synthetic-data import behind a disabled-by-default flag.
+It reuses the strict schema 1.0 validator and atomic importer; React import remains a separate milestone.
+
 The [candidate matching core](docs/integrations/capability-matching.md) compares explicit `ALL_OF`
 skill UUID mappings for human-reviewed, grounded findings with one selected snapshot. It returns
 deterministic per-person assignment coverage while keeping qualification unverified and capacity
