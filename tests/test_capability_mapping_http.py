@@ -136,10 +136,19 @@ def test_overview_reuses_existing_contract_is_consistent_and_read_only(enabled):
     assert repo.database_path.read_bytes() == before
 
 
-@pytest.mark.parametrize("query,code", [
-    ({"analysis_id": "absent", "snapshot_hash": snapshot().content_hash}, "INVALID_MAPPING_SCOPE"),
-    ({"analysis_id": "analysis-1", "snapshot_hash": "sha256:" + "0" * 64}, "SNAPSHOT_NOT_FOUND"),
-])
+@pytest.mark.parametrize(
+    "query,code",
+    [
+        (
+            {"analysis_id": "absent", "snapshot_hash": snapshot().content_hash},
+            "INVALID_MAPPING_SCOPE",
+        ),
+        (
+            {"analysis_id": "analysis-1", "snapshot_hash": "sha256:" + "0" * 64},
+            "SNAPSHOT_NOT_FOUND",
+        ),
+    ],
+)
 def test_unknown_scope_and_snapshot_are_safe(enabled, query, code):
     client, _ = enabled
     assert_error(client.get(OVERVIEW, params=query), 404, code)
@@ -221,17 +230,24 @@ def test_ineligible_requirements_cannot_create_draft(client, tmp_path, monkeypat
     assert repo.list_capability_mappings() == []
 
 
-@pytest.mark.parametrize("change,status,code", [
-    ({"skill_ids": ["00000000-0000-0000-0000-000000000999"]}, 422, "UNKNOWN_CATALOG_SKILL_UUID"),
-    ({"finding_id": "other"}, 404, "INVALID_MAPPING_SCOPE"),
-    ({"operator": "ANY_OF"}, 422, "INVALID_MAPPING_INPUT"),
-    ({"skill_ids": []}, 422, "INVALID_MAPPING_INPUT"),
-    ({"skill_ids": [str(SKILL_B), str(SKILL_B)]}, 422, "INVALID_MAPPING_INPUT"),
-    ({"rationale": " "}, 422, "INVALID_MAPPING_INPUT"),
-    ({"rationale": "PRIVATE" * 1000}, 422, "INVALID_MAPPING_INPUT"),
-    ({"url": "https://PRIVATE.invalid"}, 422, "INVALID_MAPPING_INPUT"),
-    ({"database_path": "/PRIVATE"}, 422, "INVALID_MAPPING_INPUT"),
-])
+@pytest.mark.parametrize(
+    "change,status,code",
+    [
+        (
+            {"skill_ids": ["00000000-0000-0000-0000-000000000999"]},
+            422,
+            "UNKNOWN_CATALOG_SKILL_UUID",
+        ),
+        ({"finding_id": "other"}, 404, "INVALID_MAPPING_SCOPE"),
+        ({"operator": "ANY_OF"}, 422, "INVALID_MAPPING_INPUT"),
+        ({"skill_ids": []}, 422, "INVALID_MAPPING_INPUT"),
+        ({"skill_ids": [str(SKILL_B), str(SKILL_B)]}, 422, "INVALID_MAPPING_INPUT"),
+        ({"rationale": " "}, 422, "INVALID_MAPPING_INPUT"),
+        ({"rationale": "PRIVATE" * 1000}, 422, "INVALID_MAPPING_INPUT"),
+        ({"url": "https://PRIVATE.invalid"}, 422, "INVALID_MAPPING_INPUT"),
+        ({"database_path": "/PRIVATE"}, 422, "INVALID_MAPPING_INPUT"),
+    ],
+)
 def test_invalid_draft_inputs_do_not_write(enabled, change, status, code):
     client, repo = enabled
     assert_error(create(client, draft_body(**change)), status, code)
@@ -264,14 +280,17 @@ def test_approval_body_must_match_path_and_require_version_binding(enabled):
     )
 
 
-@pytest.mark.parametrize("bad,status,code", [
-    (b'{"rationale":"PRIVATE","rationale":"PRIVATE"}', 422, "INVALID_MAPPING_INPUT"),
-    (b'{"rationale":NaN}', 422, "INVALID_MAPPING_INPUT"),
-    (b'{"PRIVATE":', 422, "INVALID_MAPPING_INPUT"),
-    (b"\xff", 422, "INVALID_MAPPING_INPUT"),
-    (b"[]", 422, "INVALID_MAPPING_INPUT"),
-    (b" " * 65537, 413, "MAPPING_REQUEST_TOO_LARGE"),
-])
+@pytest.mark.parametrize(
+    "bad,status,code",
+    [
+        (b'{"rationale":"PRIVATE","rationale":"PRIVATE"}', 422, "INVALID_MAPPING_INPUT"),
+        (b'{"rationale":NaN}', 422, "INVALID_MAPPING_INPUT"),
+        (b'{"PRIVATE":', 422, "INVALID_MAPPING_INPUT"),
+        (b"\xff", 422, "INVALID_MAPPING_INPUT"),
+        (b"[]", 422, "INVALID_MAPPING_INPUT"),
+        (b" " * 65537, 413, "MAPPING_REQUEST_TOO_LARGE"),
+    ],
+)
 def test_bounded_body_and_ambiguous_json(enabled, bad, status, code):
     client, _ = enabled
     assert_error(
@@ -323,9 +342,7 @@ def test_unexpected_error_is_sanitized_and_creates_no_record(enabled, monkeypatc
 
 def test_openapi_has_existing_selection_approval_and_overview_contracts():
     document = app.openapi()
-    assert "MappingSelection" in str(
-        document["paths"][DRAFT]["post"]["requestBody"]
-    )
+    assert "MappingSelection" in str(document["paths"][DRAFT]["post"]["requestBody"])
     assert "MappingApprovalInput" in str(
         document["paths"]["/api/v1/capability-mappings/{mapping_id}/approve"]["post"]["requestBody"]
     )

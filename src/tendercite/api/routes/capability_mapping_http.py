@@ -233,8 +233,7 @@ mappings_router = APIRouter(
 )
 for router in (snapshots_router, workflow_router, mappings_router):
     router.responses = {
-        status: {"model": MappingApiError}
-        for status in (400, 404, 409, 413, 415, 422, 500, 503)
+        status: {"model": MappingApiError} for status in (400, 404, 409, 413, 415, 422, 500, 503)
     }
 
 
