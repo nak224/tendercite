@@ -21,12 +21,12 @@ from tendercite.core.config import settings
 from tendercite.domain.capability_mapping_records import (
     CapabilityMappingError,
     CapabilityMappingRecord,
+    LocalId,
     MappingApprovalInput,
     MappingErrorCode,
 )
 from tendercite.domain.capability_matching import SnapshotHash
 from tendercite.domain.capability_workflow import AssessmentOverview, MappingSelection
-from tendercite.domain.capability_mapping_records import LocalId
 from tendercite.repositories.sqlite import SqliteRepository
 from tendercite.services.capabilities import CapabilityError, CapabilityErrorCode
 from tendercite.services.capability_workflow import assessment_overview, prepare_mapping_draft
@@ -102,7 +102,10 @@ class MappingRoute(APIRoute):
                     raise _error(422, "INVALID_MAPPING_INPUT")
                 if is_post:
                     media = request.headers.getlist("content-type")
-                    if len(media) != 1 or media[0].split(";")[0].strip().lower() != "application/json":
+                    if (
+                        len(media) != 1
+                        or media[0].split(";")[0].strip().lower() != "application/json"
+                    ):
                         raise _error(415, "UNSUPPORTED_MEDIA_TYPE")
                     encoding = request.headers.getlist("content-encoding")
                     if encoding and (len(encoding) != 1 or encoding[0].lower() != "identity"):
@@ -162,7 +165,8 @@ class MappingRoute(APIRoute):
                     CapabilityErrorCode.STORAGE_INTEGRITY: 409,
                     CapabilityErrorCode.DATABASE_FAILED: 503,
                 }.get(exc.code, 500)
-                raise _error(status, exc.code.value if status != 500 else "CAPABILITY_MAPPING_FAILED") from None
+                code = exc.code.value if status != 500 else "CAPABILITY_MAPPING_FAILED"
+                raise _error(status, code) from None
             except (sqlite3.Error, OSError):
                 raise _error(503, "DATABASE_FAILED") from None
             except Exception:

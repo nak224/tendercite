@@ -1,16 +1,14 @@
 """HTTP transport regressions for the synthetic, operator-driven mapping workflow."""
 
 import json
-import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock
 from uuid import UUID
 
 import pytest
-from fastapi.testclient import TestClient
 
 from matching_helpers import SKILL_B, finding, snapshot
-from persistent_mapping_helpers import approval_input, seeded_repository
+from persistent_mapping_helpers import seeded_repository
 
 from tendercite.api.dependencies import get_repository
 from tendercite.core.config import Settings, settings
@@ -84,7 +82,9 @@ def test_disabled_by_default_without_repository_or_body_access(client, monkeypat
     monkeypatch.setattr(settings, "capability_mapping_api_enabled", False)
     absent = tmp_path / "absent"
     monkeypatch.setattr(settings, "data_dir", absent)
-    app.dependency_overrides[get_repository] = lambda: pytest.fail("Disabled mapping touched SQLite")
+    app.dependency_overrides[get_repository] = lambda: pytest.fail(
+        "Disabled mapping touched SQLite"
+    )
     for response in (
         client.get(SNAPSHOTS),
         client.get(OVERVIEW, params=params()),
@@ -173,10 +173,8 @@ def test_manual_draft_approval_history_and_preserved_judgment(enabled):
     assert approved["revision"] == 2
     assert approved["approved_at"] is not None
     assert get_overview(client).json()["findings"][0]["mapping"]["status"] == "APPROVED"
-    assert [event.status.value for event in repo.capability_mapping_history(UUID(record["mapping_id"]))] == [
-        "DRAFT",
-        "APPROVED",
-    ]
+    history = repo.capability_mapping_history(UUID(record["mapping_id"]))
+    assert [event.status.value for event in history] == ["DRAFT", "APPROVED"]
     assert repo.list_matrix("analysis-1") == before_matrix
     assert repo.list_reviews("finding-1") == before_reviews
     assert repo.list_findings("analysis-1") == before_findings
@@ -259,7 +257,12 @@ def test_approval_body_must_match_path_and_require_version_binding(enabled):
         422,
         "INVALID_MAPPING_INPUT",
     )
-    assert_error(approve(client, draft, expected_review_digest="sha256:" + "0" * 64), 409, "REQUIREMENT_REVIEW_CONFLICT")
+    wrong_digest = "sha256:" + "0" * 64
+    assert_error(
+        approve(client, draft, expected_review_digest=wrong_digest),
+        409,
+        "REQUIREMENT_REVIEW_CONFLICT",
+    )
 
 
 @pytest.mark.parametrize("bad,status,code", [
