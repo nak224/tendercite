@@ -103,8 +103,12 @@ export async function tenderPage(
   return { document_id: documentId, page_number: pageNumber, text: page.text };
 }
 
-export function tenderGet<T>(path: string, signal: AbortSignal): Promise<T> {
-  return tenderRequest<T>(path, { signal });
+export function tenderGet<T>(
+  path: string,
+  signal: AbortSignal,
+  responseError?: (response: Response) => Promise<Error>,
+): Promise<T> {
+  return tenderRequest<T>(path, { signal }, false, responseError);
 }
 
 function uploadError(status: number): string {
@@ -239,6 +243,22 @@ export function tenderSnapshotPost(
       },
       redirect: 'error',
     },
+    false,
+    responseError,
+  );
+}
+
+export function tenderMappingPost(
+  operation: 'drafts' | 'approve',
+  body: string,
+  responseError: (response: Response) => Promise<Error>,
+  mappingId?: string,
+): Promise<unknown> {
+  return tenderRequest(
+    operation === 'drafts'
+      ? 'capability-mappings/drafts'
+      : `capability-mappings/${encodeURIComponent(mappingId!)}/approve`,
+    { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, redirect: 'error' },
     false,
     responseError,
   );
