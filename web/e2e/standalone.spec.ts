@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 import { syntheticPdf } from '../src/test/tenderPdf';
 
 // Opt-in only. Start the backend with a NEW disposable data directory, retrieval disabled,
-// no provider configuration and the snapshot flag enabled. No TCE service is used.
-test('standalone PDF → intake → human review → assessment → snapshot import', async ({
+// no provider configuration and snapshot/mapping flags enabled. No TCE service is used.
+test('standalone PDF → intake → human review → assessment → snapshot import → manual skill mapping', async ({
   page,
   request,
   baseURL,
@@ -28,14 +28,18 @@ test('standalone PDF → intake → human review → assessment → snapshot imp
     expect(new URL(sent.url()).origin).toBe(baseURL);
     if (sent.method() !== 'GET') {
       expect(sent.url()).toMatch(
-        /\/api\/v1\/(documents|curated-intakes|findings|go-no-go|capability-snapshots)/,
+        /\/api\/v1\/(documents|curated-intakes|findings|go-no-go|capability-snapshots|capability-mappings)/,
       );
       mutations.push(new URL(sent.url()).pathname);
     }
   });
   await page.goto('/');
   await expect(page.getByText('No documents available.', { exact: true })).toBeVisible();
-  const file = syntheticPdf('standalone-synthetic.pdf');
+  const file = syntheticPdf(
+    'standalone-synthetic.pdf',
+    'application/pdf',
+    'PostgreSQL is required.',
+  );
   await page.getByLabel('PDF files').setInputFiles({
     name: file.name,
     mimeType: file.type,
@@ -51,25 +55,22 @@ test('standalone PDF → intake → human review → assessment → snapshot imp
   await page.getByRole('link', { name: 'Create manual requirements' }).click();
   await page.getByLabel('Intake purpose').fill('Disposable standalone migration smoke');
   const requirement = page.getByRole('group', { name: 'Requirement 1', exact: true });
-  await requirement.getByLabel('Requirement statement').fill('This is a synthetic tender example.');
-  await requirement
-    .getByRole('combobox', { name: 'Category', exact: true })
-    .selectOption('INFORMATION');
+  await requirement.getByLabel('Requirement statement').fill('The tender requires PostgreSQL.');
+  await requirement.getByRole('combobox', { name: 'Category', exact: true }).selectOption('MUST');
   await requirement
     .getByRole('combobox', { name: 'Requirement type', exact: true })
-    .selectOption('OTHER');
+    .selectOption('TECHNICAL');
   await requirement.getByRole('combobox', { name: 'Source document' }).selectOption(document.id);
   await requirement.getByLabel('Physical PDF page').fill('1');
-  await requirement.getByLabel('Exact supporting quotation').fill('Synthetic tender');
+  await requirement.getByLabel('Exact supporting quotation').fill('PostgreSQL is required.');
   await page.getByRole('button', { name: 'Validate', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Validated intake' })).toBeVisible();
   await page.getByRole('checkbox').check();
   await page.getByRole('button', { name: 'Save requirements' }).click();
   await expect(page.getByRole('region', { name: 'Saved intake' })).toContainText('UNREVIEWED');
   await page.getByRole('link', { name: 'Open analysis', exact: true }).click();
-  await page
-    .getByRole('link', { name: 'This is a synthetic tender example.', exact: true })
-    .click();
+  const analysisId = new URL(page.url()).pathname.split('/').at(-1)!;
+  await page.getByRole('link', { name: 'The tender requires PostgreSQL.', exact: true }).click();
   await expect(page.getByText(/Review: UNREVIEWED/)).toBeVisible();
   await expect(
     page.getByText('No review events. This finding has not been reviewed.'),
@@ -87,7 +88,7 @@ test('standalone PDF → intake → human review → assessment → snapshot imp
   const source = page.getByRole('link', { name: 'View source PDF page 1' });
   const findingUrl = page.url();
   await source.click();
-  await expect(page.locator('pre.source-page-text')).toHaveText('Synthetic tender');
+  await expect(page.locator('pre.source-page-text')).toHaveText('PostgreSQL is required.');
   await page.goto(findingUrl);
   await page.getByRole('link', { name: /^Analysis / }).click();
   await page.getByRole('link', { name: 'Go/No-Go Assessment' }).click();
@@ -125,7 +126,63 @@ test('standalone PDF → intake → human review → assessment → snapshot imp
     expect((await sent).postDataBuffer()).toEqual(bytes);
     await expect(page.getByText(`Status: ${status}`, { exact: true })).toBeVisible();
   }
-  expect(mutations).toHaveLength(9); // upload, intake validation/commit, review, assessment, 2×snapshot pairs
+  const snapshotHash = JSON.parse(bytes.toString('utf8')).content_hash;
+  const findingId = new URL(findingUrl).pathname.split('/').at(-1)!;
+  async function openMapping() {
+    await page.getByRole('link', { name: 'Skill Mapping', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Analysis', exact: true }).selectOption(analysisId);
+    await page.getByRole('combobox', { name: 'Imported snapshot' }).selectOption(snapshotHash);
+    await page.getByRole('button', { name: 'Load mapping overview' }).click();
+    await expect(page.getByRole('region', { name: 'Mapping overview' })).toBeVisible();
+    await page.getByRole('combobox', { name: 'Requirement', exact: true }).selectOption(findingId);
+  }
+  await openMapping();
+  let editor = page.getByRole('region', { name: 'Selected mapping' });
+  await editor.getByRole('checkbox', { name: /PostgreSQL/ }).check();
+  await editor.getByLabel('Mapping rationale').fill('Manual synthetic PostgreSQL association.');
+  await editor.getByLabel('Non-personal operator alias (optional)').fill('synthetic_operator');
+  await editor.getByRole('button', { name: 'Review proposed mapping' }).click();
+  const drafted = page.waitForResponse((r) => r.url().endsWith('/capability-mappings/drafts'));
+  await page.getByRole('button', { name: 'Create DRAFT' }).click();
+  const draft = await (await drafted).json();
+  await expect(editor.getByText('Mapping state: DRAFT', { exact: true })).toBeVisible();
+  await expect(editor.getByRole('button', { name: 'APPROVE mapping' })).toBeDisabled();
+  await editor.getByLabel('Approval rationale').fill('Explicit synthetic approval simulation.');
+  await editor.getByLabel('Non-personal operator alias (optional)').fill('synthetic_operator');
+  await editor.getByRole('checkbox').check();
+  const approval = page.waitForRequest((r) =>
+    r.url().endsWith(`/capability-mappings/${draft.mapping_id}/approve`),
+  );
+  await editor.getByRole('button', { name: 'APPROVE mapping' }).click();
+  expect((await approval).postDataJSON()).toEqual({
+    schema_version: 'capability-mapping-approval-1',
+    mapping_id: draft.mapping_id,
+    expected_revision: draft.revision,
+    expected_review_event_id: draft.review_binding.review_event_id,
+    expected_review_digest: draft.review_binding.digest,
+    rationale: 'Explicit synthetic approval simulation.',
+    operator_alias: 'synthetic_operator',
+  });
+  await expect(editor.getByText('Mapping state: APPROVED', { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: test.info().outputPath('approved-synthetic-mapping.png'),
+    fullPage: true,
+  });
+  await page.getByRole('link', { name: 'Finding detail and human review' }).click();
+  const laterReview = page.getByRole('region', { name: 'Human finding review' });
+  await laterReview.getByRole('combobox', { name: 'Review action' }).selectOption('CONFIRM');
+  await laterReview
+    .getByLabel('Review comment (optional)')
+    .fill('New simulated review invalidates the old mapping approval.');
+  await laterReview.getByRole('button', { name: 'Save Review' }).click();
+  await expect(page.getByRole('region', { name: 'Review history' })).toContainText(
+    'New simulated review invalidates',
+  );
+  await openMapping();
+  editor = page.getByRole('region', { name: 'Selected mapping' });
+  await expect(editor.getByText('Mapping state: STALE', { exact: true })).toBeVisible();
+  await expect(editor.getByRole('button', { name: 'APPROVE mapping' })).toHaveCount(0);
+  expect(mutations).toHaveLength(12); // existing 9 + explicit draft, approval and a new simulated review
   expect(pageErrors).toEqual([]);
   await page.screenshot({
     path: test.info().outputPath('standalone-synthetic.png'),
