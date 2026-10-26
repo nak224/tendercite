@@ -22,7 +22,8 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Explicit VERIFIED_QUOTE / INVALID_QUOTE / MISSING_EVIDENCE states.
 - Confirm, modify or reject findings while preserving original AI output and review history.
 - Human-managed Go / No-Go statuses, defaulting to CLARIFICATION_NEEDED.
-- JSON, CSV and Markdown exports; Streamlit UI; FastAPI/OpenAPI.
+- Independent React workspace in `web/` for documents, manual intake, reviews, assessments and snapshot import.
+- JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
 - Synthetic evaluation corpus, offline tests, hashed dependency locks, Docker and CI definitions.
 
 ## Architecture
@@ -43,7 +44,7 @@ flowchart TD
     Findings --> Review[Human review and audit trail]
     Review --> Matrix[Human-managed Go / No-Go matrix]
     Matrix --> Export[JSON / CSV / Markdown]
-    UI[Streamlit] --> API[FastAPI modular monolith]
+    UI[Standalone React / legacy Streamlit] --> API[FastAPI modular monolith]
     API --> PDF
     API --> Retrieval
     API --> Review
@@ -52,7 +53,47 @@ flowchart TD
 No agent framework, microservices or remote Chroma server is required. See
 [architecture](docs/architecture.md) and [data models](docs/data-models.md).
 
-## Quick start (Python 3.12, Linux CPU)
+## Standalone React quick start
+
+TenderCite runs independently of Team Capacity Engine and PostgreSQL. With the existing Python
+environment installed and Node.js **24.x**, use two terminals from this repository:
+
+```powershell
+# Terminal 1: local synthetic backend, no retrieval/model access.
+$env:TENDERCITE_DATA_DIR = "data/curated/react-synthetic"
+$env:TENDERCITE_RETRIEVAL_ENABLED = "false"
+.\.venv\Scripts\python.exe -m uvicorn tendercite.main:app --host 127.0.0.1 --port 8001
+# Terminal 2:
+npm --prefix web ci
+$env:TENDERCITE_PROXY_TARGET = "http://127.0.0.1:8001"
+npm --prefix web run dev
+```
+
+```sh
+# Terminal 1:
+TENDERCITE_DATA_DIR=data/curated/react-synthetic TENDERCITE_RETRIEVAL_ENABLED=false .venv/bin/python -m uvicorn tendercite.main:app --host 127.0.0.1 --port 8001
+# Terminal 2:
+npm --prefix web ci
+TENDERCITE_PROXY_TARGET=http://127.0.0.1:8001 npm --prefix web run dev
+```
+
+Open **http://127.0.0.1:5174**. See [standalone workspace setup](docs/web-workspace.md) for fresh
+Python installation, optional synthetic snapshot flag, all migrated workflows, browser tests and
+remaining CLI-only functions. The React app retains `/tenders` deep links and uses one explicit
+same-origin development proxy. No server/model calls are started automatically beyond inspection
+queries; writes remain explicit. Production hosting/authentication are separate work.
+
+Workforce snapshot generation stays in the optional Team Capacity Engine application or another
+compatible producer. TenderCite imports the existing contract; it does not require a workforce
+server. Snapshot listing/history, skill mapping/approval and capability matching/reporting remain
+local/backend workflows with no new screens here. Model-based search/analysis and exports remain
+in the existing backend/legacy UI. [Migration provenance](web/MIGRATION.md) records the original
+implementation, tests and limited adaptations; its source repository remains an untouched fallback.
+
+## Legacy Streamlit quick start (Python 3.12, Linux CPU)
+
+`frontend/app.py` remains unchanged. It is the legacy client, not the new `web/` React package.
+Its existing search/analysis/export workflows remain available:
 
 ```bash
 git clone https://github.com/nak224/tendercite.git
@@ -94,7 +135,7 @@ API URL must be exported as `TENDERCITE_API_URL` when overriding its default.
 Analysis sends selected retrieved passages to the configured provider. Review its privacy,
 retention and model-license terms first. Offline tests do not need model downloads or paid APIs.
 
-### UI walkthrough
+### Legacy Streamlit walkthrough
 
 1. Import PDFs in **Documents**; inspect page/chunk counts.
 2. Use **Search** and select source documents in the sidebar.

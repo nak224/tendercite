@@ -19,6 +19,16 @@ provider services, user uploads or external datasets.
 | pytest | Tests | MIT |
 | Ruff | Lint/format | MIT |
 | uv | Installation/build tooling | MIT OR Apache-2.0 |
+| React / React DOM / React Router | Standalone React UI/runtime | MIT |
+| TanStack Query | React query/cache handling | MIT |
+| Vite / Vitest | React build and offline tests | MIT |
+| TypeScript | Frontend typing/build checks | Apache-2.0 |
+| Testing Library / ESLint / Prettier | Frontend tests and checks | MIT |
+| Playwright | Opt-in synthetic Chromium smoke | Apache-2.0 |
+
+The migrated React source provenance is recorded in [web/MIGRATION.md](web/MIGRATION.md)
+and NOTICE. `web/package-lock.json` pins Node dependencies separately from the Python locks;
+preserve their package notices when redistributing frontend artifacts.
 
 Model source and declared license: https://huggingface.co/intfloat/multilingual-e5-small .
 Revision `614241f622f53c4eeff9890bdc4f31cfecc418b3` was downloaded via the official
