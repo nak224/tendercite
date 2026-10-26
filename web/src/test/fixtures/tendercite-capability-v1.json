@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "source_system": "team-capacity-engine",
+  "assessment_period": {
+    "start_date": "2027-02-01",
+    "end_date": "2027-02-07"
+  },
+  "workforce_members": [
+    {
+      "person_id": "00000000-0000-0000-0000-000000000001",
+      "engagement_type": "freelancer",
+      "skills": [
+        {
+          "skill_id": "00000000-0000-0000-0000-000000000064",
+          "proficiency": 3,
+          "source": "internal_skill_assignment"
+        },
+        {
+          "skill_id": "00000000-0000-0000-0000-000000000065",
+          "proficiency": null,
+          "source": "internal_skill_assignment"
+        }
+      ],
+      "capacity": {
+        "capacity_state": "known",
+        "scheduled_hours": "20.00",
+        "unavailable_hours": "1.25",
+        "available_hours": "18.75",
+        "allocated_hours": "9.00",
+        "remaining_hours": "9.75",
+        "overallocated": true,
+        "overallocated_hours": "0.00",
+        "has_daily_overallocation": true,
+        "daily_overallocated_hours": "2.25"
+      }
+    },
+    {
+      "person_id": "00000000-0000-0000-0000-000000000002",
+      "engagement_type": "employee",
+      "skills": [
+        {
+          "skill_id": "00000000-0000-0000-0000-000000000065",
+          "proficiency": 4,
+          "source": "internal_skill_assignment"
+        }
+      ],
+      "capacity": {
+        "capacity_state": "known",
+        "scheduled_hours": "40.00",
+        "unavailable_hours": "0.00",
+        "available_hours": "40.00",
+        "allocated_hours": "8.00",
+        "remaining_hours": "32.00",
+        "overallocated": false,
+        "overallocated_hours": "0.00",
+        "has_daily_overallocation": false,
+        "daily_overallocated_hours": "0.00"
+      }
+    },
+    {
+      "person_id": "00000000-0000-0000-0000-000000000003",
+      "engagement_type": "external_partner",
+      "skills": [],
+      "capacity": {
+        "capacity_state": "unknown",
+        "scheduled_hours": null,
+        "unavailable_hours": "0.00",
+        "available_hours": null,
+        "allocated_hours": "2.00",
+        "remaining_hours": null,
+        "overallocated": null,
+        "overallocated_hours": null,
+        "has_daily_overallocation": null,
+        "daily_overallocated_hours": null
+      }
+    }
+  ],
+  "skill_catalog": [
+    {
+      "skill_id": "00000000-0000-0000-0000-000000000064",
+      "name": "Python",
+      "category": "Backend"
+    },
+    {
+      "skill_id": "00000000-0000-0000-0000-000000000065",
+      "name": "PostgreSQL",
+      "category": "Database"
+    }
+  ],
+  "source_limitations": [
+    "internal_skill_assignments_are_not_verified_experience",
+    "proficiency_is_not_years_of_experience",
+    "capacity_is_shared_unreserved_and_not_contractual_commitment",
+    "unknown_capacity_is_neither_zero_nor_unlimited",
+    "no_skill_hours_coverage_or_bidder_qualification_is_proven",
+    "current_recurring_schedules_have_no_historical_versions",
+    "date_only_totals_do_not_prove_intraday_availability"
+  ],
+  "content_hash": "sha256:e15ea7ea84176a4a9edf4bce710ede9008b620aa8329ddc14cb799354e9d6134"
+}
