@@ -84,16 +84,19 @@ class MappingRoute(APIRoute):
     too_large_code = "MAPPING_REQUEST_TOO_LARGE"
     failure_code = "CAPABILITY_MAPPING_FAILED"
 
-    def get_route_handler(self):
-        original = super().get_route_handler()
-        is_post = "POST" in self.methods
-        allowed_query = (
+    def permitted_query_parameters(self):
+        return (
             {"limit"}
             if self.path.endswith("/capability-snapshots")
             else {"analysis_id", "snapshot_hash"}
             if self.path.endswith("/overview")
             else set()
         )
+
+    def get_route_handler(self):
+        original = super().get_route_handler()
+        has_body = bool(self.methods & {"POST", "PUT"})
+        allowed_query = self.permitted_query_parameters()
 
         async def handle(request: Request):
             if not getattr(settings, self.enabled_setting):
@@ -106,7 +109,7 @@ class MappingRoute(APIRoute):
                     len(request.query_params.getlist(key)) != 1 for key in params
                 ):
                     raise _error(422, self.invalid_input_code)
-                if is_post:
+                if has_body:
                     media = request.headers.getlist("content-type")
                     if (
                         len(media) != 1
