@@ -283,3 +283,23 @@ export function tenderReportPost(
     responseError,
   );
 }
+
+// Native profiles use only this fixed local resource; no arbitrary server paths or origins.
+export function tenderProfileWrite(
+  operation: 'create' | 'update',
+  profileId: string,
+  body: string,
+  responseError: (response: Response) => Promise<Error>,
+): Promise<unknown> {
+  return tenderRequest(
+    operation === 'create' ? 'profiles' : `profiles/${encodeURIComponent(profileId)}`,
+    {
+      method: operation === 'create' ? 'POST' : 'PUT',
+      body,
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'error',
+    },
+    false,
+    responseError,
+  );
+}
