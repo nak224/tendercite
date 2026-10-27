@@ -11,11 +11,13 @@
 | Mapping overview/catalog | Available via mapping API (local flag) | Explicit analysis/snapshot scope and requirement inspection | Analyses discovered through current findings; no analysis-list API |
 | Create and approve manual mapping | Available via mapping API (local flag) | Manual ALL_OF proposal → DRAFT → separate explicit APPROVE | No automatic mapping, approval or qualification proof |
 | Mapping revision/revocation/history | CLI only | Not yet | Later milestone |
-| Capability matching/report | CLI only | Not yet | Next independent API/UI milestones |
+| Persisted capability assessment report | Available via separate report API flag | Not yet | UI-1b.6b; existing CLI still available |
 | Profile extraction / semantic match | Not yet | Not yet | Improve after manual end-to-end workflow |
 | External opportunity discovery / acquisition | Not yet | Not yet | Later functional MVP work |
 
-All mapping endpoints remain local-development-only and **disabled by default**.
+All mapping endpoints and the separately gated report endpoint remain local-development-only
+and **disabled by default**. The [report API](capability-report-http.md) includes pseudonymous
+individual coverage records; enabling the mapping API does not enable reports.
 No source evidence, manual judgment or recorded skill assignment alone proves bidder
 qualification. The MVP prioritizes UI feature completeness before sophistication.
 

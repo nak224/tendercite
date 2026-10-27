@@ -11,6 +11,11 @@ def get_repository() -> SqliteRepository:
     return _repository
 
 
+def get_read_only_repository() -> SqliteRepository:
+    """Open existing configured state without creating a database or initializing tables."""
+    return SqliteRepository(settings.database_path, read_only=True)
+
+
 def get_retrieval():
     import hashlib
 
