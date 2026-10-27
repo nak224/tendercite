@@ -3,7 +3,7 @@
 These **development-only**, opt-in endpoints expose TenderCite's existing review-bound
 mapping contracts and transaction-safe draft/approval lifecycle. They do **not** implement
 a second matching algorithm, import workforce data, run AI, select a team, or prove eligibility.
-No browser UI is part of this milestone.
+The API milestone is now consumed by the separate [UI-1b.5b manual mapping view](manual-skill-mapping-ui.md).
 
 ## Local synthetic setup
 
@@ -103,9 +103,12 @@ are append-only. No silent stale reapproval and no modification of assessments.
   **Skill mapping approved** is not qualification, certification, suitability,
   reserved capacity or tender Go/No-Go.
 
-## UI follow-up
+## React integration
 
-The next React milestone can select an analysis and one imported snapshot, show the
-overview and catalog, let an operator choose UUID skills by checkbox, create an explicit
-DRAFT, then separately confirm and approve it. Snapshot import/list and skill mapping
-are independent; no automatic approvals, CV parsing or semantic matching are included.
+The standalone [Skill Mapping view](manual-skill-mapping-ui.md) selects an analysis and one
+imported snapshot, shows the overview/catalog, accepts explicit UUID selections, creates a
+DRAFT and separately confirms/approves it. Snapshot import and mapping flags remain independent.
+The draft selection contract has no expected-review fields; the API captures its current binding,
+so the UI checks the returned draft against the proposed review and reloads after every attempt.
+Approval's revision/review checks remain authoritative. No automatic approvals, CV parsing or
+semantic matching are included. Revision/revocation/history and matching/report UI remain out of scope.

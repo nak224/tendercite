@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Route, Routes, useParams, useNavigate } from 'react-router-dom';
 import { ManualIntake } from './ManualIntake';
 import { ImportWorkforceSnapshot } from './ImportWorkforceSnapshot';
+import { SkillMapping } from './SkillMapping';
 import { TenderAssessment } from './TenderAssessment';
 import { FindingReview } from '../components/FindingReview';
 import { findingForReview } from '../api/tenderciteReviews';
@@ -267,6 +268,10 @@ function AnalysisDetail() {
             {a.provider} · {a.model} · {a.created_at}
           </p>
           <Link to={`/tenders/analyses/${idPath(a.id)}/assessment`}>Go/No-Go Assessment</Link>
+          {' · '}
+          <Link to={`/tenders/skill-mapping?analysis_id=${idPath(a.id)}`}>
+            Map reviewed requirements to skills
+          </Link>
           <FindingList analysisId={a.id} />
         </section>
       )}
@@ -289,7 +294,8 @@ export function Tenders() {
       <p className="notice muted">
         Source quotation verification does not establish semantic correctness, qualification or
         bidder eligibility. Human interpretation review is separate from fulfillment or
-        qualification; no mapping approvals are available here.
+        qualification. A separately approved skill mapping records an operator association, not
+        independently verified qualification.
       </p>
       <Routes>
         <Route
@@ -304,6 +310,7 @@ export function Tenders() {
               <Routes>
                 <Route index element={<TenderHome />} />
                 <Route path="intake" element={<ManualIntake />} />
+                <Route path="skill-mapping" element={<SkillMapping />} />
                 <Route path="workforce-snapshot/import" element={<ImportWorkforceSnapshot />} />
                 <Route path="documents/:id" element={<DocumentDetail />} />
                 <Route path="documents/:id/pages/:pageNumber" element={<SourcePage />} />

@@ -22,7 +22,7 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Explicit VERIFIED_QUOTE / INVALID_QUOTE / MISSING_EVIDENCE states.
 - Confirm, modify or reject findings while preserving original AI output and review history.
 - Human-managed Go / No-Go statuses, defaulting to CLARIFICATION_NEEDED.
-- Independent React workspace in `web/` for documents, manual intake, reviews, assessments and snapshot import.
+- Independent React workspace in `web/` for documents, manual intake, reviews, assessments, snapshot import and manual skill mapping.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
 - Synthetic evaluation corpus, offline tests, hashed dependency locks, Docker and CI definitions.
 
@@ -85,8 +85,10 @@ queries; writes remain explicit. Production hosting/authentication are separate 
 
 Workforce snapshot generation stays in the optional Team Capacity Engine application or another
 compatible producer. TenderCite imports the existing contract; it does not require a workforce
-server. Snapshot listing/history, skill mapping/approval and capability matching/reporting remain
-local/backend workflows with no new screens here. Model-based search/analysis and exports remain
+server. Bounded snapshot selection and explicit mapping draft/approval are available in
+[Skill Mapping](docs/integrations/manual-skill-mapping-ui.md), behind the existing local mapping API flag.
+Full snapshot history/export, mapping revision/revocation/history and capability matching/reporting
+remain CLI-only. Model-based search/analysis and exports remain
 in the existing backend/legacy UI. [Migration provenance](web/MIGRATION.md) records the original
 implementation, tests and limited adaptations; its source repository remains an untouched fallback.
 
@@ -246,7 +248,7 @@ not establish tender eligibility or change findings, assessments, capacity alloc
 
 The [local capability snapshot HTTP API](docs/integrations/capability-snapshot-http.md) exposes
 metadata-only validation and explicit synthetic-data import behind a disabled-by-default flag.
-It reuses the strict schema 1.0 validator and atomic importer; React import remains a separate milestone.
+It reuses the strict schema 1.0 validator and atomic importer; explicit React import is available in the standalone workspace.
 
 The [candidate matching core](docs/integrations/capability-matching.md) compares explicit `ALL_OF`
 skill UUID mappings for human-reviewed, grounded findings with one selected snapshot. It returns

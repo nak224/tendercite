@@ -185,7 +185,8 @@ export function ImportWorkforceSnapshot() {
       <p>
         Acknowledgement is an operator declaration, not independent provenance verification.
         Imported assignments do not establish bidder eligibility or legal compliance. Snapshot
-        listing/history, mappings, approvals and capability matching remain CLI-only.
+        history/export, mapping revision/revocation and capability matching remain CLI-only.
+        Explicit manual mapping drafts and approvals are available in the Skill Mapping view.
       </p>
     </section>
   );

@@ -21,6 +21,7 @@ export function Layout() {
           </NavLink>
           <NavLink to="/tenders/intake">Manual requirements</NavLink>
           <NavLink to="/tenders/workforce-snapshot/import">Import snapshot</NavLink>
+          <NavLink to="/tenders/skill-mapping">Skill Mapping</NavLink>
         </nav>
         <aside className="local-note" aria-label="Development environment">
           <strong>Local workspace</strong>

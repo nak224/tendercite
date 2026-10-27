@@ -1,6 +1,11 @@
 // Original one-page PDF fixture, generated entirely in memory.
-export function syntheticPdf(name = 'synthetic.pdf', type = 'application/pdf') {
-  const stream = 'BT /F1 12 Tf 20 80 Td (Synthetic tender) Tj ET';
+export function syntheticPdf(
+  name = 'synthetic.pdf',
+  type = 'application/pdf',
+  sourceText = 'Synthetic tender',
+) {
+  const escaped = sourceText.replace(/([\\()])/g, '\\$1');
+  const stream = `BT /F1 12 Tf 20 80 Td (${escaped}) Tj ET`;
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',

@@ -87,7 +87,8 @@ an import. See [snapshot HTTP contract](integrations/capability-snapshot-http.md
 | Manual assessment | Five statuses, required rationale, eligible/ineligible groups and readback | Reviews can invalidate an assessment; no automatic overall Go/No-Go verdict |
 | Snapshot validation/import | Original local JSON bytes, metadata, acknowledgement, INSERTED/ALREADY_PRESENT | 16 MiB bound; API flag disabled by default; no automatic synchronization |
 | Workforce snapshot generation | Optional external producer responsibility | Not implemented or moved into TenderCite |
-| Snapshot listing/history/export, skill mappings and capability reports | Existing local CLI workflows | No mapping, approval, matching or reporting UI in ARCH-1a; PR #27 is independent backend work |
+| Snapshot metadata selection and manual skill mapping | Bounded snapshot selector, scoped overview/catalog, explicit ALL_OF proposal, DRAFT and separate APPROVE | Local mapping flag required; no inference or qualification proof |
+| Full snapshot history/export, mapping revision/revocation/history and capability reports | Existing local CLI workflows | No revision/revocation, matching or reporting UI in UI-1b.5b |
 | Model-based search/analysis and result exports | Existing backend/legacy Streamlit workflows | Not added to React by this migration; model/provider access and transmission permissions remain separate |
 | Evaluation/annotations/paid pilots | Existing separate local evaluation tools | Not bridged into production findings or invoked by React |
 
@@ -102,6 +103,12 @@ levels. No status or internal skill assignment automatically establishes legal c
 of experience, certification, bidder eligibility, reserved capacity or contractual availability.
 No LLM, embedding download or analysis starts on page load. Raw source-bearing data remains in
 page/request memory, without new browser persistent storage or logging.
+
+[UI-1b.5b manual skill mapping](integrations/manual-skill-mapping-ui.md) adds the existing mapping
+HTTP workflow after the original ARCH-1a migration. It requires
+`TENDERCITE_CAPABILITY_MAPPING_API_ENABLED=true` on the local synthetic backend; this flag remains
+off by default and is independent of snapshot import. See the guide for proposal inspection,
+approval revision/review bindings, safe uncertain outcomes and current feature inventory.
 
 ## Verification
 
@@ -126,7 +133,7 @@ serving the existing backend/Streamlit setup; React is not silently bundled into
 An opt-in genuine browser smoke is in `web/e2e/standalone.spec.ts`. Stop Team Capacity Engine's
 frontend and PostgreSQL backend before running it, and point TenderCite to a **new empty disposable
 directory**, not any private/pilot database. Disable retrieval and provider configuration; enable
-the snapshot flag explicitly. The test refuses nonempty document/finding lists before mutations,
+both snapshot and mapping flags explicitly. The test refuses nonempty document/finding lists before mutations,
 but that check alone does not establish ownership of a database. Use a fresh disposable directory.
 
 Install Chromium once if needed (`cd web; npx playwright install chromium`), start the two
@@ -144,7 +151,8 @@ E2E_BASE_URL=http://127.0.0.1:5174 TENDERCITE_SYNTHETIC_SMOKE=1 npm --prefix web
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select an already installed browser. The test generates an
 original PDF, creates/reviews a synthetic intake, saves/reads back a manual assessment, checks
-source-page navigation and validates/imports a synthetic snapshot twice. Simulated reviews are
+source-page navigation, validates/imports a synthetic snapshot twice, creates and explicitly
+approves a manual mapping, then checks STALE after a subsequent identical-text review. Simulated reviews are
 test actions, not genuine human verification. Screenshots/failure outputs stay in ignored
 `web/test-results/`; remove only the owned disposable data after stopping its backend.
 
