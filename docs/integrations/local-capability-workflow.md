@@ -228,3 +228,7 @@ Private exports are point-in-time support artifacts; operators must regenerate t
 or mapping changes. The supplied review/source flags are reused, not reparsed or semantically
 reverified by reporting. No evaluation-format bridge, multi-user authorization, new API/UI,
 capacity scheduling, automated mappings or stronger qualification evidence is introduced.
+
+The later [UI-1b.6a report HTTP endpoint](capability-report-http.md) now exposes the same existing
+report contract and read-only service behind a separate default-off flag. It includes private
+individual coverage records. Its standalone React report view remains a later milestone.

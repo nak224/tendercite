@@ -88,7 +88,8 @@ an import. See [snapshot HTTP contract](integrations/capability-snapshot-http.md
 | Snapshot validation/import | Original local JSON bytes, metadata, acknowledgement, INSERTED/ALREADY_PRESENT | 16 MiB bound; API flag disabled by default; no automatic synchronization |
 | Workforce snapshot generation | Optional external producer responsibility | Not implemented or moved into TenderCite |
 | Snapshot metadata selection and manual skill mapping | Bounded snapshot selector, scoped overview/catalog, explicit ALL_OF proposal, DRAFT and separate APPROVE | Local mapping flag required; no inference or qualification proof |
-| Full snapshot history/export, mapping revision/revocation/history and capability reports | Existing local CLI workflows | No revision/revocation, matching or reporting UI in UI-1b.5b |
+| Full snapshot history/export, mapping revision/revocation/history | Existing local CLI workflows | No revision/revocation/history UI yet |
+| Capability assessment reports | Existing CLI and [separate opt-in HTTP API](integrations/capability-report-http.md) | React report view deferred to UI-1b.6b; includes private individual coverage |
 | Model-based search/analysis and result exports | Existing backend/legacy Streamlit workflows | Not added to React by this migration; model/provider access and transmission permissions remain separate |
 | Evaluation/annotations/paid pilots | Existing separate local evaluation tools | Not bridged into production findings or invoked by React |
 

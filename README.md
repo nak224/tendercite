@@ -87,8 +87,10 @@ Workforce snapshot generation stays in the optional Team Capacity Engine applica
 compatible producer. TenderCite imports the existing contract; it does not require a workforce
 server. Bounded snapshot selection and explicit mapping draft/approval are available in
 [Skill Mapping](docs/integrations/manual-skill-mapping-ui.md), behind the existing local mapping API flag.
-Full snapshot history/export, mapping revision/revocation/history and capability matching/reporting
-remain CLI-only. Model-based search/analysis and exports remain
+Full snapshot history/export and mapping revision/revocation/history remain CLI-only.
+The [capability assessment report API](docs/integrations/capability-report-http.md) exposes the
+existing persisted matching report behind a separate local opt-in; its React view is not yet available.
+Model-based search/analysis and exports remain
 in the existing backend/legacy UI. [Migration provenance](web/MIGRATION.md) records the original
 implementation, tests and limited adaptations; its source repository remains an untouched fallback.
 

@@ -69,8 +69,9 @@ authentication guarantee is added.
 7. Reload after later reviews or changes in another window. A new review event invalidates an
    old approval even if the reviewed words/digest remain identical; the backend returns **STALE**.
    STALE and REVOKED mappings are read-only here. Do not substitute an older approval or a mapping
-   from another snapshot. Revision/revocation/history and matching/reporting remain separate CLI
-   or later workflows; no reactivation action is provided.
+   from another snapshot. Revision/revocation/history remain CLI workflows; no reactivation action
+   is provided. The [separate opt-in report API](capability-report-http.md) reuses persisted
+   matching, but this mapping view does not execute matching or display reports.
 
 Reloads reset unsaved proposal/approval form state while retaining the selected finding. Mapping
 writes and manual overview reloads are blocked during a mutation and its authoritative reload.
