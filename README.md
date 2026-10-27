@@ -23,6 +23,7 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Confirm, modify or reject findings while preserving original AI output and review history.
 - Human-managed Go / No-Go statuses, defaulting to CLARIFICATION_NEEDED.
 - Independent React workspace in `web/` for documents, manual intake, reviews, assessments, snapshot import, manual skill mapping and recorded capability coverage.
+- Native manual freelancer/company profiles at `/profiles`, independent of workforce snapshots, with explicit revision-checked saves and unverified skill declarations.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
 - Synthetic evaluation corpus, offline tests, hashed dependency locks, Docker and CI definitions.
 
@@ -84,8 +85,11 @@ same-origin development proxy. No server/model calls are started automatically b
 queries; writes remain explicit. Production hosting/authentication are separate work.
 
 Workforce snapshot generation stays in the optional Team Capacity Engine application or another
-compatible producer. TenderCite imports the existing contract; it does not require a workforce
-server. Bounded snapshot selection and explicit mapping draft/approval are available in
+compatible producer. [Native profiles](docs/integrations/native-profiles.md) can instead be created
+and edited entirely within TenderCite, without a producer or snapshot. They are separate manual
+declarations and do not yet participate in matching. Snapshot workflows use the existing import
+contract without requiring a workforce server. Bounded snapshot selection and explicit mapping
+draft/approval are available in
 [Skill Mapping](docs/integrations/manual-skill-mapping-ui.md), behind the existing local mapping API flag.
 Full snapshot history/export and mapping revision/revocation/history remain CLI-only.
 The [capability assessment report API](docs/integrations/capability-report-http.md) exposes the
