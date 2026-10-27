@@ -22,7 +22,7 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Explicit VERIFIED_QUOTE / INVALID_QUOTE / MISSING_EVIDENCE states.
 - Confirm, modify or reject findings while preserving original AI output and review history.
 - Human-managed Go / No-Go statuses, defaulting to CLARIFICATION_NEEDED.
-- Independent React workspace in `web/` for documents, manual intake, reviews, assessments, snapshot import and manual skill mapping.
+- Independent React workspace in `web/` for documents, manual intake, reviews, assessments, snapshot import, manual skill mapping and recorded capability coverage.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
 - Synthetic evaluation corpus, offline tests, hashed dependency locks, Docker and CI definitions.
 
@@ -89,7 +89,9 @@ server. Bounded snapshot selection and explicit mapping draft/approval are avail
 [Skill Mapping](docs/integrations/manual-skill-mapping-ui.md), behind the existing local mapping API flag.
 Full snapshot history/export and mapping revision/revocation/history remain CLI-only.
 The [capability assessment report API](docs/integrations/capability-report-http.md) exposes the
-existing persisted matching report behind a separate local opt-in; its React view is not yet available.
+existing persisted matching report behind a separate local opt-in. The
+[Capability Matching view](docs/integrations/capability-matching-ui.md) supports explicit finding
+selection and private coverage inspection without qualification or capacity inference.
 Model-based search/analysis and exports remain
 in the existing backend/legacy UI. [Migration provenance](web/MIGRATION.md) records the original
 implementation, tests and limited adaptations; its source repository remains an untouched fallback.
