@@ -76,7 +76,13 @@ def _reject_constant(_value):
 
 
 class MappingRoute(APIRoute):
-    """Apply the flag and bounded transport checks before invoking dependencies."""
+    """Shared bounded capability transport; opt-ins and fixed codes are route-specific."""
+
+    enabled_setting = "capability_mapping_api_enabled"
+    disabled_code = "CAPABILITY_MAPPING_API_DISABLED"
+    invalid_input_code = "INVALID_MAPPING_INPUT"
+    too_large_code = "MAPPING_REQUEST_TOO_LARGE"
+    failure_code = "CAPABILITY_MAPPING_FAILED"
 
     def get_route_handler(self):
         original = super().get_route_handler()
@@ -90,16 +96,16 @@ class MappingRoute(APIRoute):
         )
 
         async def handle(request: Request):
-            if not settings.capability_mapping_api_enabled:
-                raise _error(404, "CAPABILITY_MAPPING_API_DISABLED")
+            if not getattr(settings, self.enabled_setting):
+                raise _error(404, self.disabled_code)
             try:
                 if len(request.scope.get("query_string", b"")) > _MAX_QUERY_BYTES:
-                    raise _error(413, "MAPPING_REQUEST_TOO_LARGE")
+                    raise _error(413, self.too_large_code)
                 params = list(request.query_params.keys())
                 if set(params) - allowed_query or any(
                     len(request.query_params.getlist(key)) != 1 for key in params
                 ):
-                    raise _error(422, "INVALID_MAPPING_INPUT")
+                    raise _error(422, self.invalid_input_code)
                 if is_post:
                     media = request.headers.getlist("content-type")
                     if (
@@ -117,10 +123,10 @@ class MappingRoute(APIRoute):
                     if lengths:
                         digits = lengths[0].lstrip("0") or "0"
                         if len(digits) > len(str(MAX_MAPPING_REQUEST_BYTES)):
-                            raise _error(413, "MAPPING_REQUEST_TOO_LARGE")
+                            raise _error(413, self.too_large_code)
                         declared = int(digits)
                         if declared > MAX_MAPPING_REQUEST_BYTES:
-                            raise _error(413, "MAPPING_REQUEST_TOO_LARGE")
+                            raise _error(413, self.too_large_code)
                     received = 0
 
                     async def bounded_receive():
@@ -129,7 +135,7 @@ class MappingRoute(APIRoute):
                         if message["type"] == "http.request":
                             received += len(message.get("body", b""))
                             if received > MAX_MAPPING_REQUEST_BYTES:
-                                raise _error(413, "MAPPING_REQUEST_TOO_LARGE")
+                                raise _error(413, self.too_large_code)
                         return message
 
                     bounded = Request(request.scope, receive=bounded_receive)
@@ -145,7 +151,7 @@ class MappingRoute(APIRoute):
                         if not isinstance(value, dict):
                             raise ValueError("Expected a JSON object")
                     except (ValueError, UnicodeError, RecursionError, OverflowError):
-                        raise _error(422, "INVALID_MAPPING_INPUT") from None
+                        raise _error(422, self.invalid_input_code) from None
                     response = await original(bounded)
                 else:
                     response = await original(request)
@@ -154,7 +160,7 @@ class MappingRoute(APIRoute):
             except _MappingHttpError:
                 raise
             except RequestValidationError:
-                raise _error(422, "INVALID_MAPPING_INPUT") from None
+                raise _error(422, self.invalid_input_code) from None
             except ClientDisconnect:
                 raise _error(400, "INCOMPLETE_BODY") from None
             except CapabilityMappingError as exc:
@@ -165,12 +171,12 @@ class MappingRoute(APIRoute):
                     CapabilityErrorCode.STORAGE_INTEGRITY: 409,
                     CapabilityErrorCode.DATABASE_FAILED: 503,
                 }.get(exc.code, 500)
-                code = exc.code.value if status != 500 else "CAPABILITY_MAPPING_FAILED"
+                code = exc.code.value if status != 500 else self.failure_code
                 raise _error(status, code) from None
             except (sqlite3.Error, OSError):
                 raise _error(503, "DATABASE_FAILED") from None
             except Exception:
-                raise _error(500, "CAPABILITY_MAPPING_FAILED") from None
+                raise _error(500, self.failure_code) from None
 
         return handle
 
