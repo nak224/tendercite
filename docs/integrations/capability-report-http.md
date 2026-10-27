@@ -2,7 +2,8 @@
 
 `POST /api/v1/capability-workflow/report` exposes the existing `assessment_report()` service
 and `AssessmentReport` contract. It is a point-in-time assessment-support report, not a saved
-decision or an overall Go/No-Go verdict. No React report view is added in this milestone.
+decision or an overall Go/No-Go verdict. The later
+[UI-1b.6b React view](capability-matching-ui.md) consumes this unchanged contract.
 
 ## Separate local opt-in
 
@@ -136,5 +137,6 @@ Go/No-Go decision occurs, and existing assessments remain untouched.
 
 This endpoint delegates matching and report serialization to existing services. It is synchronous
 and returns the existing bounded-selection report, which may be large for a large snapshot;
-there is no pagination, report persistence or access-control layer. The standalone React report
-view is a separate **UI-1b.6b** milestone. Mapping revision/revocation/history still require the CLI.
+there is no pagination, report persistence or access-control layer. The standalone
+[Capability Matching page](capability-matching-ui.md) supports explicit report requests and private
+inspection. Mapping revision/revocation/history still require the CLI.

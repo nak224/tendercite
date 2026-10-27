@@ -11,7 +11,7 @@
 | Mapping overview/catalog | Available via mapping API (local flag) | Explicit analysis/snapshot scope and requirement inspection | Analyses discovered through current findings; no analysis-list API |
 | Create and approve manual mapping | Available via mapping API (local flag) | Manual ALL_OF proposal → DRAFT → separate explicit APPROVE | No automatic mapping, approval or qualification proof |
 | Mapping revision/revocation/history | CLI only | Not yet | Later milestone |
-| Persisted capability assessment report | Available via separate report API flag | Not yet | UI-1b.6b; existing CLI still available |
+| Persisted capability assessment report | Available via separate report API flag | Capability Matching: explicit scope/selection, coverage, missing assignments and expandable pseudonymous details | UUID membership only; no qualification proof; CLI still available |
 | Profile extraction / semantic match | Not yet | Not yet | Improve after manual end-to-end workflow |
 | External opportunity discovery / acquisition | Not yet | Not yet | Later functional MVP work |
 
@@ -22,4 +22,6 @@ No source evidence, manual judgment or recorded skill assignment alone proves bi
 qualification. The MVP prioritizes UI feature completeness before sophistication.
 
 Local setup, exact contracts, refresh/conflict behavior and limitations:
-[manual skill mapping UI](manual-skill-mapping-ui.md).
+[manual skill mapping UI](manual-skill-mapping-ui.md) and
+[capability matching UI](capability-matching-ui.md). Snapshot discovery needs the mapping flag;
+report computation remains independently gated and supports manual exact-hash entry.

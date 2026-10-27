@@ -263,3 +263,23 @@ export function tenderMappingPost(
     responseError,
   );
 }
+
+// Read-only report computation still uses an explicit, non-retried POST to one fixed endpoint.
+export function tenderReportPost(
+  body: string,
+  signal: AbortSignal,
+  responseError: (response: Response) => Promise<Error>,
+): Promise<unknown> {
+  return tenderRequest(
+    'capability-workflow/report',
+    {
+      method: 'POST',
+      body,
+      signal,
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'error',
+    },
+    false,
+    responseError,
+  );
+}

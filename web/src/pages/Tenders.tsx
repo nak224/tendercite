@@ -4,6 +4,7 @@ import { Link, Route, Routes, useParams, useNavigate } from 'react-router-dom';
 import { ManualIntake } from './ManualIntake';
 import { ImportWorkforceSnapshot } from './ImportWorkforceSnapshot';
 import { SkillMapping } from './SkillMapping';
+import { CapabilityReport } from './CapabilityReport';
 import { TenderAssessment } from './TenderAssessment';
 import { FindingReview } from '../components/FindingReview';
 import { findingForReview } from '../api/tenderciteReviews';
@@ -272,6 +273,10 @@ function AnalysisDetail() {
           <Link to={`/tenders/skill-mapping?analysis_id=${idPath(a.id)}`}>
             Map reviewed requirements to skills
           </Link>
+          {' · '}
+          <Link to={`/tenders/capability-report?analysis_id=${idPath(a.id)}`}>
+            Capability Matching
+          </Link>
           <FindingList analysisId={a.id} />
         </section>
       )}
@@ -311,6 +316,7 @@ export function Tenders() {
                 <Route index element={<TenderHome />} />
                 <Route path="intake" element={<ManualIntake />} />
                 <Route path="skill-mapping" element={<SkillMapping />} />
+                <Route path="capability-report" element={<CapabilityReport />} />
                 <Route path="workforce-snapshot/import" element={<ImportWorkforceSnapshot />} />
                 <Route path="documents/:id" element={<DocumentDetail />} />
                 <Route path="documents/:id/pages/:pageNumber" element={<SourcePage />} />

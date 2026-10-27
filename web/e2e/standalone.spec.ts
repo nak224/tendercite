@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 import { syntheticPdf } from '../src/test/tenderPdf';
 
 // Opt-in only. Start the backend with a NEW disposable data directory, retrieval disabled,
-// no provider configuration and snapshot/mapping flags enabled. No TCE service is used.
-test('standalone PDF → intake → human review → assessment → snapshot import → manual skill mapping', async ({
+// no provider configuration and snapshot/mapping/report flags enabled. No TCE service is used.
+test('standalone PDF → intake → human review → assessment → snapshot → mapping → capability report', async ({
   page,
   request,
   baseURL,
@@ -22,11 +22,16 @@ test('standalone PDF → intake → human review → assessment → snapshot imp
   expect(await (await request.get(`${api}/documents`)).json()).toEqual([]);
   expect(await (await request.get(`${api}/findings`)).json()).toEqual([]);
   const mutations: string[] = [];
+  const reportRequests: string[] = [];
   const pageErrors: string[] = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
   page.on('request', (sent) => {
     expect(new URL(sent.url()).origin).toBe(baseURL);
     if (sent.method() !== 'GET') {
+      if (new URL(sent.url()).pathname.endsWith('/capability-workflow/report')) {
+        reportRequests.push(sent.url());
+        return;
+      }
       expect(sent.url()).toMatch(
         /\/api\/v1\/(documents|curated-intakes|findings|go-no-go|capability-snapshots|capability-mappings)/,
       );
@@ -168,7 +173,37 @@ test('standalone PDF → intake → human review → assessment → snapshot imp
     path: test.info().outputPath('approved-synthetic-mapping.png'),
     fullPage: true,
   });
-  await page.getByRole('link', { name: 'Finding detail and human review' }).click();
+  async function runMatching() {
+    await page.getByRole('link', { name: 'Capability Matching', exact: true }).click();
+    // Both pages have scope selectors; wait for the new route before selecting them.
+    await expect(
+      page.getByRole('heading', { name: 'Capability Matching', exact: true }),
+    ).toBeVisible();
+    await page.getByRole('combobox', { name: 'Analysis', exact: true }).selectOption(analysisId);
+    await page.getByRole('combobox', { name: 'Imported snapshot' }).selectOption(snapshotHash);
+    await page.getByRole('checkbox', { name: /The tender requires PostgreSQL/ }).check();
+    const response = page.waitForResponse((r) => r.url().endsWith('/capability-workflow/report'));
+    await page.getByRole('button', { name: 'Run Capability Matching' }).click();
+    const received = await response;
+    expect(received.request().postDataJSON()).toEqual({
+      schema_version: 'capability-workflow-assessment-selection-1',
+      analysis_id: analysisId,
+      snapshot_hash: snapshotHash,
+      finding_ids: [findingId],
+    });
+    expect(received.status()).toBe(200);
+    return page.getByRole('article', { name: `Requirement ${findingId}` });
+  }
+  let matched = await runMatching();
+  await expect(matched.getByText('Recorded coverage: ALL_REQUIRED_SKILLS_RECORDED')).toBeVisible();
+  await expect(matched.getByText(/All required skills recorded: 2/)).toBeVisible();
+  await matched.getByText('Individual recorded-skill coverage (3)').click();
+  await expect(matched.getByText(/Pseudonymous person ID:/)).toHaveCount(3);
+  await page.screenshot({
+    path: test.info().outputPath('synthetic-capability-report.png'),
+    fullPage: true,
+  });
+  await matched.getByRole('link', { name: 'Finding detail, review and source evidence' }).click();
   const laterReview = page.getByRole('region', { name: 'Human finding review' });
   await laterReview.getByRole('combobox', { name: 'Review action' }).selectOption('CONFIRM');
   await laterReview
@@ -182,7 +217,14 @@ test('standalone PDF → intake → human review → assessment → snapshot imp
   editor = page.getByRole('region', { name: 'Selected mapping' });
   await expect(editor.getByText('Mapping state: STALE', { exact: true })).toBeVisible();
   await expect(editor.getByRole('button', { name: 'APPROVE mapping' })).toHaveCount(0);
+  matched = await runMatching();
+  await expect(matched.getByText('Mapping: STALE', { exact: true })).toBeVisible();
+  await expect(
+    matched.getByText('Recorded coverage: NOT_EVALUATED', { exact: true }),
+  ).toBeVisible();
+  await expect(matched.getByText(/Individual recorded-skill coverage/)).toHaveCount(0);
   expect(mutations).toHaveLength(12); // existing 9 + explicit draft, approval and a new simulated review
+  expect(reportRequests).toHaveLength(2); // explicit read-only computations, never writes or retries
   expect(pageErrors).toEqual([]);
   await page.screenshot({
     path: test.info().outputPath('standalone-synthetic.png'),

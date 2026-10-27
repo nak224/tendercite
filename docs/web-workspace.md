@@ -89,7 +89,7 @@ an import. See [snapshot HTTP contract](integrations/capability-snapshot-http.md
 | Workforce snapshot generation | Optional external producer responsibility | Not implemented or moved into TenderCite |
 | Snapshot metadata selection and manual skill mapping | Bounded snapshot selector, scoped overview/catalog, explicit ALL_OF proposal, DRAFT and separate APPROVE | Local mapping flag required; no inference or qualification proof |
 | Full snapshot history/export, mapping revision/revocation/history | Existing local CLI workflows | No revision/revocation/history UI yet |
-| Capability assessment reports | Existing CLI and [separate opt-in HTTP API](integrations/capability-report-http.md) | React report view deferred to UI-1b.6b; includes private individual coverage |
+| Capability assessment reports | [Capability Matching](integrations/capability-matching-ui.md): explicit analysis/snapshot/finding selection and backend report | Separate report flag; manual hash fallback; private pseudonymous details collapsed by default |
 | Model-based search/analysis and result exports | Existing backend/legacy Streamlit workflows | Not added to React by this migration; model/provider access and transmission permissions remain separate |
 | Evaluation/annotations/paid pilots | Existing separate local evaluation tools | Not bridged into production findings or invoked by React |
 
@@ -134,7 +134,7 @@ serving the existing backend/Streamlit setup; React is not silently bundled into
 An opt-in genuine browser smoke is in `web/e2e/standalone.spec.ts`. Stop Team Capacity Engine's
 frontend and PostgreSQL backend before running it, and point TenderCite to a **new empty disposable
 directory**, not any private/pilot database. Disable retrieval and provider configuration; enable
-both snapshot and mapping flags explicitly. The test refuses nonempty document/finding lists before mutations,
+snapshot, mapping and report flags explicitly. The test refuses nonempty document/finding lists before mutations,
 but that check alone does not establish ownership of a database. Use a fresh disposable directory.
 
 Install Chromium once if needed (`cd web; npx playwright install chromium`), start the two
@@ -153,7 +153,9 @@ E2E_BASE_URL=http://127.0.0.1:5174 TENDERCITE_SYNTHETIC_SMOKE=1 npm --prefix web
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select an already installed browser. The test generates an
 original PDF, creates/reviews a synthetic intake, saves/reads back a manual assessment, checks
 source-page navigation, validates/imports a synthetic snapshot twice, creates and explicitly
-approves a manual mapping, then checks STALE after a subsequent identical-text review. Simulated reviews are
+approves a manual mapping, inspects approved recorded coverage, then checks STALE/NOT_EVALUATED
+after a subsequent identical-text review. It sends twelve explicit writes and two explicit read-only
+report computations; there are no automatic POST retries. Simulated reviews are
 test actions, not genuine human verification. Screenshots/failure outputs stay in ignored
 `web/test-results/`; remove only the owned disposable data after stopping its backend.
 

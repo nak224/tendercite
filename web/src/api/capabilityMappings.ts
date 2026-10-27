@@ -141,6 +141,10 @@ export async function mappingOverview(
     data.snapshot_hash !== scope.snapshot_hash
   )
     throw new MappingRequestError('Invalid or mismatched mapping overview. Reload current state.');
+  return copyMappingOverview(data);
+}
+// Project validated source/mapping fields for both the overview and private report client.
+export function copyMappingOverview(data: MappingOverview): MappingOverview {
   return {
     schema_version: data.schema_version,
     analysis_id: data.analysis_id,
