@@ -26,6 +26,7 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Native manual freelancer/company profiles at `/profiles`, independent of workforce snapshots, with explicit revision-checked saves and unverified skill declarations.
 - Native manual opportunities at `/opportunities`: local external project/tender references, skill labels, date-only deadlines and revision-checked saves; no source fetching.
 - Explicit native profile/opportunity skill-label comparison at `/matching`: normalized exact equality with original labels, counts and revision checks; no qualification score or inference.
+- Native manual opportunity pipeline at `/pipeline`: explicit tracking, stages, priority, notes and next actions with revision-checked saves; no external submissions or automatic outcomes.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
 - Synthetic evaluation corpus, offline tests, hashed dependency locks, Docker and CI definitions.
 
@@ -95,7 +96,9 @@ local flag. It does not verify qualifications or use workforce snapshots. Snapsh
 the existing import
 contract without requiring a workforce server. [Native opportunities](docs/integrations/native-opportunities.md)
 can be created and edited independently of profiles, documents and analyses. They are unverified
-external references, not job listings published by TenderCite. Bounded snapshot selection and explicit mapping
+external references, not job listings published by TenderCite. [Pipeline](docs/integrations/native-pipeline.md)
+adds optional manual acquisition tracking for an existing opportunity, behind its own default-off
+local flag. Matching never adds or advances tracking. Bounded snapshot selection and explicit mapping
 draft/approval are available in
 [Skill Mapping](docs/integrations/manual-skill-mapping-ui.md), behind the existing local mapping API flag.
 Full snapshot history/export and mapping revision/revocation/history remain CLI-only.

@@ -104,6 +104,20 @@ const kind = (v: unknown): v is OpportunityType =>
 const date = (v: unknown): v is string | null =>
   v === null || (typeof v === 'string' && !v.startsWith('0000-') && validDate(v));
 const key = (s: string) => s.normalize('NFKC').toLowerCase().replace(/\s+/gu, ' ').trim();
+export function opportunityMetadataValid(v: unknown): v is OpportunityMetadata {
+  return (
+    object(v) &&
+    uuid(v.opportunity_id) &&
+    count(v.revision) &&
+    v.revision >= 1 &&
+    v.revision <= 2147483647 &&
+    nonblank(v.title, 200) &&
+    kind(v.opportunity_type) &&
+    text(v.organization, 200) &&
+    date(v.deadline) &&
+    timestamp(v.updated_at)
+  );
+}
 function contentValid(v: unknown): v is NativeOpportunity {
   return (
     object(v) &&
@@ -211,19 +225,7 @@ export async function listOpportunities(
     !Array.isArray(value.opportunities) ||
     value.opportunities.length > 50 ||
     !(value.next_offset === null || value.next_offset === offset + 50) ||
-    !value.opportunities.every(
-      (v) =>
-        object(v) &&
-        uuid(v.opportunity_id) &&
-        count(v.revision) &&
-        v.revision >= 1 &&
-        v.revision <= 2147483647 &&
-        nonblank(v.title, 200) &&
-        kind(v.opportunity_type) &&
-        text(v.organization, 200) &&
-        date(v.deadline) &&
-        timestamp(v.updated_at),
-    ) ||
+    !value.opportunities.every(opportunityMetadataValid) ||
     new Set(value.opportunities.map((v) => v.opportunity_id)).size !== value.opportunities.length
   )
     throw new OpportunityRequestError('Invalid opportunity listing.');

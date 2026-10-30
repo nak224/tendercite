@@ -32,6 +32,9 @@ Both sides are manual declarations. A matching label proves no experience, quali
 certification, availability, eligibility, tender fulfillment or legal compliance. Qualification
 and eligibility remain `NOT_VERIFIED`; availability remains `NOT_EVALUATED`.
 
+Use [Pipeline](native-pipeline.md) to track pursuing a saved opportunity explicitly. Matching is
+optional, never creates a pipeline entry and never changes its stage or infers an outcome.
+
 This is independent of **Capability Matching**, which uses imported workforce snapshots, reviewed
 findings, explicit approved ALL_OF UUID mappings and recorded individual skill assignments. Native
 profile skill UUIDs identify declarations only. No snapshot is fabricated and neither system

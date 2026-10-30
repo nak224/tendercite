@@ -342,3 +342,22 @@ export function tenderNativeMatchPost(
     responseError,
   );
 }
+
+export function tenderPipelineWrite(
+  operation: 'create' | 'update',
+  pipelineId: string,
+  body: string,
+  responseError: (response: Response) => Promise<Error>,
+): Promise<unknown> {
+  return tenderRequest(
+    operation === 'create' ? 'pipeline' : `pipeline/${encodeURIComponent(pipelineId)}`,
+    {
+      method: operation === 'create' ? 'POST' : 'PUT',
+      body,
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'error',
+    },
+    false,
+    responseError,
+  );
+}

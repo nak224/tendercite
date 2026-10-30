@@ -5,6 +5,7 @@
 | Native freelancer/company profiles | Available via separate local profiles flag | Profiles: create, reopen, edit skills/preferences and explicit revision-checked saves | Manual declarations only; no snapshot adapter |
 | Native manual opportunities | Available via separate local opportunities flag | Opportunities: create/reopen/edit external references, skill labels and date-only deadlines | Unverified declarations; no discovery or analysis association |
 | Native profile/opportunity matching | Read-only preview via separate default-off native matching flag | Opportunity Matching: saved-record selectors, explicit compare, original/normalized labels and counts | Exact label equality only; no semantic matching, qualification proof, scores or saved results; [guide](native-matching.md) |
+| Native opportunity pipeline | Available via separate default-off pipeline flag | Explicit add, manual stage/priority/notes/next-action/date updates, filtering and reopen | One entry per existing opportunity; current revision only; no external submission/synchronization; [guide](native-pipeline.md) |
 | PDF intake / source pages | Available | Available | Rich PDF viewer later |
 | Manual requirements / human review | Available | Available | Review UX improvements later |
 | Manual Go/No-Go assessment | Available | Available | No automatic compliance claims |
@@ -16,7 +17,7 @@
 | Mapping revision/revocation/history | CLI only | Not yet | Later milestone |
 | Persisted capability assessment report | Available via separate report API flag | Capability Matching: explicit scope/selection, coverage, missing assignments and expandable pseudonymous details | UUID membership only; no qualification proof; CLI still available |
 | Profile extraction / semantic match | Not yet | Not yet | Improve after manual end-to-end workflow |
-| External opportunity discovery / acquisition | Not yet | Not yet | Later functional MVP work |
+| Automatic external discovery / acquisition | Not yet | Not yet | Manual tracking exists; automatic actions remain separate work |
 
 All mapping endpoints and the separately gated report endpoint remain local-development-only
 and **disabled by default**. The [report API](capability-report-http.md) includes pseudonymous

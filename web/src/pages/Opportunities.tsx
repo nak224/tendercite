@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Async, Empty } from '../components/ui';
 import { OpportunityForm } from '../components/OpportunityForm';
 import { tenderciteConfigured } from '../api/tendercite';
@@ -296,8 +297,9 @@ function OpportunityWorkspace() {
       <p>
         Opportunities are manually entered external references, not listings hosted or published by
         TenderCite. Their details, requirements and deadlines are not independently verified. A
-        PUBLIC_TENDER opportunity is not an analyzed tender or proof of eligibility. No matching,
-        application submission or acquisition tracking runs.
+        PUBLIC_TENDER opportunity is not an analyzed tender or proof of eligibility. Saving does not
+        automatically compare or track it. Use <Link to="/matching">Opportunity Matching</Link> for
+        explicit skill-label comparison or <Link to="/pipeline">Pipeline</Link> for manual tracking.
       </p>
     </>
   );

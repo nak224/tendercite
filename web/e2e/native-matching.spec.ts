@@ -48,7 +48,10 @@ test('saved native declarations → explicit comparison → stale revision → r
   }
   await page.getByRole('button', { name: 'Save Opportunity', exact: true }).click();
   await expect(page.getByText(/Server confirmed CREATED/)).toBeVisible();
-  await page.getByRole('link', { name: 'Opportunity Matching', exact: true }).click();
+  await page
+    .getByRole('navigation', { name: 'Primary navigation' })
+    .getByRole('link', { name: 'Opportunity Matching', exact: true })
+    .click();
   const profile = page.getByRole('combobox', { name: 'Profile', exact: true });
   const opportunity = page.getByRole('combobox', { name: 'Opportunity', exact: true });
   await profile.selectOption({ label: 'Synthetic matching freelancer · FREELANCER · revision 1' });
