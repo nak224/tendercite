@@ -258,7 +258,9 @@ function PipelineWorkspace() {
             Unsaved pipeline edits will be discarded if you leave. Wait for any pending save before
             navigating.
           </p>
-          <button onClick={() => blocker.reset()}>Keep editing</button>
+          <button autoFocus onClick={() => blocker.reset()}>
+            Keep editing
+          </button>
           <button disabled={busy} onClick={() => blocker.proceed()}>
             Discard changes and leave
           </button>

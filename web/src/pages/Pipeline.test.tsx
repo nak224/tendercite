@@ -369,6 +369,7 @@ test('SPA navigation warns and keeps edits until explicit discard', async () => 
   expect(
     await screen.findByRole('alertdialog', { name: 'Unsaved pipeline changes' }),
   ).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Keep editing' })).toHaveFocus();
   await user.click(screen.getByRole('button', { name: 'Keep editing' }));
   expect(screen.getByLabelText('Notes (optional, maximum 4000 characters)')).toHaveValue('Unsaved');
   await user.click(nav.getByRole('link', { name: 'Opportunity Matching' }));

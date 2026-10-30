@@ -69,6 +69,7 @@ test('manual opportunity → explicit tracking → stage/action → save → rel
   expect(writes).toHaveLength(2);
   await page.goBack();
   await expect(page.getByRole('alertdialog', { name: 'Unsaved pipeline changes' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Keep editing', exact: true })).toBeFocused();
   await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Pipeline', exact: true })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Stage', exact: true })).toHaveValue('SUBMITTED');
