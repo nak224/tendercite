@@ -15,6 +15,7 @@ import { Opportunities } from './pages/Opportunities';
 import { OpportunityMatching } from './pages/OpportunityMatching';
 import { Pipeline } from './pages/Pipeline';
 import { Dashboard } from './pages/Dashboard';
+import { Discover } from './pages/Discover';
 import './styles.css';
 
 // Construct once outside React StrictMode in production; tests may own a disposable router.
@@ -27,6 +28,7 @@ export function createWorkspaceRouter() {
         <Route path="tenders/*" element={<Tenders />} />
         <Route path="profiles" element={<Profiles />} />
         <Route path="opportunities" element={<Opportunities />} />
+        <Route path="discover" element={<Discover />} />
         <Route path="matching" element={<OpportunityMatching />} />
         <Route path="pipeline" element={<Pipeline />} />
         <Route

@@ -7,6 +7,7 @@ from tendercite.api.routes.capability_reports import router as capability_report
 from tendercite.api.routes.capability_snapshots import router as capability_snapshots_router
 from tendercite.api.routes.configuration import router as configuration_router
 from tendercite.api.routes.curated_intakes import router as curated_intakes_router
+from tendercite.api.routes.discovery import router as discovery_router
 from tendercite.api.routes.documents import router as documents_router
 from tendercite.api.routes.evidence import router as evidence_router
 from tendercite.api.routes.exports import router as exports_router
@@ -58,3 +59,4 @@ app.include_router(opportunities_router, prefix="/api/v1")
 
 app.include_router(native_matches_router, prefix="/api/v1")
 app.include_router(pipeline_router, prefix="/api/v1")
+app.include_router(discovery_router, prefix="/api/v1")

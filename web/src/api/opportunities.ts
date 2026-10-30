@@ -1,6 +1,7 @@
 import { tenderGet, tenderOpportunityWrite } from './tendercite';
 import { object, uuid, count, timestamp, nonblank } from './capabilityMappingValidation';
 import { validDate } from '../utils/period';
+import { copyTedSource, tedSourceValid, type TedSource } from './tedReferences';
 
 export type OpportunityType = 'PUBLIC_TENDER' | 'FREELANCE_PROJECT' | 'OTHER';
 export type WorkArrangement = 'REMOTE' | 'HYBRID' | 'ON_SITE' | null;
@@ -17,7 +18,8 @@ export interface NativeOpportunity {
   source_url: string;
   required_skills: string[];
   requirements_description: string;
-  source_origin: 'manual_operator_entry';
+  source_origin: 'manual_operator_entry' | 'ted_import';
+  external_source?: TedSource | null;
   verification_status: 'NOT_VERIFIED';
 }
 export interface OpportunityRecord {
@@ -55,6 +57,7 @@ const safeCodes = new Set([
   'OPPORTUNITY_STORAGE_INTEGRITY',
   'OPPORTUNITY_REQUEST_TOO_LARGE',
   'OPPORTUNITY_OPERATION_FAILED',
+  'OPPORTUNITY_PROVENANCE_CONFLICT',
   'DATABASE_FAILED',
   'INVALID_CONTENT_LENGTH',
   'INCOMPLETE_BODY',
@@ -133,7 +136,9 @@ function contentValid(v: unknown): v is NativeOpportunity {
     text(v.source_url, 2048) &&
     sourceUrlValid(v.source_url) &&
     text(v.requirements_description, 2000) &&
-    v.source_origin === 'manual_operator_entry' &&
+    ((v.source_origin === 'manual_operator_entry' &&
+      (v.external_source === undefined || v.external_source === null)) ||
+      (v.source_origin === 'ted_import' && tedSourceValid(v.external_source))) &&
     v.verification_status === 'NOT_VERIFIED' &&
     Array.isArray(v.required_skills) &&
     v.required_skills.length <= 100 &&
@@ -156,6 +161,9 @@ function copyOpportunity(v: NativeOpportunity): NativeOpportunity {
     required_skills: [...v.required_skills],
     requirements_description: v.requirements_description,
     source_origin: v.source_origin,
+    ...(v.source_origin === 'ted_import' && v.external_source
+      ? { external_source: copyTedSource(v.external_source) }
+      : {}),
     verification_status: v.verification_status,
   };
 }
@@ -201,6 +209,11 @@ function copyRecord(v: OpportunityRecord): OpportunityRecord {
     updated_at: v.updated_at,
     opportunity: copyOpportunity(v.opportunity),
   };
+}
+export function parseOpportunityRecord(value: unknown, id: string): OpportunityRecord {
+  if (!recordValid(value, id))
+    throw new OpportunityRequestError('Invalid or mismatched opportunity response.');
+  return copyRecord(value);
 }
 async function get(path: string, signal: AbortSignal): Promise<unknown> {
   try {

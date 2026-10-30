@@ -361,3 +361,23 @@ export function tenderPipelineWrite(
     responseError,
   );
 }
+
+export function tenderDiscoveryPost(
+  operation: 'search' | 'import',
+  body: string,
+  signal: AbortSignal | undefined,
+  responseError: (response: Response) => Promise<Error>,
+): Promise<unknown> {
+  return tenderRequest(
+    `discovery/ted/${operation}`,
+    {
+      method: 'POST',
+      body,
+      signal,
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'error',
+    },
+    false,
+    responseError,
+  );
+}
