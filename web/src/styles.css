@@ -372,3 +372,21 @@ main {
   overflow-wrap: anywhere;
   font-family: inherit;
 }
+
+.native-match-table {
+  overflow-x: auto;
+}
+
+.native-match-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.native-match-table th,
+.native-match-table td {
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #dce5df;
+  overflow-wrap: anywhere;
+}

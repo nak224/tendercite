@@ -297,7 +297,8 @@ function Comparison() {
             <ul>
               {result.profile.skills.map((s) => (
                 <li key={s.skill_id}>
-                  {s.original_label} → <code>{s.normalized_label}</code>
+                  <span className="source-page-text">{s.original_label}</span> →{' '}
+                  <code>{s.normalized_label}</code>
                 </li>
               ))}
             </ul>
@@ -305,7 +306,7 @@ function Comparison() {
             <p>No declared profile skills.</p>
           )}
           <h3>Opportunity requested skills</h3>
-          <div className="table-wrap">
+          <div className="native-match-table">
             <table>
               <thead>
                 <tr>
@@ -318,7 +319,7 @@ function Comparison() {
               <tbody>
                 {result.opportunity.required_skills.map((s, i) => (
                   <tr key={i}>
-                    <td>{s.original_label}</td>
+                    <td className="source-page-text">{s.original_label}</td>
                     <td>
                       <code>{s.normalized_label}</code>
                     </td>
