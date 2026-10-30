@@ -14,6 +14,7 @@ import { Profiles } from './pages/Profiles';
 import { Opportunities } from './pages/Opportunities';
 import { OpportunityMatching } from './pages/OpportunityMatching';
 import { Pipeline } from './pages/Pipeline';
+import { Dashboard } from './pages/Dashboard';
 import './styles.css';
 
 // Construct once outside React StrictMode in production; tests may own a disposable router.
@@ -21,7 +22,8 @@ export function createWorkspaceRouter() {
   return createBrowserRouter(
     createRoutesFromElements(
       <Route element={<Layout />}>
-        <Route index element={<Navigate to="/tenders" replace />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="tenders/*" element={<Tenders />} />
         <Route path="profiles" element={<Profiles />} />
         <Route path="opportunities" element={<Opportunities />} />
