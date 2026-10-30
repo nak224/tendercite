@@ -426,6 +426,15 @@ main {
   white-space: nowrap;
 }
 
+.discovery-results {
+  list-style: none;
+  padding: 0;
+}
+
+.discovery-results > li {
+  overflow-wrap: anywhere;
+}
+
 .dashboard-pipeline-records {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

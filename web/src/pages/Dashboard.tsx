@@ -63,6 +63,9 @@ export function Dashboard() {
           <Link className="button" to="/opportunities">
             Add Opportunity
           </Link>
+          <Link className="button" to="/discover">
+            Discover Opportunities
+          </Link>
           <Link className="button" to="/matching">
             Compare Skills
           </Link>
@@ -72,8 +75,8 @@ export function Dashboard() {
         </div>
         <p className="dashboard-scope">
           Actions open existing pages. Nothing is compared, saved, submitted or approved
-          automatically. Current native workflows use manual declarations and deterministic label
-          comparison; AI discovery and recommendations are future work.
+          automatically. Current native workflows use saved metadata, manual skill declarations and
+          deterministic label comparison; AI discovery and recommendations are future work.
         </p>
       </section>
       {tenderciteConfigured() ? (
@@ -179,7 +182,7 @@ function NativeOverview() {
         </section>
         <section className="panel" aria-labelledby="dashboard-opportunities">
           <h2 id="dashboard-opportunities">Opportunities</h2>
-          <p>Manually recorded external references, not verified tender analyses.</p>
+          <p>Saved external references (manual or TED import), not verified tender analyses.</p>
           <Preview name="Opportunities" query={opportunities}>
             {(data) => (
               <>
