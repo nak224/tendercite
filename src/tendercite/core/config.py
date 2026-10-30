@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     capability_mapping_api_enabled: bool = False
     capability_report_api_enabled: bool = False
     profiles_api_enabled: bool = False
+    opportunities_api_enabled: bool = False
     embedding_model: str = "intfloat/multilingual-e5-small"
     embedding_revision: str | None = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
 
