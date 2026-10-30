@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { makeQueryClient } from './api/queryClient';
 import { Layout } from './components/Layout';
 import { Tenders } from './pages/Tenders';
+import { Profiles } from './pages/Profiles';
 import './styles.css';
 
 export function App() {
@@ -15,6 +16,7 @@ export function App() {
           <Route element={<Layout />}>
             <Route index element={<Navigate to="/tenders" replace />} />
             <Route path="tenders/*" element={<Tenders />} />
+            <Route path="profiles" element={<Profiles />} />
             <Route
               path="*"
               element={<p role="alert">Page not found. Use the TenderCite navigation.</p>}

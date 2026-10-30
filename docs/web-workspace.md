@@ -80,6 +80,7 @@ an import. See [snapshot HTTP contract](integrations/capability-snapshot-http.md
 
 | Workflow | React workspace | Remaining limitation |
 | --- | --- | --- |
+| Native manual profiles | `/profiles`: freelancer/company CRUD, manual skills and keyword preferences | Separate profiles API flag; no snapshot dependency or profile matching; [guide](integrations/native-profiles.md) |
 | Documents | Explicit multi-PDF upload, list, metadata and source-page text | No embedded PDF viewer; retrieval/indexing stays disabled unless separately configured |
 | Analyses/findings | Current findings, known-ID analysis lookup, source navigation | No analysis-list API; analyses without findings need a known ID |
 | Manual intake | Source selection, exact quotations, validate, explicit idempotent commit | One citation editable per requirement; all new findings remain UNREVIEWED |
@@ -131,11 +132,16 @@ A separate small React workflow installs only the locked Node
 package and runs types/lint/format/tests/build. Python Docker images exclude `web/` and continue
 serving the existing backend/Streamlit setup; React is not silently bundled into that image.
 
-An opt-in genuine browser smoke is in `web/e2e/standalone.spec.ts`. Stop Team Capacity Engine's
-frontend and PostgreSQL backend before running it, and point TenderCite to a **new empty disposable
+Opt-in genuine browser smokes are in `web/e2e/standalone.spec.ts` and `web/e2e/profiles.spec.ts`.
+The profile test creates five manual skills, saves, reloads, edits/removes/adds skills and saves
+again using only native profile endpoints. Enable `TENDERCITE_PROFILES_API_ENABLED=true` for it;
+no snapshot is required. Run the two tests together only against fresh disposable data.
+For an independence check, stop Team Capacity Engine's frontend and PostgreSQL backend.
+Point TenderCite to a **new empty disposable
 directory**, not any private/pilot database. Disable retrieval and provider configuration; enable
-snapshot, mapping and report flags explicitly. The test refuses nonempty document/finding lists before mutations,
-but that check alone does not establish ownership of a database. Use a fresh disposable directory.
+snapshot, mapping, report and profiles flags explicitly. The tests refuse nonempty document/finding
+or profile lists before their respective writes, but that check alone does not establish ownership
+of a database. Use a fresh disposable directory.
 
 Install Chromium once if needed (`cd web; npx playwright install chromium`), start the two
 TenderCite servers as above, then in terminal 3:

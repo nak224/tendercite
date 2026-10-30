@@ -10,6 +10,7 @@ from tendercite.domain.models import ChunkRead, DocumentRead, PageRead
 from tendercite.repositories.capability_mapping_schema import MAPPING_SCHEMA_SQL
 from tendercite.repositories.capability_mappings import CapabilityMappingRepositoryMixin
 from tendercite.repositories.curated_intake import CuratedIntakeRepositoryMixin
+from tendercite.repositories.profiles import PROFILE_SCHEMA_SQL, ProfileRepositoryMixin
 from tendercite.services.capabilities import (
     CapabilityError,
     CapabilityErrorCode,
@@ -19,7 +20,9 @@ from tendercite.services.capabilities import (
 MAX_CAPABILITY_LIST_LIMIT = 100
 
 
-class SqliteRepository(CapabilityMappingRepositoryMixin, CuratedIntakeRepositoryMixin):
+class SqliteRepository(
+    CapabilityMappingRepositoryMixin, CuratedIntakeRepositoryMixin, ProfileRepositoryMixin
+):
     def __init__(
         self, database_path: Path, *, read_only: bool = False, initialize: bool = True
     ) -> None:
@@ -126,6 +129,7 @@ class SqliteRepository(CapabilityMappingRepositoryMixin, CuratedIntakeRepository
                 """
             )
             conn.executescript(MAPPING_SCHEMA_SQL)
+            conn.executescript(PROFILE_SCHEMA_SQL)
 
     def import_capability_snapshot(self, snapshot: CapabilitySnapshot) -> CapabilityImportResult:
         # Revalidate even programmatically constructed/copied models before starting a write.
