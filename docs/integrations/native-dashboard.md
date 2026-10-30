@@ -1,7 +1,8 @@
 # Unified dashboard and native workflow (UI-1b.11)
 
 `/` now opens **Dashboard** at `/dashboard`. All existing `/profiles`, `/opportunities`,
-`/matching`, `/pipeline` and `/tenders` routes/deep links remain available. The dashboard connects
+`/matching`, `/pipeline` and `/tenders` routes/deep links remain available. `/discover` now adds
+the separately gated [official TED search/import workflow](ted-discovery.md). The dashboard connects
 existing workflows through read-only previews and navigation; it adds no backend API, database
 table, matching algorithm or mutation.
 
@@ -48,7 +49,10 @@ separate; the production build intentionally has no configured development proxy
 1. **Create Profile** → Profiles: explicitly create a freelancer/company profile, enter manual
    skill declarations and save. Return to Dashboard to see its name/type, without exposing skills.
 2. **Add Opportunity** → Opportunities: create and save the external project/tender reference,
-   organization, date-only submission deadline and required skill labels.
+   organization, date-only submission deadline and required skill labels. Alternatively, **Discover
+   Opportunities** → search TED → inspect → explicitly save. Open the saved opportunity and add
+   skills manually; importing never infers skills or creates tracking. Original TED provenance
+   remains distinct from manual declarations and later local edits.
 3. On its dashboard card or Opportunities row, **Compare this opportunity** loads the saved source
    and preselects it in Opportunity Matching. Select a saved profile and click **Compare Skills**.
    Results are normalized exact-label comparisons, not experience/eligibility verification.
@@ -102,6 +106,7 @@ not merge models or treat declared skills, human review or manual stages as qual
 
 | Route | Supported selection |
 | --- | --- |
+| `/opportunities?opportunity_id=UUID` | Load the current saved opportunity in the existing editor, including immutable TED provenance when imported |
 | `/matching?opportunity_id=UUID` | Load and preselect the saved opportunity; profile selection/comparison remain explicit |
 | `/pipeline?opportunity_id=UUID` | Load and select the saved opportunity; never automatically create tracking |
 | `/pipeline?pipeline_id=UUID` | Load the current existing entry/revision for inspection and explicit editing |
@@ -146,9 +151,9 @@ through React, reloads Dashboard, checks current backend state, and takes genuin
 screenshots under ignored test output. It uses no mocked retrieval/results or paid providers.
 The existing tender smoke now enters `/tenders` explicitly; its workflow and deep links are preserved.
 
-This milestone implements integration, not AI discovery, recommendations, scraping, CV extraction,
+The dashboard milestone implements integration, not AI discovery, recommendations, scraping, CV extraction,
 applications, emails, notifications, billing or pipeline automation. The current production build
-still reports a nonblocking approximately 510 kB minified-chunk warning; route splitting/performance
+with DISC-1a reports a nonblocking approximately 524 kB minified-chunk warning; route splitting/performance
 work remains separate from this functional milestone.
 
 Validation on 2026-10-30 (Python 3.12.14, Node 24.19.0): **579 frontend tests / 30 files passed**;

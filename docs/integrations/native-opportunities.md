@@ -2,8 +2,9 @@
 
 **Opportunities** at `/opportunities` stores local references to externally sourced public tenders,
 freelance projects and other potential business opportunities. TenderCite does not host or publish
-job listings. Everything entered here is a manual declaration, not an independently verified source
-record. No document, native profile, workforce snapshot, external integration or AI model is needed.
+job listings. Records may be manual declarations or explicitly imported [official TED metadata](ted-discovery.md).
+Their origins remain distinct; neither is independently verified qualification evidence. Manual
+creation needs no document, native profile, workforce snapshot, external integration or AI model.
 
 ## Setup and manual workflow
 
@@ -51,7 +52,7 @@ legal obligation. Past dates are allowed; no reminders, expiry decisions or noti
 
 | Record | Meaning | Current relationship |
 | --- | --- | --- |
-| Native opportunity | Unverified, manually entered external project/tender reference and skill labels | Independent local opportunity record |
+| Native opportunity | Unverified manual reference or explicitly imported TED metadata; manually selected skill labels | Independent local opportunity record |
 | PDF-based tender analysis | Persisted analysis/findings with source quotations and separate human review | No automatic association with opportunities |
 | Native capability profile | Manually declared freelancer/company skills and preferences | Explicit normalized label comparison in Opportunity Matching |
 
@@ -76,14 +77,18 @@ location (120), work arrangement (REMOTE/HYBRID/ON_SITE/null), deadline, source 
 source URL (2048), required_skills (at most 100 plain labels, 1–100 each), requirements_description
 (2000). Strings are trimmed; duplicate skill labels are rejected after Unicode NFKC, case-folding
 and whitespace collapse. Browser checks are convenience checks; server validation is authoritative.
-Source origin is `manual_operator_entry`; verification is always `NOT_VERIFIED`. Unknown fields and
+Source origin is `manual_operator_entry` for manual creation, or `ted_import` with immutable
+`ted-opportunity-source-1` metadata for explicit discovery import. Manual records omit absent
+`external_source` on serialization, preserving their previous JSON shape. Verification is always
+`NOT_VERIFIED`. Unknown fields and
 unsupported versions are rejected, including implicit analysis/profile relationships or verified status.
 
 Source URLs are optional references only. HTTP/HTTPS syntax is checked without DNS/network access.
 Credentials, control/whitespace characters, backslashes, malformed ports and non-HTTP schemes are
 rejected. The entered URL is preserved after trimming, not rewritten or crawled. The saved link
 opens only after an explicit browser click in a separate tab, with noopener/noreferrer and no
-referrer. There are no previews, server fetches, discovery providers or automatic external requests.
+referrer. Ordinary opportunity CRUD never fetches the entered URL. The separate, default-off
+discovery API contacts only the fixed official TED endpoint after an explicit operator action.
 
 ## Local HTTP API and persistence
 
@@ -133,6 +138,7 @@ Listings contain metadata, not source URLs or full requirements. Responses carry
 no-store`. Errors expose only fixed codes, never raw input, source URLs, SQL, paths or traces:
 OPPORTUNITIES_API_DISABLED (404), INVALID_OPPORTUNITY_INPUT (422), OPPORTUNITY_NOT_FOUND (404),
 OPPORTUNITY_ID_CONFLICT / OPPORTUNITY_REVISION_CONFLICT / OPPORTUNITY_STORAGE_INTEGRITY (409),
+OPPORTUNITY_PROVENANCE_CONFLICT (409, attempted change to imported source attribution),
 OPPORTUNITY_REQUEST_TOO_LARGE (413), DATABASE_FAILED (503), OPPORTUNITY_OPERATION_FAILED (500).
 Unsupported media/encoding and incomplete/invalid length transport errors use the existing fixed codes.
 
@@ -162,6 +168,9 @@ through a separate explicit read-only label comparison. Opportunity CRUD remains
 existing opportunity. Its SUBMITTED/WON/LOST values are operator declarations, not external actions
 or verified facts. Creating or editing an opportunity does not add or advance pipeline entries.
 
-Discovery, scraping, application submission, notifications, deletion, revision history and analysis
-associations are not implemented. No following
-milestone or qualification decision is introduced.
+The separate [TED discovery workflow](ted-discovery.md) now imports selected metadata into this
+same storage, preserving operator edits on repeated import. `/opportunities?opportunity_id=UUID`
+opens a saved record through its authoritative detail endpoint. Imported records start with no
+skills; manual edits and later comparisons/tracking remain explicit. Scraping, automatic discovery,
+source synchronization, application submission, notifications, deletion, revision history and
+analysis associations remain unimplemented. No qualification decision is introduced.
