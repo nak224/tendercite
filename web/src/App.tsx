@@ -6,6 +6,7 @@ import { Layout } from './components/Layout';
 import { Tenders } from './pages/Tenders';
 import { Profiles } from './pages/Profiles';
 import { Opportunities } from './pages/Opportunities';
+import { OpportunityMatching } from './pages/OpportunityMatching';
 import './styles.css';
 
 export function App() {
@@ -19,6 +20,7 @@ export function App() {
             <Route path="tenders/*" element={<Tenders />} />
             <Route path="profiles" element={<Profiles />} />
             <Route path="opportunities" element={<Opportunities />} />
+            <Route path="matching" element={<OpportunityMatching />} />
             <Route
               path="*"
               element={<p role="alert">Page not found. Use the TenderCite navigation.</p>}

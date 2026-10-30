@@ -18,6 +18,7 @@ export function Layout() {
         <nav aria-label="Primary navigation">
           <NavLink to="/profiles">Profiles</NavLink>
           <NavLink to="/opportunities">Opportunities</NavLink>
+          <NavLink to="/matching">Opportunity Matching</NavLink>
           <NavLink to="/tenders" end>
             Documents &amp; findings
           </NavLink>
