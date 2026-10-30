@@ -206,6 +206,14 @@ function OpportunityWorkspace() {
                       </>
                     )}{' '}
                     · Revision {p.revision}
+                    <div className="actions">
+                      <Link to={`/matching?opportunity_id=${p.opportunity_id}`}>
+                        Compare this opportunity
+                      </Link>
+                      <Link to={`/pipeline?opportunity_id=${p.opportunity_id}`}>
+                        Track this opportunity
+                      </Link>
+                    </div>
                   </li>
                 ))}
               </ul>

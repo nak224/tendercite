@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { tenderciteConfigured } from '../api/tendercite';
 import { listProfiles } from '../api/profiles';
-import { listOpportunities } from '../api/opportunities';
+import { listOpportunities, type OpportunityMetadata } from '../api/opportunities';
 import { compareNativeSkills, NativeMatchError } from '../api/nativeMatching';
 import type { NativeMatchResult } from '../api/nativeMatching';
 import { Async } from '../components/ui';
+import { SavedNativeSelection } from '../components/SavedNativeSelection';
 
 export function OpportunityMatching() {
   return (
@@ -33,7 +34,9 @@ export function OpportunityMatching() {
         </p>
       </section>
       {tenderciteConfigured() ? (
-        <Comparison />
+        <SavedNativeSelection mode="matching">
+          {(context) => <Comparison initialOpportunity={context.opportunity} />}
+        </SavedNativeSelection>
       ) : (
         <p role="alert">
           TenderCite is not configured. Set the fixed local development proxy before comparing.
@@ -43,11 +46,12 @@ export function OpportunityMatching() {
   );
 }
 
-function Comparison() {
+function Comparison({ initialOpportunity }: { initialOpportunity?: OpportunityMetadata }) {
   const [profileOffset, setProfileOffset] = useState(0);
   const [opportunityOffset, setOpportunityOffset] = useState(0);
   const [profileId, setProfileId] = useState('');
-  const [opportunityId, setOpportunityId] = useState('');
+  const [opportunityId, setOpportunityId] = useState(initialOpportunity?.opportunity_id ?? '');
+  const [linkedOpportunity, setLinkedOpportunity] = useState(initialOpportunity);
   // Private comparison output belongs only to this component, never query/browser storage.
   const [result, setResult] = useState<NativeMatchResult | null>(null);
   const [error, setError] = useState('');
@@ -78,9 +82,13 @@ function Comparison() {
     queryFn: ({ signal }) => listOpportunities(opportunityOffset, signal),
   });
   const profile = profiles.data?.profiles.find((p) => p.profile_id === profileId);
-  const opportunity = opportunities.data?.opportunities.find(
-    (o) => o.opportunity_id === opportunityId,
-  );
+  const availableOpportunities = [...(opportunities.data?.opportunities ?? [])];
+  if (
+    linkedOpportunity &&
+    !availableOpportunities.some((o) => o.opportunity_id === linkedOpportunity.opportunity_id)
+  )
+    availableOpportunities.push(linkedOpportunity);
+  const opportunity = availableOpportunities.find((o) => o.opportunity_id === opportunityId);
   function clear() {
     active.current?.abort();
     active.current = null;
@@ -195,7 +203,7 @@ function Comparison() {
                       }}
                     >
                       <option value="">Select saved opportunity</option>
-                      {data.opportunities.map((o) => (
+                      {availableOpportunities.map((o) => (
                         <option key={o.opportunity_id} value={o.opportunity_id}>
                           {o.title} · {o.opportunity_type} · {o.organization || 'No organization'} ·
                           revision {o.revision}
@@ -203,7 +211,7 @@ function Comparison() {
                       ))}
                     </select>
                   </label>
-                  {!data.opportunities.length && (
+                  {!availableOpportunities.length && (
                     <p>
                       No saved opportunities on this page.{' '}
                       <Link to="/opportunities">Create an opportunity</Link>.
@@ -238,6 +246,7 @@ function Comparison() {
           onClick={() => {
             clear();
             setRefreshRequired(false);
+            setLinkedOpportunity(undefined);
             setProfileId('');
             setOpportunityId('');
             void profiles.refetch();
@@ -270,6 +279,14 @@ function Comparison() {
           </p>
         )}
       </section>
+      {opportunity && (
+        <p>
+          <Link to={`/pipeline?opportunity_id=${opportunity.opportunity_id}`}>
+            Track selected opportunity
+          </Link>
+          . Tracking remains an explicit action.
+        </p>
+      )}
       {result && (
         <section className="panel" aria-label="Skill comparison results">
           <h2>Comparison results</h2>
