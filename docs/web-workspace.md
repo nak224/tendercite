@@ -80,8 +80,9 @@ an import. See [snapshot HTTP contract](integrations/capability-snapshot-http.md
 
 | Workflow | React workspace | Remaining limitation |
 | --- | --- | --- |
-| Native manual profiles | `/profiles`: freelancer/company CRUD, manual skills and keyword preferences | Separate profiles API flag; no snapshot dependency or profile matching; [guide](integrations/native-profiles.md) |
+| Native manual profiles | `/profiles`: freelancer/company CRUD, manual skills and keyword preferences | Separate profiles API flag; no snapshot dependency; [guide](integrations/native-profiles.md) |
 | Native manual opportunities | `/opportunities`: external opportunity references, skill labels, explicit saves and unsaved-edit confirmation | Separate opportunities API flag; no discovery, source fetching or analysis/profile dependency; [guide](integrations/native-opportunities.md) |
+| Native profile/opportunity matching | `/matching`: explicit saved-record skill-label comparison, exact normalized labels and counts | Separate default-off matching flag; revision conflicts require refresh; no qualification inference; [guide](integrations/native-matching.md) |
 | Documents | Explicit multi-PDF upload, list, metadata and source-page text | No embedded PDF viewer; retrieval/indexing stays disabled unless separately configured |
 | Analyses/findings | Current findings, known-ID analysis lookup, source navigation | No analysis-list API; analyses without findings need a known ID |
 | Manual intake | Source selection, exact quotations, validate, explicit idempotent commit | One citation editable per requirement; all new findings remain UNREVIEWED |
@@ -135,6 +136,8 @@ serving the existing backend/Streamlit setup; React is not silently bundled into
 
 Opt-in genuine browser smokes are in `web/e2e/standalone.spec.ts`, `web/e2e/profiles.spec.ts`
 and `web/e2e/opportunities.spec.ts`.
+`web/e2e/native-matching.spec.ts` has a separate opt-in and requires its **own fresh database**;
+see the [matching guide](integrations/native-matching.md) for setup and the stale-revision scenario.
 The profile test creates five manual skills, saves, reloads, edits/removes/adds skills and saves
 again using only native profile endpoints. Enable `TENDERCITE_PROFILES_API_ENABLED=true` for it;
 no snapshot is required. The opportunity test covers manual external references, skill edits,

@@ -155,6 +155,9 @@ Frontend tests cover the complete form, skill edits, unsaved-change confirmation
 The opt-in browser test runs create → requirements → save → reload → edit → save with synthetic data;
 the profile and tender browser regressions remain in the same suite. See [workspace tests](../web-workspace.md).
 
-Profile matching, discovery, scraping, application submission, acquisition tracking, pipeline stages,
+[Opportunity Matching](native-matching.md) now connects saved native profiles and opportunities
+through a separate explicit read-only label comparison. Opportunity CRUD remains independent.
+
+Discovery, scraping, application submission, acquisition tracking, pipeline stages,
 notifications, deletion, revision history and analysis associations are not implemented. No following
 milestone or qualification decision is introduced.
