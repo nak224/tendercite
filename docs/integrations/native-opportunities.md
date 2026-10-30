@@ -53,13 +53,13 @@ legal obligation. Past dates are allowed; no reminders, expiry decisions or noti
 | --- | --- | --- |
 | Native opportunity | Unverified, manually entered external project/tender reference and skill labels | Independent local opportunity record |
 | PDF-based tender analysis | Persisted analysis/findings with source quotations and separate human review | No automatic association with opportunities |
-| Native capability profile | Manually declared freelancer/company skills and preferences | No profile-to-opportunity matching yet |
+| Native capability profile | Manually declared freelancer/company skills and preferences | Explicit normalized label comparison in Opportunity Matching |
 
 A PUBLIC_TENDER opportunity does not create an AnalysisRun, Finding, quotation, review, assessment
 or mapping. A URL is not source verification. No automatic relationship or conversion is implemented.
-Existing workforce snapshot matching remains unchanged and separate. Future deterministic matching
-can compare native profile skill names with opportunity labels, but no matching, ranking or
-compatibility percentage is calculated here.
+Existing workforce snapshot matching remains unchanged and separate. [Opportunity Matching](native-matching.md)
+compares saved native skill labels explicitly, without ranking or compatibility percentages.
+Saving an opportunity never performs that comparison or creates acquisition tracking automatically.
 
 ## Contracts and bounds
 
@@ -158,6 +158,10 @@ the profile and tender browser regressions remain in the same suite. See [worksp
 [Opportunity Matching](native-matching.md) now connects saved native profiles and opportunities
 through a separate explicit read-only label comparison. Opportunity CRUD remains independent.
 
-Discovery, scraping, application submission, acquisition tracking, pipeline stages,
-notifications, deletion, revision history and analysis associations are not implemented. No following
+[Pipeline](native-pipeline.md) supports separate manual acquisition tracking and stages for an
+existing opportunity. Its SUBMITTED/WON/LOST values are operator declarations, not external actions
+or verified facts. Creating or editing an opportunity does not add or advance pipeline entries.
+
+Discovery, scraping, application submission, notifications, deletion, revision history and analysis
+associations are not implemented. No following
 milestone or qualification decision is introduced.
