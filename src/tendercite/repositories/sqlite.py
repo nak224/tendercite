@@ -11,6 +11,7 @@ from tendercite.repositories.capability_mapping_schema import MAPPING_SCHEMA_SQL
 from tendercite.repositories.capability_mappings import CapabilityMappingRepositoryMixin
 from tendercite.repositories.curated_intake import CuratedIntakeRepositoryMixin
 from tendercite.repositories.opportunities import OPPORTUNITY_SCHEMA_SQL, OpportunityRepositoryMixin
+from tendercite.repositories.pipeline import PIPELINE_SCHEMA_SQL, PipelineRepositoryMixin
 from tendercite.repositories.profiles import PROFILE_SCHEMA_SQL, ProfileRepositoryMixin
 from tendercite.services.capabilities import (
     CapabilityError,
@@ -26,6 +27,7 @@ class SqliteRepository(
     CuratedIntakeRepositoryMixin,
     ProfileRepositoryMixin,
     OpportunityRepositoryMixin,
+    PipelineRepositoryMixin,
 ):
     def __init__(
         self, database_path: Path, *, read_only: bool = False, initialize: bool = True
@@ -135,6 +137,7 @@ class SqliteRepository(
             conn.executescript(MAPPING_SCHEMA_SQL)
             conn.executescript(PROFILE_SCHEMA_SQL)
             conn.executescript(OPPORTUNITY_SCHEMA_SQL)
+            conn.executescript(PIPELINE_SCHEMA_SQL)
 
     def import_capability_snapshot(self, snapshot: CapabilitySnapshot) -> CapabilityImportResult:
         # Revalidate even programmatically constructed/copied models before starting a write.
