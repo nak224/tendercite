@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Async, Empty } from '../components/ui';
 import { OpportunityForm } from '../components/OpportunityForm';
+import { SavedNativeSelection } from '../components/SavedNativeSelection';
 import { tenderciteConfigured } from '../api/tendercite';
 import {
   emptyOpportunity,
@@ -15,11 +16,13 @@ import {
   type OpportunityRecord,
 } from '../api/opportunities';
 
-function OpportunityWorkspace() {
+function OpportunityWorkspace({ initialRecord }: { initialRecord?: OpportunityRecord }) {
   const [offset, setOffset] = useState(0);
-  const [id, setId] = useState('');
-  const [record, setRecord] = useState<OpportunityRecord | null>(null);
-  const [initial, setInitial] = useState<NativeOpportunity | null>(null);
+  const [id, setId] = useState(initialRecord?.opportunity_id ?? '');
+  const [record, setRecord] = useState<OpportunityRecord | null>(initialRecord ?? null);
+  const [initial, setInitial] = useState<NativeOpportunity | null>(
+    initialRecord?.opportunity ?? null,
+  );
   const [version, setVersion] = useState(0);
   const [observed, setObserved] = useState<OpportunityRecord | null>(null);
   const [busy, setBusy] = useState(false);
@@ -256,6 +259,30 @@ function OpportunityWorkspace() {
               confirmation.
             </p>
           )}
+          {record?.opportunity.external_source && (
+            <aside aria-label="TED import provenance">
+              <p>
+                Imported from TED publication {record.opportunity.external_source.external_id} at{' '}
+                {record.opportunity.external_source.retrieved_at}. This source attribution is
+                retained through local edits. Metadata and qualifications are NOT_VERIFIED.
+              </p>
+              <a
+                href={record.opportunity.external_source.original_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                referrerPolicy="no-referrer"
+              >
+                Original TED publication
+              </a>
+              {record.opportunity.external_source.mapping_warnings.length > 0 && (
+                <p>
+                  Import mapping notes:{' '}
+                  {record.opportunity.external_source.mapping_warnings.join(', ')}. Check the
+                  original notice.
+                </p>
+              )}
+            </aside>
+          )}
           {record?.opportunity.source_url && (
             <p>
               Stored external reference:{' '}
@@ -303,7 +330,7 @@ function OpportunityWorkspace() {
         </section>
       )}
       <p>
-        Opportunities are manually entered external references, not listings hosted or published by
+        Opportunities are locally saved external references, not listings hosted or published by
         TenderCite. Their details, requirements and deadlines are not independently verified. A
         PUBLIC_TENDER opportunity is not an analyzed tender or proof of eligibility. Saving does not
         automatically compare or track it. Use <Link to="/matching">Opportunity Matching</Link> for
@@ -322,7 +349,9 @@ export function Opportunities() {
         </div>
       </div>
       {tenderciteConfigured() ? (
-        <OpportunityWorkspace />
+        <SavedNativeSelection mode="opportunities">
+          {(context) => <OpportunityWorkspace initialRecord={context.opportunityRecord} />}
+        </SavedNativeSelection>
       ) : (
         <Empty>
           TenderCite is not configured. Set TENDERCITE_PROXY_TARGET for the Vite development server
