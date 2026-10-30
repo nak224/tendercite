@@ -1,9 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './App';
+import { App, createWorkspaceRouter } from './App';
+
+const router = createWorkspaceRouter();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <App router={router} />
   </StrictMode>,
 );

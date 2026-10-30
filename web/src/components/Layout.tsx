@@ -19,6 +19,7 @@ export function Layout() {
           <NavLink to="/profiles">Profiles</NavLink>
           <NavLink to="/opportunities">Opportunities</NavLink>
           <NavLink to="/matching">Opportunity Matching</NavLink>
+          <NavLink to="/pipeline">Pipeline</NavLink>
           <NavLink to="/tenders" end>
             Documents &amp; findings
           </NavLink>

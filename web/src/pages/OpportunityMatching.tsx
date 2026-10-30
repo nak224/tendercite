@@ -27,6 +27,10 @@ export function OpportunityMatching() {
           <Link to="/tenders/capability-report">Capability Matching</Link>. No ranking,
           qualification score or Go/No-Go decision is made.
         </p>
+        <p>
+          To pursue an opportunity, add it explicitly in <Link to="/pipeline">Pipeline</Link>.
+          Comparing skills never creates or changes tracking.
+        </p>
       </section>
       {tenderciteConfigured() ? (
         <Comparison />
