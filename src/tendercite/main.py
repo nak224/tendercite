@@ -12,6 +12,7 @@ from tendercite.api.routes.evidence import router as evidence_router
 from tendercite.api.routes.exports import router as exports_router
 from tendercite.api.routes.health import router as health_router
 from tendercite.api.routes.matrix import router as matrix_router
+from tendercite.api.routes.native_matches import router as native_matches_router
 from tendercite.api.routes.opportunities import router as opportunities_router
 from tendercite.api.routes.profiles import router as profiles_router
 from tendercite.api.routes.reviews import router as reviews_router
@@ -53,3 +54,5 @@ app.include_router(capability_reports_router, prefix="/api/v1")
 app.include_router(profiles_router, prefix="/api/v1")
 
 app.include_router(opportunities_router, prefix="/api/v1")
+
+app.include_router(native_matches_router, prefix="/api/v1")

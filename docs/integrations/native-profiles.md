@@ -65,8 +65,10 @@ server validation remains authoritative. Strict models reject unexpected fields 
 These are **native profiles**, not schema 1.0 workforce snapshots. There are no workforce members,
 capacity periods, external catalog requirements or fabricated `team-capacity-engine` provenance.
 Internal skill IDs do not imply equivalence to an imported snapshot's catalog UUIDs. Existing
-snapshot imports, mappings and matching remain separate and unchanged. No adapter or profile
-matching is implemented. Stable identities and explicit profile/skill provenance provide a basis
+snapshot imports, mappings and matching remain separate and unchanged. No snapshot adapter is
+implemented. [Opportunity Matching](native-matching.md) independently compares saved native skill
+labels with explicit revision checks, without qualification inference. Stable identities and
+explicit profile/skill provenance provide a basis
 for later extraction, but any future extraction source must be introduced explicitly with honest
 provenance/versioning; the current API accepts only manual, unverified declarations.
 

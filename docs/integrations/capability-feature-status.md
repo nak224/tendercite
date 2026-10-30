@@ -2,8 +2,9 @@
 
 | Feature | TenderCite HTTP | Standalone React UI | Remaining work |
 | --- | --- | --- | --- |
-| Native freelancer/company profiles | Available via separate local profiles flag | Profiles: create, reopen, edit skills/preferences and explicit revision-checked saves | Manual declarations only; no profile matching or snapshot adapter |
-| Native manual opportunities | Available via separate local opportunities flag | Opportunities: create/reopen/edit external references, skill labels and date-only deadlines | Unverified declarations; no discovery, analysis association or profile matching |
+| Native freelancer/company profiles | Available via separate local profiles flag | Profiles: create, reopen, edit skills/preferences and explicit revision-checked saves | Manual declarations only; no snapshot adapter |
+| Native manual opportunities | Available via separate local opportunities flag | Opportunities: create/reopen/edit external references, skill labels and date-only deadlines | Unverified declarations; no discovery or analysis association |
+| Native profile/opportunity matching | Read-only preview via separate default-off native matching flag | Opportunity Matching: saved-record selectors, explicit compare, original/normalized labels and counts | Exact label equality only; no semantic matching, qualification proof, scores or saved results; [guide](native-matching.md) |
 | PDF intake / source pages | Available | Available | Rich PDF viewer later |
 | Manual requirements / human review | Available | Available | Review UX improvements later |
 | Manual Go/No-Go assessment | Available | Available | No automatic compliance claims |

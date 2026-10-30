@@ -516,6 +516,47 @@ class SqliteRepository(
             if (row := self.matrix_row(finding)) is not None
         ]
 
+    def load_native_match_records(self, selection):
+        """Read both native records and their revision guards in one SQLite snapshot."""
+        from pydantic import ValidationError
+
+        from tendercite.domain.native_matching import (
+            NativeMatchError,
+            NativeMatchErrorCode,
+            NativeMatchSelection,
+        )
+        from tendercite.domain.opportunities import OpportunityError
+        from tendercite.domain.profiles import ProfileError
+
+        try:
+            selection = NativeMatchSelection.model_validate(selection)
+        except ValidationError:
+            raise NativeMatchError(NativeMatchErrorCode.INVALID_INPUT) from None
+        try:
+            with self._connect() as conn:
+                conn.execute("BEGIN")
+                profile = self._stored_profile(
+                    conn.execute(
+                        "SELECT * FROM native_profiles WHERE profile_id=?",
+                        (str(selection.profile_id),),
+                    ).fetchone()
+                )
+                opportunity = self._stored_opportunity(
+                    conn.execute(
+                        "SELECT * FROM native_opportunities WHERE opportunity_id=?",
+                        (str(selection.opportunity_id),),
+                    ).fetchone()
+                )
+                if profile.revision != selection.expected_profile_revision:
+                    raise NativeMatchError(NativeMatchErrorCode.PROFILE_CONFLICT)
+                if opportunity.revision != selection.expected_opportunity_revision:
+                    raise NativeMatchError(NativeMatchErrorCode.OPPORTUNITY_CONFLICT)
+                return profile, opportunity
+        except (ProfileError, OpportunityError) as exc:
+            raise NativeMatchError(NativeMatchErrorCode(exc.code.value)) from None
+        except sqlite3.Error:
+            raise NativeMatchError(NativeMatchErrorCode.DATABASE_FAILED) from None
+
     def set_assessment(self, finding_id: str, request):
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")

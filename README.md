@@ -24,7 +24,8 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Human-managed Go / No-Go statuses, defaulting to CLARIFICATION_NEEDED.
 - Independent React workspace in `web/` for documents, manual intake, reviews, assessments, snapshot import, manual skill mapping and recorded capability coverage.
 - Native manual freelancer/company profiles at `/profiles`, independent of workforce snapshots, with explicit revision-checked saves and unverified skill declarations.
-- Native manual opportunities at `/opportunities`: local external project/tender references, skill labels, date-only deadlines and revision-checked saves; no source fetching or matching.
+- Native manual opportunities at `/opportunities`: local external project/tender references, skill labels, date-only deadlines and revision-checked saves; no source fetching.
+- Explicit native profile/opportunity skill-label comparison at `/matching`: normalized exact equality with original labels, counts and revision checks; no qualification score or inference.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
 - Synthetic evaluation corpus, offline tests, hashed dependency locks, Docker and CI definitions.
 
@@ -88,7 +89,10 @@ queries; writes remain explicit. Production hosting/authentication are separate 
 Workforce snapshot generation stays in the optional Team Capacity Engine application or another
 compatible producer. [Native profiles](docs/integrations/native-profiles.md) can instead be created
 and edited entirely within TenderCite, without a producer or snapshot. They are separate manual
-declarations and do not yet participate in matching. Snapshot workflows use the existing import
+declarations. [Opportunity Matching](docs/integrations/native-matching.md) compares saved native
+skill labels using NFKC, case-folding and whitespace normalization, behind a separate default-off
+local flag. It does not verify qualifications or use workforce snapshots. Snapshot workflows use
+the existing import
 contract without requiring a workforce server. [Native opportunities](docs/integrations/native-opportunities.md)
 can be created and edited independently of profiles, documents and analyses. They are unverified
 external references, not job listings published by TenderCite. Bounded snapshot selection and explicit mapping

@@ -322,3 +322,23 @@ export function tenderOpportunityWrite(
     responseError,
   );
 }
+
+// Read-only preview; explicit POST with the same fixed-origin transport and no retries.
+export function tenderNativeMatchPost(
+  body: string,
+  signal: AbortSignal,
+  responseError: (response: Response) => Promise<Error>,
+): Promise<unknown> {
+  return tenderRequest(
+    'native-matches/preview',
+    {
+      method: 'POST',
+      body,
+      signal,
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'error',
+    },
+    false,
+    responseError,
+  );
+}
