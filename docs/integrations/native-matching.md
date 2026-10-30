@@ -34,6 +34,9 @@ and eligibility remain `NOT_VERIFIED`; availability remains `NOT_EVALUATED`.
 
 Use [Pipeline](native-pipeline.md) to track pursuing a saved opportunity explicitly. Matching is
 optional, never creates a pipeline entry and never changes its stage or infers an outcome.
+[Dashboard](native-dashboard.md) and Opportunities can preselect a saved opportunity through a
+validated identity link. The profile and **Compare Skills** action remain explicit; **Track selected
+opportunity** continues to Pipeline without automatically adding it.
 
 This is independent of **Capability Matching**, which uses imported workforce snapshots, reviewed
 findings, explicit approved ALL_OF UUID mappings and recorded individual skill assignments. Native

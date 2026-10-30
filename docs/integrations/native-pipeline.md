@@ -3,6 +3,10 @@
 **Pipeline** at `/pipeline` records manual progress pursuing an existing external opportunity.
 It is local acquisition tracking, not a full CRM or an application-submission service.
 
+[Dashboard](native-dashboard.md) shows bounded pipeline previews and current action dates. Its
+existing-entry link loads the authoritative record/revision; a track-opportunity link only selects
+the saved opportunity and still requires **Add to Pipeline**. Matching remains optional.
+
 ## Local setup and complete manual workflow
 
 Use the [standalone workspace setup](../web-workspace.md) with permitted synthetic records only.
