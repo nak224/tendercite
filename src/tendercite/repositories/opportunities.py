@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from tendercite.domain.opportunities import (
     MAX_OPPORTUNITY_BYTES,
+    NativeOpportunity,
     OpportunityCreate,
     OpportunityError,
     OpportunityErrorCode,
@@ -18,6 +19,7 @@ from tendercite.domain.opportunities import (
     OpportunitySaveResult,
     OpportunityUpdate,
 )
+from tendercite.domain.ted_reference import publication_id, ted_opportunity_id
 
 OPPORTUNITY_SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS native_opportunities (
@@ -126,19 +128,57 @@ class OpportunityRepositoryMixin:
                 if record.revision != 1 or record.opportunity != request.opportunity:
                     raise OpportunityError(OpportunityErrorCode.ID_CONFLICT)
                 return OpportunitySaveResult(status="ALREADY_PRESENT", record=record)
-            now = datetime.now(UTC)
-            record = OpportunityRecord(
-                opportunity_id=request.opportunity_id,
-                revision=1,
-                created_at=now,
-                updated_at=now,
-                opportunity=request.opportunity,
-            )
-            conn.execute(
-                "INSERT INTO native_opportunities VALUES (?, ?, ?)",
-                (identity, 1, self._opportunity_payload(record)),
-            )
-            return OpportunitySaveResult(status="CREATED", record=record)
+            return self._insert_opportunity(conn, request.opportunity_id, request.opportunity)
+
+    def _insert_opportunity(self, conn, identity, opportunity):
+        now = datetime.now(UTC)
+        record = OpportunityRecord(
+            opportunity_id=identity,
+            revision=1,
+            created_at=now,
+            updated_at=now,
+            opportunity=opportunity,
+        )
+        conn.execute(
+            "INSERT INTO native_opportunities VALUES (?, ?, ?)",
+            (str(identity), 1, self._opportunity_payload(record)),
+        )
+        return OpportunitySaveResult(status="CREATED", record=record)
+
+    def _ted_existing(self, conn, notice_id):
+        identity = ted_opportunity_id(notice_id)
+        row = conn.execute(
+            "SELECT * FROM native_opportunities WHERE opportunity_id=?", (str(identity),)
+        ).fetchone()
+        if row is None:
+            return None
+        record = self._stored_opportunity(row)
+        source = record.opportunity.external_source
+        if (
+            record.opportunity.source_origin != "ted_import"
+            or source is None
+            or source.external_id != notice_id
+        ):
+            raise OpportunityError(OpportunityErrorCode.ID_CONFLICT)
+        return OpportunitySaveResult(status="ALREADY_PRESENT", record=record)
+
+    def find_ted_opportunity(self, notice_id: str) -> OpportunitySaveResult | None:
+        try:
+            notice_id = publication_id(notice_id)
+        except ValueError:
+            raise OpportunityError(OpportunityErrorCode.INVALID_INPUT) from None
+        with self._opportunity_transaction() as conn:
+            return self._ted_existing(conn, notice_id)
+
+    def import_ted_opportunity(self, opportunity: NativeOpportunity) -> OpportunitySaveResult:
+        opportunity = self._opportunity_input(opportunity, NativeOpportunity)
+        if opportunity.source_origin != "ted_import" or opportunity.external_source is None:
+            raise OpportunityError(OpportunityErrorCode.INVALID_INPUT)
+        notice_id = opportunity.external_source.external_id
+        with self._opportunity_transaction(write=True) as conn:
+            if current := self._ted_existing(conn, notice_id):
+                return current
+            return self._insert_opportunity(conn, ted_opportunity_id(notice_id), opportunity)
 
     def update_opportunity(
         self, opportunity_id: UUID, request: OpportunityUpdate
@@ -153,6 +193,11 @@ class OpportunityRepositoryMixin:
             )
             if current.revision != request.expected_revision or current.revision == 2147483647:
                 raise OpportunityError(OpportunityErrorCode.REVISION_CONFLICT)
+            if (
+                current.opportunity.source_origin != request.opportunity.source_origin
+                or current.opportunity.external_source != request.opportunity.external_source
+            ):
+                raise OpportunityError(OpportunityErrorCode.PROVENANCE_CONFLICT)
             record = OpportunityRecord(
                 opportunity_id=opportunity_id,
                 revision=current.revision + 1,
