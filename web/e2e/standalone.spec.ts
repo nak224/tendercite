@@ -38,7 +38,7 @@ test('standalone PDF → intake → human review → assessment → snapshot →
       mutations.push(new URL(sent.url()).pathname);
     }
   });
-  await page.goto('/');
+  await page.goto('/tenders');
   await expect(page.getByText('No documents available.', { exact: true })).toBeVisible();
   const file = syntheticPdf(
     'standalone-synthetic.pdf',

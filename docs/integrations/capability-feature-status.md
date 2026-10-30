@@ -2,6 +2,7 @@
 
 | Feature | TenderCite HTTP | Standalone React UI | Remaining work |
 | --- | --- | --- | --- |
+| Unified native dashboard | Existing independently flagged list/detail APIs; no new endpoint | Default `/dashboard`, four-record previews, date-only action labels and saved-identity workflow links | Bounded first pages only; no exact aggregate counts or automatic actions; [guide](native-dashboard.md) |
 | Native freelancer/company profiles | Available via separate local profiles flag | Profiles: create, reopen, edit skills/preferences and explicit revision-checked saves | Manual declarations only; no snapshot adapter |
 | Native manual opportunities | Available via separate local opportunities flag | Opportunities: create/reopen/edit external references, skill labels and date-only deadlines | Unverified declarations; no discovery or analysis association |
 | Native profile/opportunity matching | Read-only preview via separate default-off native matching flag | Opportunity Matching: saved-record selectors, explicit compare, original/normalized labels and counts | Exact label equality only; no semantic matching, qualification proof, scores or saved results; [guide](native-matching.md) |

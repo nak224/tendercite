@@ -52,7 +52,8 @@ npm --prefix web run dev
 TENDERCITE_PROXY_TARGET=http://127.0.0.1:8001 npm --prefix web run dev
 ```
 
-Open **http://127.0.0.1:5174**. `/` redirects to `/tenders`. Instead of a session variable,
+Open **http://127.0.0.1:5174**. `/` redirects to `/dashboard`; `/tenders` remains available for
+document/analysis workflows. Instead of a session variable,
 you may copy `web/.env.example` to ignored `web/.env`; restart Vite after changing the target.
 There is exactly one fixed development proxy, `/tendercite-api/api/v1` → `/api/v1`, and the
 existing 180-second upload/parsing inactivity timeouts. No `/api`/`/health` Team Capacity proxy,
@@ -80,6 +81,7 @@ an import. See [snapshot HTTP contract](integrations/capability-snapshot-http.md
 
 | Workflow | React workspace | Remaining limitation |
 | --- | --- | --- |
+| Unified native dashboard | `/dashboard`: quick actions, independent bounded previews, calendar action labels and contextual links | Four visible records from first pages of 50; loaded counts only, no exact totals/analytics; [guide](integrations/native-dashboard.md) |
 | Native manual profiles | `/profiles`: freelancer/company CRUD, manual skills and keyword preferences | Separate profiles API flag; no snapshot dependency; [guide](integrations/native-profiles.md) |
 | Native manual opportunities | `/opportunities`: external opportunity references, skill labels, explicit saves and unsaved-edit confirmation | Separate opportunities API flag; no discovery, source fetching or analysis/profile dependency; [guide](integrations/native-opportunities.md) |
 | Native profile/opportunity matching | `/matching`: explicit saved-record skill-label comparison, exact normalized labels and counts | Separate default-off matching flag; revision conflicts require refresh; no qualification inference; [guide](integrations/native-matching.md) |
@@ -141,6 +143,9 @@ and `web/e2e/opportunities.spec.ts`.
 see the [matching guide](integrations/native-matching.md) for setup and the stale-revision scenario.
 `web/e2e/pipeline.spec.ts` similarly needs its own fresh database and `TENDERCITE_PIPELINE_SMOKE=1`;
 the [pipeline guide](integrations/native-pipeline.md) covers manual tracking and unsaved Back navigation.
+`web/e2e/dashboard.spec.ts` connects the complete native workflow and reload/readback with real
+FastAPI persistence, plus desktop/mobile screenshots. It needs its own new database and
+`TENDERCITE_DASHBOARD_SMOKE=1`; see the [dashboard guide](integrations/native-dashboard.md).
 The profile test creates five manual skills, saves, reloads, edits/removes/adds skills and saves
 again using only native profile endpoints. Enable `TENDERCITE_PROFILES_API_ENABLED=true` for it;
 no snapshot is required. The opportunity test covers manual external references, skill edits,

@@ -23,6 +23,7 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Confirm, modify or reject findings while preserving original AI output and review history.
 - Human-managed Go / No-Go statuses, defaulting to CLARIFICATION_NEEDED.
 - Independent React workspace in `web/` for documents, manual intake, reviews, assessments, snapshot import, manual skill mapping and recorded capability coverage.
+- Unified `/dashboard` landing page with bounded native previews, quick actions and validated workflow links; read-only and independent of AI providers or workforce snapshots.
 - Native manual freelancer/company profiles at `/profiles`, independent of workforce snapshots, with explicit revision-checked saves and unverified skill declarations.
 - Native manual opportunities at `/opportunities`: local external project/tender references, skill labels, date-only deadlines and revision-checked saves; no source fetching.
 - Explicit native profile/opportunity skill-label comparison at `/matching`: normalized exact equality with original labels, counts and revision checks; no qualification score or inference.
@@ -83,7 +84,9 @@ TENDERCITE_PROXY_TARGET=http://127.0.0.1:8001 npm --prefix web run dev
 
 Open **http://127.0.0.1:5174**. See [standalone workspace setup](docs/web-workspace.md) for fresh
 Python installation, optional synthetic snapshot flag, all migrated workflows, browser tests and
-remaining CLI-only functions. The React app retains `/tenders` deep links and uses one explicit
+remaining CLI-only functions. [Dashboard](docs/integrations/native-dashboard.md) is the default
+landing page and connects the complete manual profile → opportunity → comparison → pipeline workflow.
+The React app retains `/tenders` deep links and uses one explicit
 same-origin development proxy. No server/model calls are started automatically beyond inspection
 queries; writes remain explicit. Production hosting/authentication are separate work.
 

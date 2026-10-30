@@ -373,6 +373,72 @@ main {
   font-family: inherit;
 }
 
+.dashboard-welcome .actions {
+  margin: 20px 0;
+}
+
+.dashboard-eyebrow,
+.dashboard-scope {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.dashboard-eyebrow {
+  letter-spacing: 0.1em;
+}
+
+.dashboard-refresh {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.dashboard-grid > .panel {
+  min-width: 0;
+}
+
+.dashboard-pipeline {
+  grid-column: 1 / -1;
+}
+
+.dashboard-records {
+  list-style: none;
+  padding: 0;
+}
+
+.dashboard-records li {
+  border-top: 1px solid var(--line);
+  padding: 18px 0;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-records h3 {
+  margin-bottom: 10px;
+}
+
+.dashboard-records time {
+  white-space: nowrap;
+}
+
+.dashboard-pipeline-records {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 760px) {
+  .dashboard-grid,
+  .dashboard-pipeline-records {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .native-match-table {
   overflow-x: auto;
 }

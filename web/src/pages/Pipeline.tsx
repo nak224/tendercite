@@ -3,6 +3,7 @@ import { Link, useBlocker } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { tenderciteConfigured } from '../api/tendercite';
 import { listOpportunities } from '../api/opportunities';
+import { SavedNativeSelection, type SavedNativeContext } from '../components/SavedNativeSelection';
 import {
   addPipelineEntry,
   getPipelineEntry,
@@ -36,7 +37,9 @@ export function Pipeline() {
         </p>
       </section>
       {tenderciteConfigured() ? (
-        <PipelineWorkspace />
+        <SavedNativeSelection mode="pipeline">
+          {(context) => <PipelineWorkspace initial={context} />}
+        </SavedNativeSelection>
       ) : (
         <Empty>
           TenderCite is not configured. Set the fixed local development proxy and restart Vite.
@@ -45,13 +48,15 @@ export function Pipeline() {
     </>
   );
 }
-function PipelineWorkspace() {
+function PipelineWorkspace({ initial }: { initial: SavedNativeContext }) {
   const [stage, setStage] = useState<PipelineStage | ''>('');
   const [offset, setOffset] = useState(0);
   const [opportunityOffset, setOpportunityOffset] = useState(0);
-  const [opportunityId, setOpportunityId] = useState('');
-  const [creationId, setCreationId] = useState('');
-  const [selected, setSelected] = useState<PipelineEntry | null>(null);
+  const [opportunityId, setOpportunityId] = useState(initial.opportunity?.opportunity_id ?? '');
+  const [creationId, setCreationId] = useState(() =>
+    initial.opportunity ? crypto.randomUUID() : '',
+  );
+  const [selected, setSelected] = useState<PipelineEntry | null>(initial.entry ?? null);
   const [observed, setObserved] = useState<PipelineEntry | null>(null);
   const [found, setFound] = useState<PipelineEntry | null>(null);
   const [version, setVersion] = useState(0);
@@ -106,6 +111,12 @@ function PipelineWorkspace() {
     queryFn: ({ signal }) => listPipeline(0, '', signal, opportunityId),
   });
   const duplicate = found ?? existing.data?.entries[0];
+  const availableOpportunities = [...(opportunities.data?.opportunities ?? [])];
+  if (
+    initial.opportunity &&
+    !availableOpportunities.some((o) => o.opportunity_id === initial.opportunity!.opportunity_id)
+  )
+    availableOpportunities.push(initial.opportunity);
   function discardAllowed() {
     return !unsaved.current || window.confirm('Discard unsaved pipeline changes?');
   }
@@ -363,7 +374,7 @@ function PipelineWorkspace() {
                   }}
                 >
                   <option value="">Select saved opportunity</option>
-                  {data.opportunities.map((o) => (
+                  {availableOpportunities.map((o) => (
                     <option key={o.opportunity_id} value={o.opportunity_id}>
                       {o.title} · {o.opportunity_type} · {o.organization || 'No organization'}
                     </option>
