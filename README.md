@@ -24,6 +24,7 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Human-managed Go / No-Go statuses, defaulting to CLARIFICATION_NEEDED.
 - Independent React workspace in `web/` for documents, manual intake, reviews, assessments, snapshot import, manual skill mapping and recorded capability coverage.
 - Native manual freelancer/company profiles at `/profiles`, independent of workforce snapshots, with explicit revision-checked saves and unverified skill declarations.
+- Native manual opportunities at `/opportunities`: local external project/tender references, skill labels, date-only deadlines and revision-checked saves; no source fetching or matching.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
 - Synthetic evaluation corpus, offline tests, hashed dependency locks, Docker and CI definitions.
 
@@ -88,7 +89,9 @@ Workforce snapshot generation stays in the optional Team Capacity Engine applica
 compatible producer. [Native profiles](docs/integrations/native-profiles.md) can instead be created
 and edited entirely within TenderCite, without a producer or snapshot. They are separate manual
 declarations and do not yet participate in matching. Snapshot workflows use the existing import
-contract without requiring a workforce server. Bounded snapshot selection and explicit mapping
+contract without requiring a workforce server. [Native opportunities](docs/integrations/native-opportunities.md)
+can be created and edited independently of profiles, documents and analyses. They are unverified
+external references, not job listings published by TenderCite. Bounded snapshot selection and explicit mapping
 draft/approval are available in
 [Skill Mapping](docs/integrations/manual-skill-mapping-ui.md), behind the existing local mapping API flag.
 Full snapshot history/export and mapping revision/revocation/history remain CLI-only.

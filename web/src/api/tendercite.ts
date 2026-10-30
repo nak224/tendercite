@@ -303,3 +303,22 @@ export function tenderProfileWrite(
     responseError,
   );
 }
+
+export function tenderOpportunityWrite(
+  operation: 'create' | 'update',
+  opportunityId: string,
+  body: string,
+  responseError: (response: Response) => Promise<Error>,
+): Promise<unknown> {
+  return tenderRequest(
+    operation === 'create' ? 'opportunities' : `opportunities/${encodeURIComponent(opportunityId)}`,
+    {
+      method: operation === 'create' ? 'POST' : 'PUT',
+      body,
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'error',
+    },
+    false,
+    responseError,
+  );
+}
