@@ -260,9 +260,20 @@ function OpportunityWorkspace({ initialRecord }: { initialRecord?: OpportunityRe
             </p>
           )}
           {record?.opportunity.external_source && (
-            <aside aria-label="TED import provenance">
+            <aside
+              className="source-page-text"
+              aria-label={
+                record.opportunity.source_origin === 'ted_import'
+                  ? 'TED import provenance'
+                  : 'German procurement import provenance'
+              }
+            >
               <p>
-                Imported from TED publication {record.opportunity.external_source.external_id} at{' '}
+                Imported from{' '}
+                {record.opportunity.external_source.source === 'TED'
+                  ? 'TED'
+                  : 'Bekanntmachungsservice'}{' '}
+                publication {record.opportunity.external_source.external_id} at{' '}
                 {record.opportunity.external_source.retrieved_at}. This source attribution is
                 retained through local edits. Metadata and qualifications are NOT_VERIFIED.
               </p>
@@ -272,8 +283,41 @@ function OpportunityWorkspace({ initialRecord }: { initialRecord?: OpportunityRe
                 rel="noopener noreferrer"
                 referrerPolicy="no-referrer"
               >
-                Original TED publication
+                {record.opportunity.external_source.source === 'TED'
+                  ? 'Original TED publication'
+                  : 'Original German publication'}
               </a>
+              {record.opportunity.external_source.source === 'BEKANNTMACHUNGSSERVICE' && (
+                <details>
+                  <summary>Original Open Data metadata</summary>
+                  <p>
+                    Export day: {record.opportunity.external_source.export_day}. License: CC Zero.
+                  </p>
+                  <p>Archive SHA-256: {record.opportunity.external_source.archive_sha256}</p>
+                  <p>Record SHA-256: {record.opportunity.external_source.record_sha256}</p>
+                  <p>
+                    Original title:{' '}
+                    {record.opportunity.external_source.original_metadata.title ?? 'Not supplied'}
+                  </p>
+                  <p>
+                    Original buyer:{' '}
+                    {record.opportunity.external_source.original_metadata.buyer ?? 'Not supplied'}
+                  </p>
+                  <p className="source-page-text">
+                    {record.opportunity.external_source.original_metadata.description ??
+                      'No description supplied'}
+                  </p>
+                  <p>
+                    OCDS tags:{' '}
+                    {record.opportunity.external_source.original_metadata.tags.join(', ') ||
+                      'Not supplied'}
+                  </p>
+                  <p>
+                    Original metadata remains separate from your editable local fields; retained
+                    source text may be shortened with an explicit warning.
+                  </p>
+                </details>
+              )}
               {record.opportunity.external_source.mapping_warnings.length > 0 && (
                 <p>
                   Import mapping notes:{' '}
