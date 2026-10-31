@@ -60,6 +60,7 @@ def _operation(call):
             OpportunityErrorCode.REVISION_CONFLICT: 409,
             OpportunityErrorCode.STORAGE_INTEGRITY: 409,
             OpportunityErrorCode.DATABASE_FAILED: 503,
+            OpportunityErrorCode.PROVENANCE_CONFLICT: 409,
         }[exc.code]
         raise _error(status, exc.code.value) from None
 

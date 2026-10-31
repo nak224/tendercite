@@ -25,7 +25,8 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Independent React workspace in `web/` for documents, manual intake, reviews, assessments, snapshot import, manual skill mapping and recorded capability coverage.
 - Unified `/dashboard` landing page with bounded native previews, quick actions and validated workflow links; read-only and independent of AI providers or workforce snapshots.
 - Native manual freelancer/company profiles at `/profiles`, independent of workforce snapshots, with explicit revision-checked saves and unverified skill declarations.
-- Native manual opportunities at `/opportunities`: local external project/tender references, skill labels, date-only deadlines and revision-checked saves; no source fetching.
+- Native opportunities at `/opportunities`: manual external references or explicitly imported TED metadata, editable skill labels, date-only deadlines and revision-checked saves.
+- Official TED discovery at `/discover`: explicit bounded keyword search and selected import, immutable source attribution and duplicate protection; no inferred skills or automatic tracking.
 - Explicit native profile/opportunity skill-label comparison at `/matching`: normalized exact equality with original labels, counts and revision checks; no qualification score or inference.
 - Native manual opportunity pipeline at `/pipeline`: explicit tracking, stages, priority, notes and next actions with revision-checked saves; no external submissions or automatic outcomes.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
@@ -85,7 +86,10 @@ TENDERCITE_PROXY_TARGET=http://127.0.0.1:8001 npm --prefix web run dev
 Open **http://127.0.0.1:5174**. See [standalone workspace setup](docs/web-workspace.md) for fresh
 Python installation, optional synthetic snapshot flag, all migrated workflows, browser tests and
 remaining CLI-only functions. [Dashboard](docs/integrations/native-dashboard.md) is the default
-landing page and connects the complete manual profile → opportunity → comparison → pipeline workflow.
+landing page and connects the profile → opportunity → comparison → pipeline workflow. Optional
+[TED discovery](docs/integrations/ted-discovery.md), behind its separate default-off flag, adds
+explicit search → review → save. Live metadata connectivity was verified; qualification and
+interpretation are not verified by import.
 The React app retains `/tenders` deep links and uses one explicit
 same-origin development proxy. No server/model calls are started automatically beyond inspection
 queries; writes remain explicit. Production hosting/authentication are separate work.

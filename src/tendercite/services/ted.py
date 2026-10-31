@@ -1,5 +1,6 @@
 """Small public TED Search API v3 adapter; no discovery scheduler or model calls."""
 
+import json
 import logging
 import re
 import time
@@ -11,9 +12,14 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from tendercite.domain.ted_reference import literal_keyword as literal_keyword
+from tendercite.domain.ted_reference import publication_id as publication_id
+from tendercite.domain.ted_reference import validate_notice_url as validate_notice_url
+
 SEARCH_URL = "https://api.ted.europa.eu/v3/notices/search"
 MAX_NOTICES = 50
 MAX_DOCUMENT_BYTES = 25 * 1024 * 1024
+MAX_SEARCH_BYTES = 4 * 1024 * 1024
 REQUEST_INTERVAL_SECONDS = 1.0
 FIELDS = (
     "publication-number",
@@ -57,17 +63,21 @@ logger = logging.getLogger(__name__)
 class TedError(RuntimeError):
     """TED failures are errors, never successful empty search results."""
 
+    def __init__(self, message, *, status_code=None):
+        self.status_code = status_code
+        super().__init__(message)
+
 
 class TedResponseError(TedError):
     pass
 
 
-def publication_id(value: str) -> str:
-    """Normalize padding, retaining the publication year (not the notice UUID)."""
-    if not re.fullmatch(r"[0-9]{1,8}-[0-9]{4}", value) or int(value.split("-")[0]) == 0:
-        raise ValueError("Expected a TED publication number such as 123456-2026")
-    number, year = value.split("-")
-    return f"{int(number)}-{year}"
+class TedTimeoutError(TedError):
+    pass
+
+
+class TedNotFoundError(TedError):
+    pass
 
 
 def language_code(value: str) -> str:
@@ -142,6 +152,9 @@ class TedNotice:
     source_url: str
     links: dict[str, dict[str, str]]
     warnings: tuple[str, ...] = ()
+    buyers: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    descriptions: dict[str, str] = field(default_factory=dict)
+    submission_dates: tuple[str, ...] = ()
 
     @property
     def title(self) -> str | None:
@@ -233,6 +246,16 @@ def _notice(raw: object) -> TedNotice:
         logger.warning("%s: %s", notice_id, warning)
     types = _strings(raw.get("notice-type"))
     forms = _strings(raw.get("form-type"))
+    buyers = raw.get("buyer-name")
+    descriptions = raw.get("description-proc")
+    buyers = {} if buyers is None else buyers
+    descriptions = {} if descriptions is None else descriptions
+    if not isinstance(buyers, dict) or not all(isinstance(k, str) for k in buyers):
+        raise TedResponseError("Malformed buyer metadata")
+    if not isinstance(descriptions, dict) or not all(
+        isinstance(k, str) and isinstance(v, str) for k, v in descriptions.items()
+    ):
+        raise TedResponseError("Malformed description metadata")
     lang = next((LANGUAGES[v] for v in languages if v in LANGUAGES), "en")
     return TedNotice(
         notice_id,
@@ -245,6 +268,9 @@ def _notice(raw: object) -> TedNotice:
         f"https://ted.europa.eu/{lang}/notice/-/detail/{notice_id}",
         safe_links,
         tuple(warnings),
+        {language_code(k): _strings(v) for k, v in buyers.items()},
+        {language_code(k): v for k, v in descriptions.items()},
+        _strings(raw.get("deadline-receipt-tender-date-lot")),
     )
 
 
@@ -357,36 +383,83 @@ class TedClient:
             raise TedResponseError(f"Publication {notice_id} was not returned by TED")
         return result.notices[0]
 
-    def _search(self, query: str, limit: int) -> SearchResult:
+    def discover(self, keyword: str, *, limit=10, page=1) -> SearchResult:
+        keyword = literal_keyword(keyword)
+        if (
+            type(limit) is not int
+            or not 1 <= limit <= 20
+            or type(page) is not int
+            or not 1 <= page <= 50
+        ):
+            raise ValueError("Discovery page outside the bounded range")
+        return self._search(
+            f'(FT ~ "{keyword}") AND (form-type = competition) SORT BY publication-date DESC',
+            limit,
+            page=page,
+            fields=DISCOVERY_FIELDS,
+            scope="ACTIVE",
+        )
+
+    def lookup_discovery(self, notice_id: str) -> TedNotice:
+        notice_id = publication_id(notice_id)
+        result = self._search(f'publication-number = "{notice_id}"', 1, fields=DISCOVERY_FIELDS)
+        if not result.notices and result.total_notice_count == 0:
+            raise TedNotFoundError("TED publication not found")
+        if len(result.notices) != 1 or result.notices[0].publication_id != notice_id:
+            raise TedResponseError("TED publication was not returned")
+        return result.notices[0]
+
+    def _search(
+        self, query: str, limit: int, *, page=1, fields=FIELDS, scope="ALL"
+    ) -> SearchResult:
         payload = {
             "query": query,
-            "fields": list(FIELDS),
+            "fields": list(fields),
             "limit": limit,
-            "page": 1,
-            "scope": "ALL",
+            "page": page,
+            "scope": scope,
             "paginationMode": "PAGE_NUMBER",
             "checkQuerySyntax": False,
         }
         for attempt in range(self.attempts):
             try:
                 self._pace()
-                response = self.client.post(SEARCH_URL, json=payload, follow_redirects=False)
+                with self.client.stream(
+                    "POST", SEARCH_URL, json=payload, follow_redirects=False
+                ) as response:
+                    if response.status_code in {429, 500, 502, 503, 504} and self.retry(
+                        attempt, response
+                    ):
+                        continue
+                    if not response.is_success:
+                        raise TedError(
+                            f"{SEARCH_URL}: HTTP {response.status_code}; search did not succeed",
+                            status_code=response.status_code,
+                        )
+                    chunks, size = [], 0
+                    for chunk in response.iter_bytes():
+                        size += len(chunk)
+                        if size > MAX_SEARCH_BYTES:
+                            raise TedResponseError("TED search response exceeds 4 MiB")
+                        chunks.append(chunk)
+                    raw_body = b"".join(chunks)
             except httpx.RequestError as exc:
                 if isinstance(exc, httpx.ProxyError) or not self.retry(attempt):
-                    raise TedError(f"{SEARCH_URL}: {type(exc).__name__}: {exc}") from exc
+                    if isinstance(exc, httpx.TimeoutException):
+                        raise TedTimeoutError("TED search timed out") from None
+                    raise TedError(f"{SEARCH_URL}: {type(exc).__name__}: {exc}") from None
                 continue
-            if response.status_code in {429, 500, 502, 503, 504} and self.retry(attempt, response):
-                continue
-            if not response.is_success:
-                raise TedError(f"{SEARCH_URL}: HTTP {response.status_code}; search did not succeed")
             try:
-                body = response.json()
-            except ValueError as exc:
+                body = json.loads(
+                    raw_body, object_pairs_hook=_unique_pairs, parse_constant=_bad_constant
+                )
+            except (ValueError, UnicodeError, RecursionError) as exc:
                 raise TedResponseError("TED returned invalid JSON") from exc
             if (
                 not isinstance(body, dict)
                 or not isinstance(body.get("notices"), list)
-                or body.get("error")
+                or ("error" in body and body["error"] is not None)
+                or body.get("timedOut", False) is not False
             ):
                 raise TedResponseError("TED response has no notices array")
             total = body.get("totalNoticeCount")
@@ -395,5 +468,23 @@ class TedClient:
             if len(body["notices"]) > limit:
                 raise TedResponseError("TED returned more notices than requested")
             notices = tuple(_notice(raw) for raw in body["notices"])
+            if len({n.publication_id for n in notices}) != len(notices):
+                raise TedResponseError("TED returned duplicate publication numbers")
             return SearchResult(query, total, notices)
         raise TedError("TED retry budget exhausted")
+
+
+DISCOVERY_FIELDS = FIELDS + ("buyer-name", "description-proc", "deadline-receipt-tender-date-lot")
+
+
+def _unique_pairs(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError("Duplicate JSON key")
+        value[key] = item
+    return value
+
+
+def _bad_constant(_):
+    raise ValueError("Non-finite JSON number")
