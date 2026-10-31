@@ -98,6 +98,8 @@ class OriginalMetadata(BkmsModel):
     @classmethod
     def source_timestamp(cls, value):
         if value is not None:
+            if not re.match(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T", value):
+                raise ValueError("Expected an OCDS date-time")
             parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
             if parsed.tzinfo is None:
                 raise ValueError("Source timestamp requires an offset")

@@ -48,6 +48,7 @@ def _operation(call):
             "BKMS_CATALOG_CONFLICT": 409,
             "BKMS_STORAGE_INTEGRITY": 409,
             "BKMS_NOT_IMPORTABLE": 422,
+            "BKMS_INVALID_PUBLICATION_DAY": 422,
             "BKMS_EXPORT_TOO_LARGE": 413,
             "BKMS_BUSY": 409,
             "BKMS_TIMEOUT": 504,

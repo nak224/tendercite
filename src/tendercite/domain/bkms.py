@@ -1,8 +1,7 @@
 """One explicitly loaded daily catalog; no remote search or cross-source identity inference."""
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated, Literal
-from zoneinfo import ZoneInfo
 
 from pydantic import AwareDatetime, Field, StringConstraints, field_validator, model_validator
 
@@ -57,8 +56,10 @@ class LoadInput(BkmsModel):
     @field_validator("export_day")
     @classmethod
     def historical_day(cls, value):
-        if not date(2022, 12, 1) <= value < datetime.now(ZoneInfo("Europe/Berlin")).date():
-            raise ValueError("Select one completed publication day")
+        # The provider owns the Europe/Berlin boundary. UTC today can be yesterday there;
+        # permit it locally and handle the official API's documented 400 if it is incomplete.
+        if not date(2022, 12, 1) <= value <= datetime.now(UTC).date():
+            raise ValueError("Select one publication day in the supported range")
         return value
 
 

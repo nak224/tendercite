@@ -103,8 +103,8 @@ def _record(raw: bytes, identity: str, day: date, archive_hash: str, retrieved: 
     )
     if meta.published_at is None:
         warnings.append("MISSING_PUBLICATION_DATE")
-    elif date.fromisoformat(meta.published_at[:10]) != day:
-        raise ValueError("Publication outside selected day")
+    # pubDay is the provider's Berlin selection. A source timestamp expressed in UTC can
+    # legitimately have the preceding calendar date; retain it without relabeling the day.
     if meta.deadline is None:
         warnings.append("MISSING_DEADLINE")
     return BkmsSource(
@@ -198,6 +198,8 @@ class BkmsClient:
                 headers={"Accept-Encoding": "identity"},
                 follow_redirects=False,
             ) as response:
+                if response.status_code == 400:
+                    raise BkmsError("BKMS_INVALID_PUBLICATION_DAY")
                 if response.status_code == 429:
                     raise BkmsError("BKMS_RATE_LIMITED")
                 if response.status_code != 200:
