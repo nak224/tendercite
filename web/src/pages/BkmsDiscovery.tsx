@@ -27,13 +27,19 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
   const [busy, setBusy] = useState<string | null>(null);
   const [outcomes, setOutcomes] = useState<Record<string, Outcome>>({});
   const pending = useRef<string | null>(null);
+  const catalogGeneration = useRef(0);
   const alive = useRef(true);
   const blocker = useBlocker(() => pending.current !== null);
   async function refresh(signal?: AbortSignal) {
-    const current = await currentBkmsCatalog(signal);
-    if (alive.current && !signal?.aborted) {
-      setCatalog(current);
-      setResults((old) => (old?.catalog.catalog_id === current?.catalog_id ? old : null));
+    const generation = ++catalogGeneration.current;
+    try {
+      const current = await currentBkmsCatalog(signal);
+      if (alive.current && !signal?.aborted && generation === catalogGeneration.current) {
+        setCatalog(current);
+        setResults((old) => (old?.catalog.catalog_id === current?.catalog_id ? old : null));
+      }
+    } catch (failure) {
+      if (!signal?.aborted && generation === catalogGeneration.current) throw failure;
     }
   }
   useEffect(() => {
@@ -81,6 +87,7 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
   async function load() {
     setError('');
     await perform('LOAD', async () => {
+      catalogGeneration.current += 1;
       try {
         const current = await loadBkmsDay(day);
         if (alive.current) {

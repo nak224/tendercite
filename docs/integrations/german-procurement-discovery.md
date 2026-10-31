@@ -224,9 +224,9 @@ Remaining limits: one retained day, bounded literal search, no CPV/country filte
 cross-source merging, semantic matching, inferred skills, attachment ingestion or applications.
 
 Validation on 2026-10-31 (Python 3.12.14, Node 24.19.0): **1,650 offline Python tests passed,
-3 expected live-test skips**, 96% coverage; **648 React tests passed** across 34 files.
+3 expected live-test skips**, 96% coverage; **649 React tests passed** across 34 files.
 Ruff lint/format, TypeScript, ESLint, Prettier and production build passed. Eight Chromium workflows
 passed on disposable synthetic databases, including German/TED discovery and the existing native
 and PDF-to-capability-report regressions. Genuine German discovery desktop/mobile screenshots
 were inspected; the 390-pixel view passed an overflow check. The existing bundle-size warning
-remains (541.73 kB minified JavaScript). Dependency locks, historical evaluations and ledgers are unchanged.
+remains (541.93 kB minified JavaScript). Dependency locks, historical evaluations and ledgers are unchanged.

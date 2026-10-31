@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import { App } from '../App';
@@ -12,6 +12,7 @@ function setup(
   options: {
     configured?: boolean;
     loaded?: boolean;
+    catalogRead?: () => Response | Promise<Response>;
     save?: () => Response | Promise<Response>;
     load?: () => Response | Promise<Response>;
     results?: unknown;
@@ -22,6 +23,8 @@ function setup(
   const fetcher = vi.fn(async (request: Request) => {
     const path = new URL(request.url).pathname;
     expect(new URL(request.url).origin).toBe(window.location.origin);
+    if (request.method === 'GET' && path.endsWith('/discovery/bkms/catalog') && options.catalogRead)
+      return options.catalogRead();
     if (request.method === 'GET' && path.endsWith('/discovery/bkms/catalog'))
       return loaded
         ? Response.json(bkmsCatalog())
@@ -230,4 +233,27 @@ test('unconfigured proxy makes no requests for either source', async () => {
   await userEvent.selectOptions(screen.getByLabelText('Discovery source'), 'BKMS');
   expect(screen.getByText(/TenderCite is not configured/)).toBeVisible();
   expect(fetcher).not.toHaveBeenCalled();
+});
+
+test('delayed initial metadata cannot replace a successfully loaded catalog', async () => {
+  let complete: (response: Response) => void = () => {
+    throw new Error('Read not started');
+  };
+  const { posts } = setup({
+    catalogRead: () =>
+      new Promise((resolve) => {
+        complete = resolve;
+      }),
+  });
+  await choose();
+  fireEvent.change(screen.getByLabelText('Publication day (Europe/Berlin)'), {
+    target: { value: '2026-10-30' },
+  });
+  await userEvent.click(screen.getByRole('button', { name: 'Load publication day' }));
+  await screen.findByLabelText('Loaded German catalog');
+  await act(async () =>
+    complete(Response.json({ detail: { code: 'BKMS_CATALOG_NOT_FOUND' } }, { status: 404 })),
+  );
+  expect(screen.getByLabelText('Loaded German catalog')).toHaveTextContent('2026-10-30');
+  expect(posts).toHaveLength(1);
 });
