@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import AwareDatetime, Field, StringConstraints, field_validator, model_validator
 
-from tendercite.domain.bkms_reference import BkmsModel, BkmsSource, Digest, ExternalId
+from tendercite.domain.bkms_reference import BkmsModel, BkmsSource, Digest, ExternalId, notice_parts
 from tendercite.domain.opportunities import NativeOpportunity, OpportunityType
 from tendercite.domain.ted_reference import literal_keyword
 
@@ -79,6 +79,12 @@ class ImportInput(BkmsModel):
     schema_version: Literal["bkms-import-input-1"] = "bkms-import-input-1"
     catalog_id: Digest
     external_id: ExternalId
+
+    @field_validator("external_id")
+    @classmethod
+    def publication_identity(cls, value):
+        notice_parts(value)
+        return value
 
 
 def mapped_text(value: str | None, size: int) -> str | None:
