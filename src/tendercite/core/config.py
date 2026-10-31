@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     native_matching_api_enabled: bool = False
     pipeline_api_enabled: bool = False
     discovery_api_enabled: bool = False
+    bkms_discovery_api_enabled: bool = False
     embedding_model: str = "intfloat/multilingual-e5-small"
     embedding_revision: str | None = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
 

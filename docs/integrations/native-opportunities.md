@@ -2,7 +2,8 @@
 
 **Opportunities** at `/opportunities` stores local references to externally sourced public tenders,
 freelance projects and other potential business opportunities. TenderCite does not host or publish
-job listings. Records may be manual declarations or explicitly imported [official TED metadata](ted-discovery.md).
+job listings. Records may be manual declarations, explicitly imported [official TED metadata](ted-discovery.md)
+or [German Bekanntmachungsservice Open Data](german-procurement-discovery.md).
 Their origins remain distinct; neither is independently verified qualification evidence. Manual
 creation needs no document, native profile, workforce snapshot, external integration or AI model.
 
@@ -52,7 +53,7 @@ legal obligation. Past dates are allowed; no reminders, expiry decisions or noti
 
 | Record | Meaning | Current relationship |
 | --- | --- | --- |
-| Native opportunity | Unverified manual reference or explicitly imported TED metadata; manually selected skill labels | Independent local opportunity record |
+| Native opportunity | Unverified manual reference or explicitly imported official metadata; manually selected skill labels | Independent local opportunity record |
 | PDF-based tender analysis | Persisted analysis/findings with source quotations and separate human review | No automatic association with opportunities |
 | Native capability profile | Manually declared freelancer/company skills and preferences | Explicit normalized label comparison in Opportunity Matching |
 
@@ -78,7 +79,9 @@ source URL (2048), required_skills (at most 100 plain labels, 1–100 each), req
 (2000). Strings are trimmed; duplicate skill labels are rejected after Unicode NFKC, case-folding
 and whitespace collapse. Browser checks are convenience checks; server validation is authoritative.
 Source origin is `manual_operator_entry` for manual creation, or `ted_import` with immutable
-`ted-opportunity-source-1` metadata for explicit discovery import. Manual records omit absent
+`ted-opportunity-source-1` metadata for explicit TED import. German Open Data uses `bkms_import`
+and `bkms-opportunity-source-1`, preserving source version, original metadata and hashes separately
+from local edits. Manual records omit absent
 `external_source` on serialization, preserving their previous JSON shape. Verification is always
 `NOT_VERIFIED`. Unknown fields and
 unsupported versions are rejected, including implicit analysis/profile relationships or verified status.
@@ -168,7 +171,8 @@ through a separate explicit read-only label comparison. Opportunity CRUD remains
 existing opportunity. Its SUBMITTED/WON/LOST values are operator declarations, not external actions
 or verified facts. Creating or editing an opportunity does not add or advance pipeline entries.
 
-The separate [TED discovery workflow](ted-discovery.md) now imports selected metadata into this
+The separate [TED discovery workflow](ted-discovery.md) and
+[German daily catalog workflow](german-procurement-discovery.md) import selected metadata into this
 same storage, preserving operator edits on repeated import. `/opportunities?opportunity_id=UUID`
 opens a saved record through its authoritative detail endpoint. Imported records start with no
 skills; manual edits and later comparisons/tracking remain explicit. Scraping, automatic discovery,

@@ -19,6 +19,7 @@ from pydantic import (
     model_validator,
 )
 
+from tendercite.domain.bkms_reference import BkmsSource
 from tendercite.domain.ted_reference import publication_id, validate_notice_url
 
 MAX_OPPORTUNITY_BYTES = 65536
@@ -102,8 +103,10 @@ class NativeOpportunity(OpportunityModel):
     source_url: Annotated[str, StringConstraints(max_length=2048)] = ""
     required_skills: Annotated[tuple[SkillLabel, ...], Field(max_length=100)] = ()
     requirements_description: Annotated[str, StringConstraints(max_length=2000)] = ""
-    source_origin: Literal["manual_operator_entry", "ted_import"] = "manual_operator_entry"
-    external_source: TedOpportunitySource | None = None
+    source_origin: Literal["manual_operator_entry", "ted_import", "bkms_import"] = (
+        "manual_operator_entry"
+    )
+    external_source: TedOpportunitySource | BkmsSource | None = None
     verification_status: Literal["NOT_VERIFIED"] = "NOT_VERIFIED"
 
     @model_serializer(mode="wrap")
@@ -135,7 +138,17 @@ class NativeOpportunity(OpportunityModel):
 
     @model_validator(mode="after")
     def unique_skill_labels(self) -> Self:
-        if (self.source_origin == "ted_import") != (self.external_source is not None):
+        if (
+            (self.source_origin == "manual_operator_entry" and self.external_source is not None)
+            or (
+                self.source_origin == "ted_import"
+                and not isinstance(self.external_source, TedOpportunitySource)
+            )
+            or (
+                self.source_origin == "bkms_import"
+                and not isinstance(self.external_source, BkmsSource)
+            )
+        ):
             raise ValueError("Source provenance does not match origin")
         labels = [
             " ".join(unicodedata.normalize("NFKC", s).casefold().split())

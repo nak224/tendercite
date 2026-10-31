@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from tendercite import __version__
 from tendercite.api.routes import capability_mapping_http
 from tendercite.api.routes.analyses import router as analyses_router
+from tendercite.api.routes.bkms import router as bkms_router
 from tendercite.api.routes.capability_reports import router as capability_reports_router
 from tendercite.api.routes.capability_snapshots import router as capability_snapshots_router
 from tendercite.api.routes.configuration import router as configuration_router
@@ -60,3 +61,4 @@ app.include_router(opportunities_router, prefix="/api/v1")
 app.include_router(native_matches_router, prefix="/api/v1")
 app.include_router(pipeline_router, prefix="/api/v1")
 app.include_router(discovery_router, prefix="/api/v1")
+app.include_router(bkms_router, prefix="/api/v1")
