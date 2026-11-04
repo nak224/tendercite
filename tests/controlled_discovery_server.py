@@ -84,10 +84,30 @@ def main():
         [(f"1000000{i}-1.json", package(f"1000000{i}-1")) for i in range(1, 7)]
     )
 
+    def later_record(identity, tags):
+        value = package(identity)
+        value["publishedDate"] = "2026-10-31T08:00:00Z"
+        value["releases"][0]["tag"] = tags
+        value["releases"][0]["tender"].pop("tenderPeriod")
+        return value
+
+    daily_archives = {
+        "2026-10-30": synthetic_archive,
+        "2026-10-31": archive(
+            [
+                ("10000001-2.json", later_record("10000001-2", ["award"])),
+                ("10000002-1.json", package("10000002-1")),
+                ("10000008-1.json", later_record("10000008-1", [])),
+            ]
+        ),
+    }
+
     def german_handler(request):
         assert request.method == "GET" and str(request.url).split("?")[0] == EXPORT_URL
-        assert dict(request.url.params) == {"pubDay": "2026-10-30", "format": "ocds.zip"}
-        return httpx.Response(200, content=synthetic_archive)
+        assert set(request.url.params) == {"pubDay", "format"}
+        assert request.url.params["format"] == "ocds.zip"
+        body = daily_archives.get(request.url.params["pubDay"])
+        return httpx.Response(200, content=body) if body else httpx.Response(400)
 
     def controlled_german_client():
         with httpx.Client(transport=httpx.MockTransport(german_handler)) as http:

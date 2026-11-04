@@ -2,6 +2,7 @@
 import { emptyOpportunity, type OpportunityRecord } from '../api/opportunities';
 import type { BkmsSource } from '../api/bkmsReferences';
 import type { BkmsCatalog, BkmsResults } from '../api/bkms';
+import type { BkmsCollection, MultiBkmsResults } from '../api/bkmsCatalogs';
 export const bkmsNotice = '10000001-1';
 export const bkmsOpportunity = '60000000-0000-0000-0000-000000000001';
 export function bkmsCatalog(): BkmsCatalog {
@@ -73,5 +74,41 @@ export function bkmsRecord(): OpportunityRecord {
       source_origin: 'bkms_import',
       external_source: s,
     },
+  };
+}
+
+export function bkmsCollection(empty = false): BkmsCollection {
+  return {
+    schema_version: 'bkms-catalog-collection-1',
+    collection_id: (empty ? 'e' : 'd').repeat(64),
+    days: empty ? [] : [{ catalog: bkmsCatalog(), warning_counts: {} }],
+    stored_bytes: empty ? 0 : 2000,
+    max_days: 7,
+    max_storage_bytes: 100663296,
+  };
+}
+export function bkmsMultiResults(): MultiBkmsResults {
+  return {
+    schema_version: 'bkms-search-result-2',
+    coverage: bkmsCollection(),
+    keyword: 'Software',
+    page: 1,
+    limit: 10,
+    notice_category: 'ALL',
+    include_earlier_versions: false,
+    total_count: 1,
+    next_page: null,
+    items: [
+      {
+        source: bkmsSource(),
+        notice_category: 'TENDER',
+        version_count: 1,
+        is_latest_stored: true,
+        occurrences: [
+          { export_day: '2026-10-30', catalog_id: 'a'.repeat(64), record_sha256: 'c'.repeat(64) },
+        ],
+        source_record_hashes_differ: false,
+      },
+    ],
   };
 }
