@@ -1,5 +1,9 @@
 # Official TED opportunity discovery (DISC-1a)
 
+This guide covers the TED adapter. Discover also offers a separately gated
+[German Bekanntmachungsservice daily catalog](german-procurement-discovery.md), with local search
+over explicitly downloaded Open Data. The two sources retain separate identities and results.
+
 Open **Discover Opportunities** at `/discover`, enter a literal keyword phrase and click
 **Search**. Inspect a result and its official publication, then explicitly **Save to Opportunities**.
 The saved native record can be opened, manually given skill labels, compared with a saved profile
@@ -205,7 +209,7 @@ E2E_BASE_URL=http://127.0.0.1:5174 TENDERCITE_CONTROLLED_DISCOVERY_SMOKE=1 npm -
 
 Use `PLAYWRIGHT_CHROMIUM_EXECUTABLE` only if selecting an installed system Chromium. Genuine
 screenshots are generated under ignored `web/test-results/`. Ordinary pytest/Vitest tests use
-synthetic responses without network or models. No second provider, semantic search, automatic
+synthetic responses without network or models. This TED adapter adds no semantic search, automatic
 import/synchronization, notifications or submission workflow is implemented.
 
 Validation on 2026-10-30, Python 3.12.14 / Node 24.19.0: **1,604 offline Python tests passed,

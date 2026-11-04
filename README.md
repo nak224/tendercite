@@ -27,6 +27,7 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Native manual freelancer/company profiles at `/profiles`, independent of workforce snapshots, with explicit revision-checked saves and unverified skill declarations.
 - Native opportunities at `/opportunities`: manual external references or explicitly imported TED metadata, editable skill labels, date-only deadlines and revision-checked saves.
 - Official TED discovery at `/discover`: explicit bounded keyword search and selected import, immutable source attribution and duplicate protection; no inferred skills or automatic tracking.
+- Official German Bekanntmachungsservice Open Data: explicit bounded daily OCDS catalog loading, local phrase search and native import with CC Zero/source provenance; separate from TED.
 - Explicit native profile/opportunity skill-label comparison at `/matching`: normalized exact equality with original labels, counts and revision checks; no qualification score or inference.
 - Native manual opportunity pipeline at `/pipeline`: explicit tracking, stages, priority, notes and next actions with revision-checked saves; no external submissions or automatic outcomes.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
@@ -90,6 +91,10 @@ landing page and connects the profile → opportunity → comparison → pipelin
 [TED discovery](docs/integrations/ted-discovery.md), behind its separate default-off flag, adds
 explicit search → review → save. Live metadata connectivity was verified; qualification and
 interpretation are not verified by import.
+[German procurement discovery](docs/integrations/german-procurement-discovery.md) adds a separately
+gated daily Open Data catalog: the official API is bulk-only, so keyword searching stays local.
+Its CC Zero declaration and anonymous live download were verified; no automatic cross-source
+merging, source synchronization or applications are performed.
 The React app retains `/tenders` deep links and uses one explicit
 same-origin development proxy. No server/model calls are started automatically beyond inspection
 queries; writes remain explicit. Production hosting/authentication are separate work.

@@ -182,7 +182,9 @@ function NativeOverview() {
         </section>
         <section className="panel" aria-labelledby="dashboard-opportunities">
           <h2 id="dashboard-opportunities">Opportunities</h2>
-          <p>Saved external references (manual or TED import), not verified tender analyses.</p>
+          <p>
+            Saved external references (manual or official imports), not verified tender analyses.
+          </p>
           <Preview name="Opportunities" query={opportunities}>
             {(data) => (
               <>

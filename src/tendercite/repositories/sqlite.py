@@ -7,6 +7,7 @@ from pathlib import Path
 from tendercite.domain.capabilities_v1 import CapabilitySnapshot, canonical_json
 from tendercite.domain.capability_storage import CapabilityImportResult, CapabilitySnapshotMetadata
 from tendercite.domain.models import ChunkRead, DocumentRead, PageRead
+from tendercite.repositories.bkms import BKMS_SCHEMA_SQL, BkmsRepositoryMixin
 from tendercite.repositories.capability_mapping_schema import MAPPING_SCHEMA_SQL
 from tendercite.repositories.capability_mappings import CapabilityMappingRepositoryMixin
 from tendercite.repositories.curated_intake import CuratedIntakeRepositoryMixin
@@ -23,6 +24,7 @@ MAX_CAPABILITY_LIST_LIMIT = 100
 
 
 class SqliteRepository(
+    BkmsRepositoryMixin,
     CapabilityMappingRepositoryMixin,
     CuratedIntakeRepositoryMixin,
     ProfileRepositoryMixin,
@@ -61,6 +63,7 @@ class SqliteRepository(
 
     def _initialize(self) -> None:
         with self._connect() as conn:
+            conn.executescript(BKMS_SCHEMA_SQL)
             conn.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS documents (

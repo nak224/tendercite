@@ -2,6 +2,7 @@ import { tenderGet, tenderOpportunityWrite } from './tendercite';
 import { object, uuid, count, timestamp, nonblank } from './capabilityMappingValidation';
 import { validDate } from '../utils/period';
 import { copyTedSource, tedSourceValid, type TedSource } from './tedReferences';
+import { copyBkmsSource, bkmsSourceValid, type BkmsSource } from './bkmsReferences';
 
 export type OpportunityType = 'PUBLIC_TENDER' | 'FREELANCE_PROJECT' | 'OTHER';
 export type WorkArrangement = 'REMOTE' | 'HYBRID' | 'ON_SITE' | null;
@@ -18,8 +19,8 @@ export interface NativeOpportunity {
   source_url: string;
   required_skills: string[];
   requirements_description: string;
-  source_origin: 'manual_operator_entry' | 'ted_import';
-  external_source?: TedSource | null;
+  source_origin: 'manual_operator_entry' | 'ted_import' | 'bkms_import';
+  external_source?: TedSource | BkmsSource | null;
   verification_status: 'NOT_VERIFIED';
 }
 export interface OpportunityRecord {
@@ -138,7 +139,8 @@ function contentValid(v: unknown): v is NativeOpportunity {
     text(v.requirements_description, 2000) &&
     ((v.source_origin === 'manual_operator_entry' &&
       (v.external_source === undefined || v.external_source === null)) ||
-      (v.source_origin === 'ted_import' && tedSourceValid(v.external_source))) &&
+      (v.source_origin === 'ted_import' && tedSourceValid(v.external_source)) ||
+      (v.source_origin === 'bkms_import' && bkmsSourceValid(v.external_source))) &&
     v.verification_status === 'NOT_VERIFIED' &&
     Array.isArray(v.required_skills) &&
     v.required_skills.length <= 100 &&
@@ -161,9 +163,11 @@ function copyOpportunity(v: NativeOpportunity): NativeOpportunity {
     required_skills: [...v.required_skills],
     requirements_description: v.requirements_description,
     source_origin: v.source_origin,
-    ...(v.source_origin === 'ted_import' && v.external_source
+    ...(v.source_origin === 'ted_import' && v.external_source?.source === 'TED'
       ? { external_source: copyTedSource(v.external_source) }
-      : {}),
+      : v.source_origin === 'bkms_import' && v.external_source?.source === 'BEKANNTMACHUNGSSERVICE'
+        ? { external_source: copyBkmsSource(v.external_source) }
+        : {}),
     verification_status: v.verification_status,
   };
 }

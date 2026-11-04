@@ -2,7 +2,8 @@
 
 `/` now opens **Dashboard** at `/dashboard`. All existing `/profiles`, `/opportunities`,
 `/matching`, `/pipeline` and `/tenders` routes/deep links remain available. `/discover` now adds
-the separately gated [official TED search/import workflow](ted-discovery.md). The dashboard connects
+the separately gated [official TED search/import workflow](ted-discovery.md) and
+[German procurement daily catalogs](german-procurement-discovery.md). The dashboard connects
 existing workflows through read-only previews and navigation; it adds no backend API, database
 table, matching algorithm or mutation.
 
@@ -50,9 +51,11 @@ separate; the production build intentionally has no configured development proxy
    skill declarations and save. Return to Dashboard to see its name/type, without exposing skills.
 2. **Add Opportunity** → Opportunities: create and save the external project/tender reference,
    organization, date-only submission deadline and required skill labels. Alternatively, **Discover
-   Opportunities** → search TED → inspect → explicitly save. Open the saved opportunity and add
+   Opportunities** → choose TED search or explicitly load/search a German daily catalog → inspect
+   → explicitly save. Open the saved opportunity and add
    skills manually; importing never infers skills or creates tracking. Original TED provenance
-   remains distinct from manual declarations and later local edits.
+   remains distinct from manual declarations and later local edits; German notices retain their
+   own source metadata and version identity. No overlap with TED is inferred from similar text.
 3. On its dashboard card or Opportunities row, **Compare this opportunity** loads the saved source
    and preselects it in Opportunity Matching. Select a saved profile and click **Compare Skills**.
    Results are normalized exact-label comparisons, not experience/eligibility verification.
@@ -153,7 +156,7 @@ The existing tender smoke now enters `/tenders` explicitly; its workflow and dee
 
 The dashboard milestone implements integration, not AI discovery, recommendations, scraping, CV extraction,
 applications, emails, notifications, billing or pipeline automation. The current production build
-with DISC-1a reports a nonblocking approximately 524 kB minified-chunk warning; route splitting/performance
+with DISC-1b reports a nonblocking approximately 542 kB minified-chunk warning; route splitting/performance
 work remains separate from this functional milestone.
 
 Validation on 2026-10-30 (Python 3.12.14, Node 24.19.0): **579 frontend tests / 30 files passed**;

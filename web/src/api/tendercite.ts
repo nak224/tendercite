@@ -381,3 +381,23 @@ export function tenderDiscoveryPost(
     responseError,
   );
 }
+
+export function tenderBkmsRequest(
+  operation: 'catalog' | 'load' | 'search' | 'import',
+  body: string | undefined,
+  signal: AbortSignal | undefined,
+  responseError: (response: Response) => Promise<Error>,
+): Promise<unknown> {
+  return tenderRequest(
+    `discovery/bkms/${operation}`,
+    {
+      method: operation === 'catalog' ? 'GET' : 'POST',
+      body,
+      signal,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      redirect: 'error',
+    },
+    false,
+    responseError,
+  );
+}

@@ -12,11 +12,14 @@ from pathlib import Path
 
 import httpx
 import uvicorn
+from bkms_helpers import archive, package
 from discovery_helpers import notice_payload
 
+from tendercite.api.routes.bkms import get_bkms_client
 from tendercite.api.routes.discovery import get_ted_client
 from tendercite.core.config import settings
 from tendercite.main import app
+from tendercite.services.bkms import EXPORT_URL, BkmsClient
 from tendercite.services.ted import SEARCH_URL, TedClient
 
 
@@ -77,7 +80,22 @@ def main():
                 yield client
 
     app.dependency_overrides[get_ted_client] = controlled_client
-    print("CONTROLLED SYNTHETIC TED PROVIDER: browser test does not contact live TED.")
+    synthetic_archive = archive(
+        [(f"1000000{i}-1.json", package(f"1000000{i}-1")) for i in range(1, 7)]
+    )
+
+    def german_handler(request):
+        assert request.method == "GET" and str(request.url).split("?")[0] == EXPORT_URL
+        assert dict(request.url.params) == {"pubDay": "2026-10-30", "format": "ocds.zip"}
+        return httpx.Response(200, content=synthetic_archive)
+
+    def controlled_german_client():
+        with httpx.Client(transport=httpx.MockTransport(german_handler)) as http:
+            with BkmsClient(http) as client:
+                yield client
+
+    app.dependency_overrides[get_bkms_client] = controlled_german_client
+    print("CONTROLLED SYNTHETIC OFFICIAL PROVIDERS: browser tests do not contact live services.")
     uvicorn.run(app, host="127.0.0.1", port=args.port)
 
 

@@ -4,6 +4,7 @@ import { tenderciteConfigured } from '../api/tendercite';
 import { DiscoveryError, importTed, searchTed, type TedSearchResult } from '../api/discovery';
 import type { OpportunityRecord } from '../api/opportunities';
 import { Empty, Badge } from '../components/ui';
+import { BkmsDiscovery } from './BkmsDiscovery';
 
 type Outcome = {
   status?: 'CREATED' | 'ALREADY_PRESENT';
@@ -22,23 +23,40 @@ const warnings: Record<string, string> = {
   SUMMARY_SHORTENED: 'Summary shortened to 2,000 characters.',
 };
 export function Discover() {
+  const [source, setSource] = useState('TED');
+  const [busy, setBusy] = useState(false);
   return (
     <>
       <section className="panel">
         <h1>Discover Opportunities</h1>
         <p>
-          Search published TED active competition notices, inspect their metadata and explicitly
-          save an external opportunity. No documents, skills, legal requirements or qualifications
-          are inferred.
+          Inspect official procurement metadata and explicitly save selected opportunities. TED
+          provides remote search; German Open Data uses one explicitly downloaded daily catalog. No
+          documents, skills, legal requirements or qualifications are inferred.
         </p>
         <p>
-          Enable TENDERCITE_DISCOVERY_API_ENABLED for local discovery. The separate opportunities
-          flag enables browsing/editing saved records. No API key is required for public TED search.
-          These development flags are not authentication.
+          TED uses TENDERCITE_DISCOVERY_API_ENABLED; German Open Data uses the separate
+          TENDERCITE_BKMS_DISCOVERY_API_ENABLED flag. The opportunities flag enables
+          browsing/editing saved records. No API key is required for public TED search. These
+          development flags are not authentication.
         </p>
       </section>
+      <section className="panel">
+        <label>
+          Discovery source
+          <select value={source} disabled={busy} onChange={(e) => setSource(e.target.value)}>
+            <option value="TED">TED — European procurement notices</option>
+            <option value="BKMS">German Bekanntmachungsservice — public procurement</option>
+          </select>
+        </label>
+        <p>Switching sources never searches, imports or downloads provider data automatically.</p>
+      </section>
       {tenderciteConfigured() ? (
-        <DiscoveryWorkspace />
+        source === 'TED' ? (
+          <DiscoveryWorkspace onBusyChange={setBusy} />
+        ) : (
+          <BkmsDiscovery onBusyChange={setBusy} />
+        )
       ) : (
         <Empty>
           TenderCite is not configured. Set the fixed local development proxy and restart Vite.
@@ -47,7 +65,7 @@ export function Discover() {
     </>
   );
 }
-function DiscoveryWorkspace() {
+function DiscoveryWorkspace({ onBusyChange }: { onBusyChange: (busy: boolean) => void }) {
   const [keyword, setKeyword] = useState('');
   const [limit, setLimit] = useState(10);
   const [result, setResult] = useState<TedSearchResult | null>(null);
@@ -78,6 +96,7 @@ function DiscoveryWorkspace() {
     if (active.current || importing.current) return;
     const controller = new AbortController();
     active.current = controller;
+    onBusyChange(true);
     setSearching(true);
     setError('');
     try {
@@ -96,12 +115,14 @@ function DiscoveryWorkspace() {
       if (active.current === controller) {
         active.current = null;
         if (alive.current) setSearching(false);
+        if (alive.current) onBusyChange(false);
       }
     }
   }
   async function save(id: string) {
     if (importing.current || active.current || outcomes[id]?.record) return;
     importing.current = id;
+    onBusyChange(true);
     setSaving(id);
     try {
       const outcome = await importTed(id);
@@ -117,6 +138,7 @@ function DiscoveryWorkspace() {
     } finally {
       importing.current = null;
       if (alive.current) setSaving(null);
+      if (alive.current) onBusyChange(false);
     }
   }
   return (
