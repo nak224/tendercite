@@ -18,9 +18,15 @@ from tendercite.domain.bkms import (
     SearchInput,
     SearchResult,
 )
+from tendercite.domain.bkms_catalogs import (
+    CatalogCollection,
+    MultiSearchInput,
+    MultiSearchResult,
+    RemoveInput,
+)
 from tendercite.domain.opportunities import OpportunitySaveResult
 from tendercite.repositories.sqlite import SqliteRepository
-from tendercite.services.bkms import BkmsClient, search_catalog
+from tendercite.services.bkms import BkmsClient, search_catalog, search_catalogs
 
 _download_slot = threading.Lock()
 
@@ -51,6 +57,9 @@ def _operation(call):
             "BKMS_INVALID_PUBLICATION_DAY": 422,
             "BKMS_EXPORT_TOO_LARGE": 413,
             "BKMS_BUSY": 409,
+            "BKMS_DAY_ALREADY_STORED": 409,
+            "BKMS_DAY_LIMIT_REACHED": 409,
+            "BKMS_TOTAL_STORAGE_LIMIT": 413,
             "BKMS_TIMEOUT": 504,
             "BKMS_RATE_LIMITED": 429,
         }.get(exc.code, 502)
@@ -58,8 +67,22 @@ def _operation(call):
 
 
 HttpLoad = Annotated[LoadInput, BeforeValidator(_json_contract(LoadInput))]
-HttpSearch = Annotated[SearchInput, BeforeValidator(_json_contract(SearchInput))]
+
+
+def _search_contract(value):
+    contract = (
+        MultiSearchInput
+        if isinstance(value, MultiSearchInput)
+        or isinstance(value, dict)
+        and value.get("schema_version") == "bkms-search-input-2"
+        else SearchInput
+    )
+    return _json_contract(contract)(value)
+
+
+HttpSearch = Annotated[SearchInput | MultiSearchInput, BeforeValidator(_search_contract)]
 HttpImport = Annotated[ImportInput, BeforeValidator(_json_contract(ImportInput))]
+HttpRemove = Annotated[RemoveInput, BeforeValidator(_json_contract(RemoveInput))]
 Repository = Annotated[SqliteRepository, Depends(get_repository)]
 ReadRepository = Annotated[SqliteRepository, Depends(get_read_only_repository)]
 router = APIRouter(
@@ -78,6 +101,11 @@ def catalog(repository: ReadRepository):
     return _operation(lambda: repository.get_bkms_catalog()[1])
 
 
+@router.get("/catalogs", response_model=CatalogCollection)
+def catalogs(repository: ReadRepository):
+    return _operation(lambda: repository.get_bkms_catalogs()[1])
+
+
 @router.post("/load", response_model=CatalogSummary)
 def load(
     request: HttpLoad,
@@ -88,16 +116,30 @@ def load(
         if not _download_slot.acquire(blocking=False):
             raise BkmsError("BKMS_BUSY")
         try:
-            return repository.save_bkms_catalog(client.load(request))
+            repository.check_bkms_load(request)
+            return repository.save_bkms_catalog(
+                client.load(request), expected_catalog_id=request.expected_catalog_id
+            )
         finally:
             _download_slot.release()
 
     return _operation(operation)
 
 
-@router.post("/search", response_model=SearchResult)
+@router.post("/search", response_model=SearchResult | MultiSearchResult)
 def search(request: HttpSearch, repository: ReadRepository):
-    return _operation(lambda: search_catalog(repository, request))
+    return _operation(
+        lambda: (
+            search_catalogs(repository, request)
+            if isinstance(request, MultiSearchInput)
+            else search_catalog(repository, request)
+        )
+    )
+
+
+@router.post("/remove", response_model=CatalogCollection)
+def remove(request: HttpRemove, repository: Repository):
+    return _operation(lambda: repository.remove_bkms_catalog(request))
 
 
 @router.post(
