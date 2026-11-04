@@ -31,8 +31,8 @@ export function Discover() {
         <h1>Discover Opportunities</h1>
         <p>
           Inspect official procurement metadata and explicitly save selected opportunities. TED
-          provides remote search; German Open Data uses one explicitly downloaded daily catalog. No
-          documents, skills, legal requirements or qualifications are inferred.
+          provides remote search; German Open Data searches up to seven explicitly downloaded daily
+          catalogs locally. No documents, skills, legal requirements or qualifications are inferred.
         </p>
         <p>
           TED uses TENDERCITE_DISCOVERY_API_ENABLED; German Open Data uses the separate
