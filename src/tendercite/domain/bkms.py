@@ -52,6 +52,7 @@ class CatalogSummary(BkmsModel):
 class LoadInput(BkmsModel):
     schema_version: Literal["bkms-load-input-1"] = "bkms-load-input-1"
     export_day: date
+    expected_catalog_id: Digest | None = None
 
     @field_validator("export_day")
     @classmethod
