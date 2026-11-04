@@ -383,7 +383,7 @@ export function tenderDiscoveryPost(
 }
 
 export function tenderBkmsRequest(
-  operation: 'catalog' | 'load' | 'search' | 'import',
+  operation: 'catalog' | 'catalogs' | 'load' | 'search' | 'import' | 'remove',
   body: string | undefined,
   signal: AbortSignal | undefined,
   responseError: (response: Response) => Promise<Error>,
@@ -391,7 +391,7 @@ export function tenderBkmsRequest(
   return tenderRequest(
     `discovery/bkms/${operation}`,
     {
-      method: operation === 'catalog' ? 'GET' : 'POST',
+      method: operation === 'catalog' || operation === 'catalogs' ? 'GET' : 'POST',
       body,
       signal,
       headers: body ? { 'Content-Type': 'application/json' } : undefined,
