@@ -8,6 +8,7 @@ import {
 } from './bkmsReferences';
 import { BkmsError, bkmsRequest, parseBkmsCatalog, type BkmsCatalog } from './bkms';
 import { dateOnly } from './tedReferences';
+import { parseDeadlineEvidence, type DeadlineEvidence } from './bkmsDeadlines';
 
 export const noticeFilters = ['ALL', 'TENDER', 'AWARD', 'PLANNING', 'OTHER_UNKNOWN'] as const;
 export type NoticeFilter = (typeof noticeFilters)[number];
@@ -92,6 +93,7 @@ export interface NoticeOccurrence {
 }
 export interface BkmsHit {
   source: BkmsSource;
+  deadline_enrichment?: DeadlineEvidence | null;
   notice_category: Exclude<NoticeFilter, 'ALL'>;
   version_count: number;
   is_latest_stored: boolean;
@@ -154,6 +156,14 @@ function parseHit(v: unknown, coverage: BkmsCollection): BkmsHit {
     throw new BkmsError('Mismatched notice provenance.');
   return {
     source: copyBkmsSource(source),
+    ...(v.deadline_enrichment === undefined
+      ? {}
+      : {
+          deadline_enrichment:
+            v.deadline_enrichment === null
+              ? null
+              : parseDeadlineEvidence(v.deadline_enrichment, source, first.catalog_id),
+        }),
     notice_category: v.notice_category as Exclude<NoticeFilter, 'ALL'>,
     version_count: v.version_count,
     is_latest_stored: v.is_latest_stored,
