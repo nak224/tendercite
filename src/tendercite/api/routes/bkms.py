@@ -24,9 +24,12 @@ from tendercite.domain.bkms_catalogs import (
     MultiSearchResult,
     RemoveInput,
 )
+from tendercite.domain.bkms_deadlines import DeadlineLoadInput, DeadlineSummary
+from tendercite.domain.bkms_reference import Digest
 from tendercite.domain.opportunities import OpportunitySaveResult
 from tendercite.repositories.sqlite import SqliteRepository
 from tendercite.services.bkms import BkmsClient, search_catalog, search_catalogs
+from tendercite.services.bkms_deadlines import parse_eforms_archive
 
 _download_slot = threading.Lock()
 
@@ -52,6 +55,7 @@ def _operation(call):
             "BKMS_CATALOG_NOT_FOUND": 404,
             "BKMS_NOTICE_NOT_FOUND": 404,
             "BKMS_CATALOG_CONFLICT": 409,
+            "BKMS_DEADLINE_CONFLICT": 409,
             "BKMS_STORAGE_INTEGRITY": 409,
             "BKMS_NOT_IMPORTABLE": 422,
             "BKMS_INVALID_PUBLICATION_DAY": 422,
@@ -83,6 +87,7 @@ def _search_contract(value):
 HttpSearch = Annotated[SearchInput | MultiSearchInput, BeforeValidator(_search_contract)]
 HttpImport = Annotated[ImportInput, BeforeValidator(_json_contract(ImportInput))]
 HttpRemove = Annotated[RemoveInput, BeforeValidator(_json_contract(RemoveInput))]
+HttpDeadlineLoad = Annotated[DeadlineLoadInput, BeforeValidator(_json_contract(DeadlineLoadInput))]
 Repository = Annotated[SqliteRepository, Depends(get_repository)]
 ReadRepository = Annotated[SqliteRepository, Depends(get_read_only_repository)]
 router = APIRouter(
@@ -140,6 +145,34 @@ def search(request: HttpSearch, repository: ReadRepository):
 @router.post("/remove", response_model=CatalogCollection)
 def remove(request: HttpRemove, repository: Repository):
     return _operation(lambda: repository.remove_bkms_catalog(request))
+
+
+@router.get("/deadlines/{catalog_id}", response_model=DeadlineSummary)
+def deadline_summary(catalog_id: Digest, repository: ReadRepository):
+    return _operation(lambda: repository.get_bkms_deadline_summary(catalog_id))
+
+
+@router.post("/deadlines/load", response_model=DeadlineSummary)
+def load_deadlines(
+    request: HttpDeadlineLoad,
+    repository: Repository,
+    client: Annotated[BkmsClient, Depends(get_bkms_client)],
+):
+    def operation():
+        if not _download_slot.acquire(blocking=False):
+            raise BkmsError("BKMS_BUSY")
+        try:
+            summary = repository.check_bkms_deadline_load(request)
+            data = parse_eforms_archive(
+                client.download_day(summary.export_day, "eforms.zip"),
+                summary.export_day,
+                summary.catalog_id,
+            )
+            return repository.save_bkms_deadlines(data, request)
+        finally:
+            _download_slot.release()
+
+    return _operation(operation)
 
 
 @router.post(

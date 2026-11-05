@@ -197,11 +197,16 @@ class BkmsClient:
             self.client.close()
 
     def load(self, request: LoadInput) -> CatalogContents:
+        return parse_archive(self.download_day(request.export_day, "ocds.zip"), request.export_day)
+
+    def download_day(self, day: date, file_format: str) -> bytes:
+        if file_format not in ("ocds.zip", "eforms.zip"):
+            raise ValueError("Unsupported official export format")
         try:
             with self.client.stream(
                 "GET",
                 EXPORT_URL,
-                params={"pubDay": request.export_day.isoformat(), "format": "ocds.zip"},
+                params={"pubDay": day.isoformat(), "format": file_format},
                 headers={"Accept-Encoding": "identity"},
                 follow_redirects=False,
             ) as response:
@@ -217,7 +222,7 @@ class BkmsClient:
                     if size > MAX_DOWNLOAD_BYTES:
                         raise BkmsError("BKMS_EXPORT_TOO_LARGE")
                     chunks.append(chunk)
-            return parse_archive(b"".join(chunks), request.export_day)
+            return b"".join(chunks)
         except httpx.TimeoutException:
             raise BkmsError("BKMS_TIMEOUT") from None
         except httpx.RequestError:
@@ -319,6 +324,8 @@ def search_catalogs(repository, request: MultiSearchInput) -> MultiSearchResult:
 
     hits.sort(key=order)
     start = (request.page - 1) * request.limit
+    selected = hits[start : start + request.limit]
+    deadlines = repository.get_bkms_deadline_evidence(coverage, [h.source for h in selected])
     return MultiSearchResult(
         coverage=coverage,
         keyword=request.keyword,
@@ -327,6 +334,15 @@ def search_catalogs(repository, request: MultiSearchInput) -> MultiSearchResult:
         notice_category=request.notice_category,
         include_earlier_versions=request.include_earlier_versions,
         total_count=len(hits),
-        items=tuple(hits[start : start + request.limit]),
+        items=tuple(
+            h.model_copy(
+                update={
+                    "deadline_enrichment": deadlines.get(
+                        metadata[h.source.export_day].catalog_id, {}
+                    ).get(h.source.external_id)
+                }
+            )
+            for h in selected
+        ),
         next_page=request.page + 1 if start + request.limit < len(hits) else None,
     )
