@@ -1,0 +1,148 @@
+{
+  "baseline": {
+    "schema_version": "bkms-search-benchmark-1",
+    "synthetic": true,
+    "measured_at": "2026-11-05T21:44:09.747654+00:00",
+    "python": "3.12.14",
+    "pydantic": "2.13.5",
+    "sqlite": "3.53.1",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 5,
+    "days": 7,
+    "records_per_day": 1000,
+    "stored_records": 7000,
+    "description_characters": 1000,
+    "active_catalog_bytes": 13207257,
+    "with_enrichment": false,
+    "setup_seconds": 0.7830464510000184,
+    "repeats": 5,
+    "warmups_per_case": 1,
+    "page": 1,
+    "limit": 20,
+    "include_earlier_versions": false,
+    "cases": [
+      {
+        "keyword": "Software",
+        "category": "ALL",
+        "matches": 6400,
+        "returned": 20,
+        "milliseconds": [
+          374.3702540000413,
+          352.05287400003726,
+          343.87162799998805,
+          353.2824599999458,
+          369.38852499997665
+        ],
+        "median_ms": 353.2824599999458,
+        "min_ms": 343.87162799998805,
+        "max_ms": 374.3702540000413
+      },
+      {
+        "keyword": "Software",
+        "category": "AWARD",
+        "matches": 2134,
+        "returned": 20,
+        "milliseconds": [
+          232.7345979999791,
+          312.96440899996014,
+          237.73485900005653,
+          236.23582599998372,
+          226.46661199996743
+        ],
+        "median_ms": 236.23582599998372,
+        "min_ms": 226.46661199996743,
+        "max_ms": 312.96440899996014
+      },
+      {
+        "keyword": "UnmatchedPhrase",
+        "category": "ALL",
+        "matches": 0,
+        "returned": 0,
+        "milliseconds": [
+          217.6454980001381,
+          221.46479699995325,
+          222.5825259999965,
+          220.17325599995274,
+          222.25142499996764
+        ],
+        "median_ms": 221.46479699995325,
+        "min_ms": 217.6454980001381,
+        "max_ms": 222.5825259999965
+      }
+    ]
+  },
+  "with_enrichment": {
+    "schema_version": "bkms-search-benchmark-1",
+    "synthetic": true,
+    "measured_at": "2026-11-05T21:44:17.090467+00:00",
+    "python": "3.12.14",
+    "pydantic": "2.13.5",
+    "sqlite": "3.53.1",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 5,
+    "days": 7,
+    "records_per_day": 1000,
+    "stored_records": 7000,
+    "description_characters": 1000,
+    "active_catalog_bytes": 13207257,
+    "with_enrichment": true,
+    "setup_seconds": 1.6670889769998212,
+    "repeats": 5,
+    "warmups_per_case": 1,
+    "page": 1,
+    "limit": 20,
+    "include_earlier_versions": false,
+    "cases": [
+      {
+        "keyword": "Software",
+        "category": "ALL",
+        "matches": 6400,
+        "returned": 20,
+        "milliseconds": [
+          369.07793499995023,
+          369.5336349999252,
+          372.0100939999611,
+          381.6761409998435,
+          374.98146999996607
+        ],
+        "median_ms": 372.0100939999611,
+        "min_ms": 369.07793499995023,
+        "max_ms": 381.6761409998435
+      },
+      {
+        "keyword": "Software",
+        "category": "AWARD",
+        "matches": 2134,
+        "returned": 20,
+        "milliseconds": [
+          283.99243800004115,
+          251.3985909999974,
+          248.42012199997043,
+          278.31838899987815,
+          255.91111599987926
+        ],
+        "median_ms": 255.91111599987926,
+        "min_ms": 248.42012199997043,
+        "max_ms": 283.99243800004115
+      },
+      {
+        "keyword": "UnmatchedPhrase",
+        "category": "ALL",
+        "matches": 0,
+        "returned": 0,
+        "milliseconds": [
+          231.9209330000831,
+          228.28087600009894,
+          240.42969399988579,
+          252.29150999984995,
+          255.648740000197
+        ],
+        "median_ms": 240.42969399988579,
+        "min_ms": 228.28087600009894,
+        "max_ms": 255.648740000197
+      }
+    ]
+  }
+}
