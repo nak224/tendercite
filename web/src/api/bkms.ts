@@ -31,6 +31,9 @@ const codes = new Set([
   'BKMS_UNAVAILABLE',
   'BKMS_UNSUPPORTED_LICENSE',
   'BKMS_INVALID_EXPORT',
+  'BKMS_DAY_ALREADY_STORED',
+  'BKMS_DAY_LIMIT_REACHED',
+  'BKMS_TOTAL_STORAGE_LIMIT',
   'DATABASE_FAILED',
   'OPPORTUNITY_ID_CONFLICT',
   'OPPORTUNITY_STORAGE_INTEGRITY',
@@ -48,8 +51,8 @@ async function responseError(response: Response): Promise<Error> {
     code,
   );
 }
-async function request(
-  operation: 'catalog' | 'load' | 'search' | 'import',
+export async function bkmsRequest(
+  operation: 'catalog' | 'catalogs' | 'load' | 'search' | 'import' | 'remove',
   body?: object,
   signal?: AbortSignal,
 ): Promise<unknown> {
@@ -77,7 +80,7 @@ export interface BkmsCatalog {
   importable_count: number;
   warning_count: number;
 }
-function catalog(value: unknown): BkmsCatalog {
+export function parseBkmsCatalog(value: unknown): BkmsCatalog {
   if (
     !object(value) ||
     value.schema_version !== 'bkms-catalog-summary-1' ||
@@ -107,16 +110,22 @@ function catalog(value: unknown): BkmsCatalog {
 }
 export async function currentBkmsCatalog(signal?: AbortSignal): Promise<BkmsCatalog | null> {
   try {
-    return catalog(await request('catalog', undefined, signal));
+    return parseBkmsCatalog(await bkmsRequest('catalog', undefined, signal));
   } catch (error) {
     if (error instanceof BkmsError && error.code === 'BKMS_CATALOG_NOT_FOUND') return null;
     throw error;
   }
 }
-export async function loadBkmsDay(day: string): Promise<BkmsCatalog> {
+export async function loadBkmsDay(day: string, expectedCatalogId?: string): Promise<BkmsCatalog> {
   if (!day || !dateOnly(day)) throw new BkmsError('Select one completed publication day.');
-  const value = catalog(
-    await request('load', { schema_version: 'bkms-load-input-1', export_day: day }),
+  if (expectedCatalogId !== undefined && !digest(expectedCatalogId))
+    throw new BkmsError('Select the current stored day before replacing it.');
+  const value = parseBkmsCatalog(
+    await bkmsRequest('load', {
+      schema_version: 'bkms-load-input-1',
+      export_day: day,
+      ...(expectedCatalogId ? { expected_catalog_id: expectedCatalogId } : {}),
+    }),
   );
   if (value.export_day !== day)
     throw new BkmsError('Mismatched daily catalog response; load outcome uncertain.');
@@ -155,13 +164,13 @@ export async function searchBkms(
     throw new BkmsError(
       'Enter a literal keyword phrase (1–150 characters) and select a loaded daily catalog.',
     );
-  const v = await request(
+  const v = await bkmsRequest(
     'search',
     { schema_version: 'bkms-search-input-1', catalog_id: id, keyword, page, limit },
     signal,
   );
   if (!object(v)) throw new BkmsError('Invalid local search response.');
-  const c = catalog(v.catalog);
+  const c = parseBkmsCatalog(v.catalog);
   if (
     v.schema_version !== 'bkms-search-result-1' ||
     c.catalog_id !== id ||
@@ -201,7 +210,7 @@ export async function importBkms(
 ): Promise<{ status: 'CREATED' | 'ALREADY_PRESENT'; record: OpportunityRecord }> {
   if (!digest(catalogId) || !bkmsId(id))
     throw new BkmsError('Select a publication from the loaded catalog.');
-  const v = await request('import', {
+  const v = await bkmsRequest('import', {
     schema_version: 'bkms-import-input-1',
     catalog_id: catalogId,
     external_id: id,

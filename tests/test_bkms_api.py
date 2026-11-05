@@ -164,7 +164,13 @@ def test_failed_exports_stale_catalog_and_busy_preserve_existing_data(enabled):
     first = load(client)
     before = repo.database_path.read_bytes()
     app.dependency_overrides[get_bkms_client] = lambda: provider(b"PRIVATE")
-    safe(client.post(BASE + "/load", json={"export_day": DAY}), 502, "BKMS_INVALID_EXPORT")
+    safe(
+        client.post(
+            BASE + "/load", json={"export_day": DAY, "expected_catalog_id": first["catalog_id"]}
+        ),
+        502,
+        "BKMS_INVALID_EXPORT",
+    )
     assert repo.database_path.read_bytes() == before
     assert client.get(BASE + "/catalog").json() == first
     safe(
@@ -245,3 +251,124 @@ def test_native_editor_matching_pipeline_and_ted_remain_independent(enabled, mon
         ted.opportunity_id != saved.opportunity_id and ted.opportunity.source_origin == "ted_import"
     )
     assert len(repo.list_opportunities().opportunities) == 2
+
+
+def multi_provider(calls):
+    from bkms_helpers import archive, package
+
+    def handler(request):
+        day = request.url.params["pubDay"]
+        calls.append(day)
+        body = package()
+        body["publishedDate"] = day + "T08:00:00Z"
+        return httpx.Response(200, content=archive([(NOTICE + ".json", body)]))
+
+    app.dependency_overrides[get_bkms_client] = lambda: provider(handler=handler)
+
+
+def test_collection_scope_replace_remove_and_no_implicit_download(enabled):
+    client, repo = enabled
+    calls = []
+    multi_provider(calls)
+    assert client.get(BASE + "/catalogs").json()["days"] == [] and calls == []
+    first = load(client)
+    second = client.post(BASE + "/load", json={"export_day": "2026-10-31"}).json()
+    safe(client.post(BASE + "/load", json={"export_day": DAY}), 409, "BKMS_DAY_ALREADY_STORED")
+    assert calls == [DAY, "2026-10-31"]
+    coverage = client.get(BASE + "/catalogs").json()
+    assert [d["catalog"]["export_day"] for d in coverage["days"]] == ["2026-10-31", DAY]
+    assert coverage["days"][0]["warning_counts"] == {}
+    before = repo.database_path.read_bytes()
+    body = {
+        "schema_version": "bkms-search-input-2",
+        "collection_id": coverage["collection_id"],
+        "keyword": "Software",
+        "notice_category": "TENDER",
+    }
+    result = client.post(BASE + "/search", json=body)
+    assert result.status_code == 200 and result.headers["cache-control"] == "no-store"
+    data = result.json()
+    assert data["schema_version"] == "bkms-search-result-2" and data["total_count"] == 1
+    assert len(data["items"][0]["occurrences"]) == 2
+    assert data["items"][0]["source"]["export_day"] == "2026-10-31"
+    assert repo.database_path.read_bytes() == before and calls == [DAY, "2026-10-31"]
+    imported = client.post(BASE + "/import", json=import_body(first)).json()["record"]
+    replacement = client.post(
+        BASE + "/load", json={"export_day": DAY, "expected_catalog_id": first["catalog_id"]}
+    )
+    assert replacement.status_code == 200
+    safe(client.post(BASE + "/search", json=body), 409, "BKMS_CATALOG_CONFLICT")
+    safe(
+        client.post(
+            BASE + "/remove", json={"export_day": DAY, "expected_catalog_id": first["catalog_id"]}
+        ),
+        409,
+        "BKMS_CATALOG_CONFLICT",
+    )
+    removed = client.post(
+        BASE + "/remove",
+        json={
+            "schema_version": "bkms-remove-input-1",
+            "export_day": DAY,
+            "expected_catalog_id": replacement.json()["catalog_id"],
+        },
+    )
+    assert removed.status_code == 200 and [d["catalog"] for d in removed.json()["days"]] == [second]
+    assert calls == [DAY, "2026-10-31", DAY]
+    assert client.post(BASE + "/import", json=import_body(first)).json()["record"] == imported
+
+
+def test_day_limit_checked_before_provider_request_and_failed_replace_retains_days(enabled):
+    client, _ = enabled
+    calls = []
+    multi_provider(calls)
+    for n in range(24, 31):
+        assert client.post(BASE + "/load", json={"export_day": f"2026-10-{n}"}).status_code == 200
+    before = client.get(BASE + "/catalogs").json()
+    safe(
+        client.post(BASE + "/load", json={"export_day": "2026-10-31"}),
+        409,
+        "BKMS_DAY_LIMIT_REACHED",
+    )
+    assert len(calls) == 7
+    app.dependency_overrides[get_bkms_client] = lambda: provider(b"PRIVATE")
+    day = before["days"][0]["catalog"]
+    safe(
+        client.post(
+            BASE + "/load",
+            json={"export_day": day["export_day"], "expected_catalog_id": day["catalog_id"]},
+        ),
+        502,
+        "BKMS_INVALID_EXPORT",
+    )
+    assert client.get(BASE + "/catalogs").json() == before
+
+
+@pytest.mark.parametrize(
+    "operation,body",
+    [
+        ("remove", {"export_day": DAY}),
+        ("remove", {"export_day": DAY, "expected_catalog_id": "PRIVATE"}),
+        (
+            "search",
+            {
+                "schema_version": "bkms-search-input-2",
+                "collection_id": "a" * 64,
+                "keyword": "Software",
+                "notice_category": "OPEN",
+            },
+        ),
+        (
+            "search",
+            {
+                "schema_version": "bkms-search-input-2",
+                "collection_id": "a" * 64,
+                "keyword": "Software",
+                "include_earlier_versions": "yes",
+            },
+        ),
+    ],
+)
+def test_multi_contract_errors_are_safe(enabled, operation, body):
+    client, _ = enabled
+    safe(client.post(BASE + "/" + operation, json=body), 422, "INVALID_BKMS_INPUT")

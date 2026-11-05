@@ -2,7 +2,14 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import { App } from '../App';
-import { bkmsCatalog, bkmsResults, bkmsRecord, bkmsNotice } from '../test/bkms';
+import type { BkmsCollection } from '../api/bkmsCatalogs';
+import {
+  bkmsCatalog,
+  bkmsMultiResults as bkmsResults,
+  bkmsCollection,
+  bkmsRecord,
+  bkmsNotice,
+} from '../test/bkms';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -12,6 +19,7 @@ function setup(
   options: {
     configured?: boolean;
     loaded?: boolean;
+    collection?: BkmsCollection;
     catalogRead?: () => Response | Promise<Response>;
     save?: () => Response | Promise<Response>;
     load?: () => Response | Promise<Response>;
@@ -20,15 +28,20 @@ function setup(
 ) {
   const posts: { path: string; body: unknown }[] = [];
   let loaded = options.loaded ?? false;
+  let current = options.collection;
+  let reads = 0;
   const fetcher = vi.fn(async (request: Request) => {
     const path = new URL(request.url).pathname;
     expect(new URL(request.url).origin).toBe(window.location.origin);
-    if (request.method === 'GET' && path.endsWith('/discovery/bkms/catalog') && options.catalogRead)
+    if (
+      request.method === 'GET' &&
+      path.endsWith('/discovery/bkms/catalogs') &&
+      options.catalogRead &&
+      reads++ === 0
+    )
       return options.catalogRead();
-    if (request.method === 'GET' && path.endsWith('/discovery/bkms/catalog'))
-      return loaded
-        ? Response.json(bkmsCatalog())
-        : Response.json({ detail: { code: 'BKMS_CATALOG_NOT_FOUND' } }, { status: 404 });
+    if (request.method === 'GET' && path.endsWith('/discovery/bkms/catalogs'))
+      return Response.json(current ?? bkmsCollection(!loaded));
     if (request.method === 'POST') {
       posts.push({ path, body: await request.json() });
       if (path.endsWith('/load')) {
@@ -36,6 +49,17 @@ function setup(
         return options.load ? options.load() : Response.json(bkmsCatalog());
       }
       if (path.endsWith('/search')) return Response.json(options.results ?? bkmsResults());
+      if (path.endsWith('/remove')) {
+        const body = posts.at(-1)!.body as { export_day: string };
+        const previous = current ?? bkmsCollection(!loaded);
+        current = {
+          ...previous,
+          collection_id: 'f'.repeat(64),
+          days: previous.days.filter((d) => d.catalog.export_day !== body.export_day),
+          stored_bytes: 0,
+        };
+        return Response.json(current);
+      }
       if (path.endsWith('/import'))
         return options.save
           ? options.save()
@@ -66,7 +90,9 @@ async function choose() {
   await screen.findByRole('heading', { name: 'German Bekanntmachungsservice — Open Data' });
 }
 async function search() {
-  await screen.findByLabelText('Loaded German catalog');
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Search local notices' })).toBeEnabled(),
+  );
   await userEvent.type(screen.getByLabelText('Keyword phrase'), 'Software');
   await userEvent.click(screen.getByRole('button', { name: 'Search local notices' }));
   await screen.findByRole('heading', { name: 'Synthetic software procurement' });
@@ -92,11 +118,13 @@ test('switching sources does not search or download; daily load and search are s
   await search();
   expect(posts).toHaveLength(2);
   expect(posts[1]!.body).toEqual({
-    schema_version: 'bkms-search-input-1',
-    catalog_id: 'a'.repeat(64),
+    schema_version: 'bkms-search-input-2',
+    collection_id: 'd'.repeat(64),
     keyword: 'Software',
     page: 1,
     limit: 10,
+    notice_category: 'ALL',
+    include_earlier_versions: false,
   });
   expect(screen.getByRole('link', { name: 'Original German publication' })).toHaveAttribute(
     'href',
@@ -201,15 +229,17 @@ test('failed download can be inspected through local catalog read, with no secon
     target: { value: '2026-10-30' },
   });
   await userEvent.click(screen.getByRole('button', { name: 'Load publication day' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('Catalog replacement is unconfirmed');
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Download/storage outcome is not confirmed',
+  );
   await userEvent.click(screen.getByRole('button', { name: 'Read current local catalog' }));
   await screen.findByLabelText('Loaded German catalog');
   expect(posts).toHaveLength(1);
 });
 test('missing title prevents saving', async () => {
   const results = bkmsResults();
-  results.items[0]!.original_metadata.title = null;
-  results.items[0]!.mapping_warnings = ['MISSING_TITLE'];
+  results.items[0]!.source.original_metadata.title = null;
+  results.items[0]!.source.mapping_warnings = ['MISSING_TITLE'];
   setup({ loaded: true, results });
   await choose();
   await screen.findByLabelText('Loaded German catalog');
@@ -225,7 +255,7 @@ test('empty results are explicitly scoped to the loaded catalog', async () => {
   await screen.findByLabelText('Loaded German catalog');
   await userEvent.type(screen.getByLabelText('Keyword phrase'), 'Software');
   await userEvent.click(screen.getByRole('button', { name: 'Search local notices' }));
-  expect(await screen.findByText('No local notices match this keyword.')).toBeVisible();
+  expect(await screen.findByText(/No local notices match this keyword and view/)).toBeVisible();
 });
 
 test('unconfigured proxy makes no requests for either source', async () => {
@@ -251,9 +281,126 @@ test('delayed initial metadata cannot replace a successfully loaded catalog', as
   });
   await userEvent.click(screen.getByRole('button', { name: 'Load publication day' }));
   await screen.findByLabelText('Loaded German catalog');
-  await act(async () =>
-    complete(Response.json({ detail: { code: 'BKMS_CATALOG_NOT_FOUND' } }, { status: 404 })),
-  );
+  await act(async () => complete(Response.json(bkmsCollection(true))));
   expect(screen.getByLabelText('Loaded German catalog')).toHaveTextContent('2026-10-30');
   expect(posts).toHaveLength(1);
+});
+
+test('replacing a retained day requires a separate confirmation with the current hash', async () => {
+  const { posts } = setup({ loaded: true });
+  await choose();
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Search local notices' })).toBeEnabled(),
+  );
+  fireEvent.change(screen.getByLabelText('Publication day (Europe/Berlin)'), {
+    target: { value: '2026-10-30' },
+  });
+  expect(screen.getByRole('button', { name: 'Load publication day' })).toBeDisabled();
+  await userEvent.click(screen.getByRole('button', { name: 'Replace stored day' }));
+  expect(posts).toEqual([]);
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel catalog change' }));
+  expect(posts).toEqual([]);
+  await userEvent.click(screen.getByRole('button', { name: 'Replace stored day' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Confirm day replacement' }));
+  await screen.findByText(/Server confirmed replacement/);
+  expect(posts).toEqual([
+    {
+      path: '/tendercite-api/api/v1/discovery/bkms/load',
+      body: {
+        schema_version: 'bkms-load-input-1',
+        export_day: '2026-10-30',
+        expected_catalog_id: 'a'.repeat(64),
+      },
+    },
+  ]);
+});
+
+test('removing a day is explicit and refreshes coverage without a provider download', async () => {
+  const { posts } = setup({ loaded: true });
+  await choose();
+  const remove = await screen.findByRole('button', { name: 'Remove 2026-10-30' });
+  await userEvent.click(remove);
+  expect(posts).toEqual([]);
+  expect(screen.getByRole('alertdialog', { name: 'Confirm catalog change' })).toHaveTextContent(
+    'Imported opportunities',
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'Confirm day removal' }));
+  await screen.findByText(/Server confirmed removal/);
+  expect(posts).toEqual([
+    {
+      path: '/tendercite-api/api/v1/discovery/bkms/remove',
+      body: {
+        schema_version: 'bkms-remove-input-1',
+        export_day: '2026-10-30',
+        expected_catalog_id: 'a'.repeat(64),
+      },
+    },
+  ]);
+  expect(screen.getByRole('button', { name: 'Search local notices' })).toBeDisabled();
+  expect(screen.getByText(/No stored days/)).toBeVisible();
+});
+
+test('seven retained days prevent adding another without automatically removing anything', async () => {
+  const collection = bkmsCollection();
+  collection.days = Array.from({ length: 7 }, (_, i) => ({
+    catalog: {
+      ...bkmsCatalog(),
+      export_day: `2026-10-${30 - i}`,
+      catalog_id: String(i + 1).repeat(64),
+    },
+    warning_counts: {},
+  }));
+  const { posts } = setup({ collection });
+  await choose();
+  await screen.findByText(/Stored publication days \(7 \/ 7\)/);
+  fireEvent.change(screen.getByLabelText('Publication day (Europe/Berlin)'), {
+    target: { value: '2026-10-31' },
+  });
+  expect(screen.getByRole('button', { name: 'Load publication day' })).toBeDisabled();
+  expect(screen.getByText(/no day is deleted automatically/)).toBeVisible();
+  expect(posts).toEqual([]);
+});
+
+test('notice-type and earlier-version controls only apply on explicit search', async () => {
+  const result = bkmsResults();
+  result.notice_category = 'AWARD';
+  result.include_earlier_versions = true;
+  result.items[0]!.notice_category = 'AWARD';
+  result.items[0]!.is_latest_stored = false;
+  result.items[0]!.version_count = 2;
+  result.items[0]!.source.original_metadata.tags = ['award'];
+  result.coverage.days[0]!.catalog.record_count = 2;
+  const { posts } = setup({ loaded: true, results: result });
+  await choose();
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Search local notices' })).toBeEnabled(),
+  );
+  await userEvent.selectOptions(screen.getByLabelText('Notice type'), 'AWARD');
+  await userEvent.click(screen.getByLabelText('Show all stored notice versions'));
+  expect(posts).toEqual([]);
+  await userEvent.type(screen.getByLabelText('Keyword phrase'), 'Software');
+  await userEvent.click(screen.getByRole('button', { name: 'Search local notices' }));
+  await screen.findByRole('heading', { name: 'Synthetic software procurement' });
+  expect(posts[0]!.body).toEqual({
+    schema_version: 'bkms-search-input-2',
+    collection_id: 'd'.repeat(64),
+    keyword: 'Software',
+    page: 1,
+    limit: 10,
+    notice_category: 'AWARD',
+    include_earlier_versions: true,
+  });
+  expect(screen.getByText(/Earlier stored numeric version/)).toBeVisible();
+});
+
+test('missing tags remain visibly unknown', async () => {
+  const result = bkmsResults();
+  result.items[0]!.source.original_metadata.tags = [];
+  result.items[0]!.notice_category = 'OTHER_UNKNOWN';
+  setup({ loaded: true, results: result });
+  await choose();
+  await search();
+  expect(
+    screen.getByText(/Notice type: Other \/ unknown. Source tags: Unknown \/ not supplied/),
+  ).toBeVisible();
 });

@@ -23,9 +23,10 @@ def repo(tmp_path):
     return SqliteRepository(tmp_path / "synthetic.db")
 
 
-def loaded(repo, payload=None):
+def loaded(repo, payload=None, *, expected_catalog_id=None):
     return repo.save_bkms_catalog(
-        provider(payload).load(LoadInput(export_day=date.fromisoformat(DAY)))
+        provider(payload).load(LoadInput(export_day=date.fromisoformat(DAY))),
+        expected_catalog_id=expected_catalog_id,
     )
 
 
@@ -227,7 +228,7 @@ def test_duplicate_preserves_edits_restart_and_catalog_replacement(repo):
             )
         ),
     )
-    loaded(repo, archive([]))
+    loaded(repo, archive([]), expected_catalog_id=summary.catalog_id)
     restarted = SqliteRepository(repo.database_path, initialize=False)
     repeated = restarted.import_bkms_opportunity(request)
     assert repeated.status == "ALREADY_PRESENT" and repeated.record == edited.record
@@ -283,7 +284,7 @@ def test_failed_download_keeps_catalog_and_tampering_is_detected(repo):
         provider(b"PRIVATE").load(LoadInput(export_day=date.fromisoformat(DAY)))
     assert repo.database_path.read_bytes() == before
     with repo._connect() as c:
-        c.execute("UPDATE bkms_catalog SET payload='{}'")
+        c.execute("UPDATE bkms_catalog_days SET payload='{}'")
     with pytest.raises(BkmsError, match="STORAGE_INTEGRITY"):
         repo.get_bkms_catalog(summary.catalog_id)
 

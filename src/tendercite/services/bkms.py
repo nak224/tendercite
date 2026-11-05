@@ -18,6 +18,13 @@ from tendercite.domain.bkms import (
     SearchInput,
     SearchResult,
 )
+from tendercite.domain.bkms_catalogs import (
+    MultiSearchHit,
+    MultiSearchInput,
+    MultiSearchResult,
+    NoticeOccurrence,
+    notice_category,
+)
 from tendercite.domain.bkms_reference import (
     LICENSE,
     ORIGIN,
@@ -246,4 +253,80 @@ def search_catalog(repository, request: SearchInput) -> SearchResult:
         total_count=len(records),
         items=tuple(records[start : start + request.limit]),
         next_page=request.page + 1 if start + request.limit < len(records) else None,
+    )
+
+
+def search_catalogs(repository, request: MultiSearchInput) -> MultiSearchResult:
+    catalogs, coverage = repository.get_bkms_catalogs(request.collection_id)
+    by_identity, occurrences, versions = {}, {}, {}
+    metadata = {d.catalog.export_day: d.catalog for d in coverage.days}
+    # Repository order is newest export day first. Never merge snapshot fields.
+    for catalog in catalogs:
+        for source in catalog.records:
+            identity = source.external_id
+            by_identity.setdefault(identity, source)
+            occurrences.setdefault(identity, []).append(
+                NoticeOccurrence(
+                    export_day=source.export_day,
+                    catalog_id=metadata[source.export_day].catalog_id,
+                    record_sha256=source.record_sha256,
+                )
+            )
+            notice, version = notice_parts(identity)
+            versions.setdefault(notice, {})[identity] = int(version)
+
+    def normalized(value):
+        return " ".join(unicodedata.normalize("NFKC", value).casefold().split())
+
+    keyword = normalized(request.keyword)
+    highest_versions = {notice: max(values.values()) for notice, values in versions.items()}
+    hits = []
+    for identity, source in by_identity.items():
+        notice, version = notice_parts(identity)
+        is_latest = int(version) == highest_versions[notice]
+        if not request.include_earlier_versions and not is_latest:
+            continue
+        category = notice_category(source.original_metadata.tags)
+        if request.notice_category != "ALL" and request.notice_category != category:
+            continue
+        meta = source.original_metadata
+        if not any(
+            keyword in normalized(v)
+            for v in (meta.title, meta.buyer, meta.description)
+            if v is not None
+        ):
+            continue
+        hits.append(
+            MultiSearchHit(
+                source=source,
+                notice_category=category,
+                version_count=len(versions[notice]),
+                is_latest_stored=is_latest,
+                occurrences=tuple(occurrences[identity]),
+                source_record_hashes_differ=len({o.record_sha256 for o in occurrences[identity]})
+                > 1,
+            )
+        )
+
+    def order(hit):
+        published = hit.source.original_metadata.published_at
+        instant = (
+            datetime.fromisoformat(published.replace("Z", "+00:00")).timestamp()
+            if published
+            else float("-inf")
+        )
+        return -instant, -hit.source.export_day.toordinal(), hit.source.external_id
+
+    hits.sort(key=order)
+    start = (request.page - 1) * request.limit
+    return MultiSearchResult(
+        coverage=coverage,
+        keyword=request.keyword,
+        page=request.page,
+        limit=request.limit,
+        notice_category=request.notice_category,
+        include_earlier_versions=request.include_earlier_versions,
+        total_count=len(hits),
+        items=tuple(hits[start : start + request.limit]),
+        next_page=request.page + 1 if start + request.limit < len(hits) else None,
     )

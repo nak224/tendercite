@@ -3,7 +3,7 @@
 `/` now opens **Dashboard** at `/dashboard`. All existing `/profiles`, `/opportunities`,
 `/matching`, `/pipeline` and `/tenders` routes/deep links remain available. `/discover` now adds
 the separately gated [official TED search/import workflow](ted-discovery.md) and
-[German procurement daily catalogs](german-procurement-discovery.md). The dashboard connects
+[German procurement daily catalogs](multi-day-german-procurement-discovery.md). The dashboard connects
 existing workflows through read-only previews and navigation; it adds no backend API, database
 table, matching algorithm or mutation.
 
@@ -51,7 +51,7 @@ separate; the production build intentionally has no configured development proxy
    skill declarations and save. Return to Dashboard to see its name/type, without exposing skills.
 2. **Add Opportunity** → Opportunities: create and save the external project/tender reference,
    organization, date-only submission deadline and required skill labels. Alternatively, **Discover
-   Opportunities** → choose TED search or explicitly load/search a German daily catalog → inspect
+   Opportunities** → choose TED search or explicitly load/search retained German days → inspect
    → explicitly save. Open the saved opportunity and add
    skills manually; importing never infers skills or creates tracking. Original TED provenance
    remains distinct from manual declarations and later local edits; German notices retain their

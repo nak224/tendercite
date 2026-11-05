@@ -5,6 +5,11 @@ one completed publication day, search the local catalog, inspect a notice and ex
 Open its existing Opportunities editor to edit local fields/skills, compare with a profile or
 explicitly add it to Pipeline. No downstream action runs during import. TED remains a separate source.
 
+DISC-2a now retains **up to seven explicitly loaded days**. See the
+[multi-day guide](multi-day-german-procurement-discovery.md) for retention, migration, combined
+search/filter/version contracts and current verification. Source rights and download guards below
+remain applicable; the original single-day search API is retained for compatibility.
+
 ## Verified access, formats and rights
 
 Checked on **2026-10-31**, through the managed proxy with TLS verification:
@@ -56,14 +61,17 @@ never extracted. Unsafe paths, symlinks, encrypted entries, unsupported compress
 duplicate-key/invalid JSON, malformed known fields or mismatched IDs/URLs reject the entire export.
 A legitimate empty ZIP is an explicit empty catalog. No records are silently dropped.
 
-`repositories/bkms.py` atomically replaces one `bkms_catalog` row in the existing SQLite database.
-Normal initialization adds this table without modifying existing data/tables. Failed loads retain
-the previous catalog. Read-only inspection does not initialize a database. No parallel opportunity
-store, archive loop, background importer or new dependency is introduced.
+`repositories/bkms.py` now retains seven daily rows within 96 MiB active storage, with explicit
+digest-bound replacement/removal. The original singleton remains readable and is copied transactionally
+on the first explicit catalog write, with its original bytes kept as an inactive recovery table.
+Failed loads retain all previous days. Read-only inspection does not initialize a database. See the
+multi-day guide for upgrade and storage details. No parallel opportunity store or background importer
+is introduced.
 
 Local search scans retained title/buyer/description using NFKC, case-folding, whitespace normalization
-and literal substring matching, ordered by source ID. It makes no outbound requests or writes and
-returns 1–20 results/page. It is **not relevance-ranked**, exhaustive or a whole-service search.
+and literal substring matching. The v2 combined view orders by source publication timestamp, newest
+first with stable ties; v1 single-day search retains source-ID order. Search makes no outbound requests
+or writes and returns 1–20 results/page. It is **not relevance-ranked**, exhaustive or a whole-service search.
 The catalog includes tender, award, planning and untagged notices; source tags are displayed, never
 interpreted as proof that bidding is open. The provider owns the exact completed Berlin-day boundary;
 local validation rejects out-of-range/obviously future dates and maps its HTTP 400 to a safe invalid-day
@@ -131,8 +139,9 @@ TENDERCITE_PROXY_TARGET=http://127.0.0.1:8001 npm --prefix web run dev
 
 Open `http://127.0.0.1:5174/discover`. Switching sources never contacts providers; the German panel
 only reads local catalog metadata. Explicitly load a completed day, inspect counts/hashes, search,
-inspect the notice/original link and save it. Loading another day replaces the catalog, never saved
-opportunities. Use **View Opportunity**, add skills manually, then **Compare Skills** or **Add to
+inspect the notice/original link and save it. Loading another day preserves retained catalogs; replacing
+or removing a day requires explicit confirmation and never changes saved opportunities. Use
+**View Opportunity**, add skills manually, then **Compare Skills** or **Add to
 Pipeline** explicitly. No profile/snapshot/AI provider is needed for discovery itself.
 
 Source flags are independent and disabled by default. German discovery works with TED off;
@@ -153,7 +162,7 @@ URLs, database selectors, uploaded archives, months or arbitrary provider query 
 | Method/path | Input | Response |
 | --- | --- | --- |
 | GET `/catalog` | None | `bkms-catalog-summary-1` or explicit missing-catalog error |
-| POST `/load` | `{"schema_version":"bkms-load-input-1","export_day":"2026-10-30"}` | Validated catalog summary; atomic replacement |
+| POST `/load` | `{"schema_version":"bkms-load-input-1","export_day":"2026-10-30"}` | Validated catalog summary; add day; replacing an existing day also requires its `expected_catalog_id` |
 | POST `/search` | `{"schema_version":"bkms-search-input-1","catalog_id":"<returned digest>","keyword":"Software","page":1,"limit":10}` | `bkms-search-result-1`: catalog, keyword/page/limit, total_count, items, next_page |
 | POST `/import` | `{"schema_version":"bkms-import-input-1","catalog_id":"<returned digest>","external_id":"10000001-1"}` (synthetic ID) | Existing `native-opportunity-save-result-1`: 201 CREATED or 200 ALREADY_PRESENT |
 
@@ -220,7 +229,7 @@ E2E_BASE_URL=http://127.0.0.1:5174 TENDERCITE_CONTROLLED_DISCOVERY_SMOKE=1 npm -
 The harness refuses existing/non-temporary databases and retrieval/provider configuration, and has
 no production provider-redirection setting. Screenshots stay in ignored test output. Offline/browser
 tests use no live data, real personnel, private pilot, model downloads, paid responses or ledgers.
-Remaining limits: one retained day, bounded literal search, no CPV/country filters, automatic refresh,
+Remaining limits: seven retained days, bounded literal search, no CPV/country filters, automatic refresh,
 cross-source merging, semantic matching, inferred skills, attachment ingestion or applications.
 
 Validation on 2026-10-31 (Python 3.12.14, Node 24.19.0): **1,650 offline Python tests passed,
