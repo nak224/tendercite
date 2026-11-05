@@ -27,7 +27,7 @@ declared v1.0.0**. See [release checks](docs/release-check.md).
 - Native manual freelancer/company profiles at `/profiles`, independent of workforce snapshots, with explicit revision-checked saves and unverified skill declarations.
 - Native opportunities at `/opportunities`: manual external references or explicitly imported TED metadata, editable skill labels, date-only deadlines and revision-checked saves.
 - Official TED discovery at `/discover`: explicit bounded keyword search and selected import, immutable source attribution and duplicate protection; no inferred skills or automatic tracking.
-- Official German Bekanntmachungsservice Open Data: retain up to seven explicit daily OCDS catalogs, search/filter versions locally and import with CC Zero/source provenance; separate from TED.
+- Official German Bekanntmachungsservice Open Data: retain up to seven explicit daily OCDS catalogs, search/filter versions locally and import with CC Zero/source provenance; separate from TED. Explicit [eForms deadline enrichment](docs/integrations/official-deadline-enrichment.md) preserves lot dates/offsets and conflicts separately from local deadlines.
 - Explicit native profile/opportunity skill-label comparison at `/matching`: normalized exact equality with original labels, counts and revision checks; no qualification score or inference.
 - Native manual opportunity pipeline at `/pipeline`: explicit tracking, stages, priority, notes and next actions with revision-checked saves; no external submissions or automatic outcomes.
 - JSON, CSV and Markdown exports; legacy Streamlit UI; FastAPI/OpenAPI.
