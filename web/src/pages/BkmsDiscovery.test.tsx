@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import { App } from '../App';
 import type { BkmsCollection } from '../api/bkmsCatalogs';
+import { deadlineEvidence, deadlineSummary } from '../test/bkmsDeadlines';
 import {
   bkmsCatalog,
   bkmsMultiResults as bkmsResults,
@@ -24,6 +25,7 @@ function setup(
     save?: () => Response | Promise<Response>;
     load?: () => Response | Promise<Response>;
     results?: unknown;
+    deadlineLoad?: () => Response | Promise<Response>;
   } = {},
 ) {
   const posts: { path: string; body: unknown }[] = [];
@@ -33,6 +35,8 @@ function setup(
   const fetcher = vi.fn(async (request: Request) => {
     const path = new URL(request.url).pathname;
     expect(new URL(request.url).origin).toBe(window.location.origin);
+    if (request.method === 'GET' && path.includes('/discovery/bkms/deadlines/'))
+      return Response.json(deadlineSummary());
     if (
       request.method === 'GET' &&
       path.endsWith('/discovery/bkms/catalogs') &&
@@ -44,6 +48,8 @@ function setup(
       return Response.json(current ?? bkmsCollection(!loaded));
     if (request.method === 'POST') {
       posts.push({ path, body: await request.json() });
+      if (path.endsWith('/deadlines/load'))
+        return options.deadlineLoad ? options.deadlineLoad() : Response.json(deadlineSummary());
       if (path.endsWith('/load')) {
         loaded = true;
         return options.load ? options.load() : Response.json(bkmsCatalog());
@@ -403,4 +409,100 @@ test('missing tags remain visibly unknown', async () => {
   expect(
     screen.getByText(/Notice type: Other \/ unknown. Source tags: Unknown \/ not supplied/),
   ).toBeVisible();
+});
+
+test('official deadline download is explicit, bound to the selected day and never adopts opportunity fields', async () => {
+  const { posts } = setup({ loaded: true });
+  await choose();
+  const button = await screen.findByRole('button', {
+    name: 'Load official deadlines for 2026-10-30',
+  });
+  expect(posts).toHaveLength(0);
+  await userEvent.click(button);
+  await screen.findByText(/Server confirmed official deadline enrichment/);
+  expect(posts).toEqual([
+    {
+      path: '/tendercite-api/api/v1/discovery/bkms/deadlines/load',
+      body: {
+        schema_version: 'bkms-deadline-load-1',
+        catalog_id: 'a'.repeat(64),
+        expected_enrichment_id: '9'.repeat(64),
+      },
+    },
+  ]);
+  expect(screen.getByText(/Stored deadline state: CURRENT/)).toBeVisible();
+  expect(screen.queryByRole('button', { name: /Adopt|Apply deadline/ })).not.toBeInTheDocument();
+});
+
+test.each(['MULTIPLE_LOTS', 'CONFLICT', 'UNRECOGNIZED'] as const)(
+  'stored %s source values stay distinct from a local deadline',
+  async (status) => {
+    const e = deadlineEvidence();
+    e.notice.status = status;
+    e.notice.lots.push({
+      lot_id: 'LOT-0002',
+      status: 'SINGLE',
+      periods: [{ dates: ['2026-12-09+01:00'], times: ['11:00:00+01:00'] }],
+    });
+    const { posts } = setup({
+      loaded: true,
+      results: {
+        ...bkmsResults(),
+        items: [{ ...bkmsResults().items[0]!, deadline_enrichment: e }],
+      },
+    });
+    await choose();
+    await search();
+    const panel = screen.getByRole('complementary', {
+      name: 'Official eForms submission deadlines',
+    });
+    expect(panel).toHaveTextContent(status);
+    expect(panel).toHaveTextContent('2026-12-08+01:00');
+    expect(panel).toHaveTextContent('2026-12-09+01:00');
+    expect(panel).toHaveTextContent('future deadline does not prove bidding is open');
+    expect(panel).toHaveTextContent('Saving a notice does not adopt these values');
+    expect(posts.filter((p) => p.path.includes('/deadlines/'))).toHaveLength(0);
+  },
+);
+
+test('pending deadline download prevents overlapping mutations', async () => {
+  let finish!: (r: Response) => void;
+  const { posts } = setup({
+    loaded: true,
+    deadlineLoad: () =>
+      new Promise((r) => {
+        finish = r;
+      }),
+  });
+  await choose();
+  const button = await screen.findByRole('button', {
+    name: 'Load official deadlines for 2026-10-30',
+  });
+  await userEvent.click(button);
+  await waitFor(() => expect(finish).toBeDefined());
+  fireEvent.click(button);
+  expect(button).toBeDisabled();
+  expect(screen.getByLabelText('Discovery source')).toBeDisabled();
+  expect(posts).toHaveLength(1);
+  await act(async () => finish(Response.json(deadlineSummary())));
+  await screen.findByText(/Server confirmed official deadline enrichment/);
+});
+
+test('uncertain enrichment reports safely, preserves selected controls, and never retries', async () => {
+  const { posts } = setup({
+    loaded: true,
+    deadlineLoad: () => Promise.reject(new Error('PRIVATE')),
+  });
+  await choose();
+  await userEvent.type(screen.getByLabelText('Keyword phrase'), 'Software');
+  await userEvent.click(
+    await screen.findByRole('button', { name: 'Load official deadlines for 2026-10-30' }),
+  );
+  await screen.findByText(/Enrichment persistence is not confirmed/);
+  expect(screen.getByRole('alert')).not.toHaveTextContent('PRIVATE');
+  expect(screen.getByLabelText('Keyword phrase')).toHaveValue('Software');
+  expect(
+    screen.queryByText(/Server confirmed official deadline enrichment/),
+  ).not.toBeInTheDocument();
+  expect(posts).toHaveLength(1);
 });

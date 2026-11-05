@@ -4,14 +4,17 @@ Never exposed by production configuration. Refuses existing/non-temporary databa
 """
 
 import argparse
+import io
 import json
 import os
 import re
 import tempfile
+import zipfile
 from pathlib import Path
 
 import httpx
 import uvicorn
+from bkms_deadline_helpers import xml
 from bkms_helpers import archive, package
 from discovery_helpers import notice_payload
 
@@ -105,8 +108,27 @@ def main():
     def german_handler(request):
         assert request.method == "GET" and str(request.url).split("?")[0] == EXPORT_URL
         assert set(request.url.params) == {"pubDay", "format"}
-        assert request.url.params["format"] == "ocds.zip"
+        assert request.url.params["format"] in ("ocds.zip", "eforms.zip")
         body = daily_archives.get(request.url.params["pubDay"])
+        if body and request.url.params["format"] == "eforms.zip":
+            records = []
+            with zipfile.ZipFile(io.BytesIO(body)) as source:
+                for name in source.namelist():
+                    identity = name[:-5]
+                    options = {}
+                    if identity == "10000002-1":
+                        options["lots"] = [
+                            ("LOT-0001", [("2026-12-08+01:00", "10:00:00+01:00")]),
+                            ("LOT-0002", [("2026-12-09+01:00", "11:00:00+01:00")]),
+                        ]
+                    elif identity == "10000003-1":
+                        options["lots"] = [("LOT-0001", [("2026-12-08+01:00", "10:00:00+02:00")])]
+                    elif identity == "10000004-1":
+                        options["lots"] = []
+                    elif identity == "10000005-1":
+                        options["customization"] = "eforms-sdk-0.1"
+                    records.append((identity + ".xml", xml(identity, **options)))
+            body = archive(records)
         return httpx.Response(200, content=body) if body else httpx.Response(400)
 
     def controlled_german_client():
