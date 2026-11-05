@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 from pydantic import Field, StringConstraints, field_validator
 
 from tendercite.domain.bkms import CatalogSummary
+from tendercite.domain.bkms_deadlines import DeadlineEvidence
 from tendercite.domain.bkms_reference import BkmsModel, BkmsSource, Digest, WarningCode
 from tendercite.domain.ted_reference import literal_keyword
 
@@ -78,6 +79,7 @@ class NoticeOccurrence(BkmsModel):
 
 class MultiSearchHit(BkmsModel):
     source: BkmsSource
+    deadline_enrichment: DeadlineEvidence | None = None
     notice_category: NoticeCategory
     version_count: Annotated[int, Field(ge=1, le=MAX_RESULTS)]
     is_latest_stored: bool

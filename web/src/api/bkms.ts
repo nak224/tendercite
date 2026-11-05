@@ -34,11 +34,14 @@ const codes = new Set([
   'BKMS_DAY_ALREADY_STORED',
   'BKMS_DAY_LIMIT_REACHED',
   'BKMS_TOTAL_STORAGE_LIMIT',
+  'BKMS_INVALID_EFORMS',
+  'BKMS_EFORMS_IDENTITY_MISMATCH',
+  'BKMS_DEADLINE_CONFLICT',
   'DATABASE_FAILED',
   'OPPORTUNITY_ID_CONFLICT',
   'OPPORTUNITY_STORAGE_INTEGRITY',
 ]);
-async function responseError(response: Response): Promise<Error> {
+export async function bkmsResponseError(response: Response): Promise<Error> {
   let code = '';
   try {
     const body = await response.json();
@@ -52,7 +55,7 @@ async function responseError(response: Response): Promise<Error> {
   );
 }
 export async function bkmsRequest(
-  operation: 'catalog' | 'catalogs' | 'load' | 'search' | 'import' | 'remove',
+  operation: 'catalog' | 'catalogs' | 'load' | 'search' | 'import' | 'remove' | 'deadlines/load',
   body?: object,
   signal?: AbortSignal,
 ): Promise<unknown> {
@@ -61,7 +64,7 @@ export async function bkmsRequest(
       operation,
       body ? JSON.stringify(body) : undefined,
       signal,
-      responseError,
+      bkmsResponseError,
     );
   } catch (error) {
     if (signal?.aborted || error instanceof BkmsError) throw error;

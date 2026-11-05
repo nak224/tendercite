@@ -383,7 +383,7 @@ export function tenderDiscoveryPost(
 }
 
 export function tenderBkmsRequest(
-  operation: 'catalog' | 'catalogs' | 'load' | 'search' | 'import' | 'remove',
+  operation: 'catalog' | 'catalogs' | 'load' | 'search' | 'import' | 'remove' | 'deadlines/load',
   body: string | undefined,
   signal: AbortSignal | undefined,
   responseError: (response: Response) => Promise<Error>,

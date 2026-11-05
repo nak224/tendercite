@@ -88,7 +88,7 @@ to native Opportunities. Raw live artifacts stay outside Git. Counts can change 
 Export day is the provider's Europe/Berlin processing boundary; source publication timestamp and
 local retrieval timestamp are separate. A preceding UTC publication date can be legitimate. Missing
 deadlines remain **Unavailable in OCDS**. No date is inferred from text, lots, publication or retrieval.
-Official eForms deadline enrichment is a possible later milestone.
+Explicit [official eForms deadline enrichment](official-deadline-enrichment.md) now provides a separate, verified-modern-schema source view. Original OCDS/imported deadline values are not changed.
 
 ## Local setup and HTTP contract
 
