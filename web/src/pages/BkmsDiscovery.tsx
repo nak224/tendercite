@@ -11,6 +11,8 @@ import {
 } from '../api/bkmsCatalogs';
 import type { OpportunityRecord } from '../api/opportunities';
 import { Badge, Empty } from '../components/ui';
+import { loadDeadlines, readDeadlineSummary, type DeadlineSummary } from '../api/bkmsDeadlines';
+import { BkmsDeadlineSource } from './BkmsDeadlineSource';
 
 type Outcome = {
   status?: 'CREATED' | 'ALREADY_PRESENT';
@@ -42,6 +44,7 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
   const [invalidated, setInvalidated] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [outcomes, setOutcomes] = useState<Record<string, Outcome>>({});
+  const [deadlineSummaries, setDeadlineSummaries] = useState<Record<string, DeadlineSummary>>({});
   const pending = useRef<string | null>(null),
     catalogGeneration = useRef(0),
     alive = useRef(true);
@@ -150,6 +153,36 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
           setError(
             `${message(failure)} Removal is not confirmed; read current stored days before explicitly retrying. No automatic retry was made.`,
           );
+        await recoverList();
+      }
+    });
+  }
+  async function deadlines(catalog: BkmsCatalog, download: boolean) {
+    await perform(download ? 'DEADLINE_LOAD' : 'DEADLINE_READ', async () => {
+      setError('');
+      setNotice('');
+      if (download) setResults(null);
+      try {
+        let current = await readDeadlineSummary(catalog);
+        if (download) current = await loadDeadlines(catalog, current.enrichment_id);
+        if (alive.current) {
+          setDeadlineSummaries((old) => ({ ...old, [catalog.catalog_id]: current }));
+          if (download)
+            setNotice(
+              `Server confirmed official deadline enrichment for ${catalog.export_day}. Search again to inspect stored source values. Local opportunities were not changed.`,
+            );
+        }
+      } catch (failure) {
+        if (alive.current) {
+          setError(
+            `${message(failure)} ${download ? 'Enrichment persistence is not confirmed; read its stored summary or search again before an explicit retry. No automatic retry was made.' : 'Stored deadline metadata could not be inspected.'}`,
+          );
+          setDeadlineSummaries((old) => {
+            const next = { ...old };
+            delete next[catalog.catalog_id];
+            return next;
+          });
+        }
         await recoverList();
       }
     });
@@ -302,6 +335,11 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
           <p role="status">Downloading and validating one official daily export…</p>
         )}
         {busy === 'REMOVE' && <p role="status">Removing the selected stored day…</p>}
+        {busy === 'DEADLINE_LOAD' && (
+          <p role="status">
+            Downloading one official eForms day and checking exact notice/version identities…
+          </p>
+        )}
         {confirmation && (
           <aside role="alertdialog" aria-label="Confirm catalog change">
             <p>
@@ -309,6 +347,9 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
               {confirmation.catalog.export_day} in local discovery? Imported opportunities and
               original source provenance remain unchanged. The migrated legacy recovery copy, if
               any, is retained.
+              {confirmation.kind === 'REMOVE'
+                ? ' Removing this day also removes its stored deadline enrichment.'
+                : ' Existing deadline enrichment becomes stale after catalog replacement until explicitly reloaded.'}
             </p>
             <button
               disabled={busy !== null}
@@ -374,6 +415,32 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
                   >
                     Remove {catalog.export_day}
                   </button>
+                  <p>
+                    Deadline enrichment is a separate explicit eForms download (same archive
+                    limits). It never updates local Opportunity deadlines.
+                  </p>
+                  <button
+                    disabled={busy !== null || invalidated}
+                    onClick={() => void deadlines(catalog, false)}
+                  >
+                    Read stored deadlines for {catalog.export_day}
+                  </button>
+                  <button
+                    disabled={busy !== null || invalidated}
+                    onClick={() => void deadlines(catalog, true)}
+                  >
+                    Load official deadlines for {catalog.export_day}
+                  </button>
+                  {deadlineSummaries[catalog.catalog_id] && (
+                    <p role="status">
+                      Stored deadline state: {deadlineSummaries[catalog.catalog_id]!.state}. Counts:{' '}
+                      {Object.entries(deadlineSummaries[catalog.catalog_id]!.counts)
+                        .map(([key, n]) => `${key}: ${n}`)
+                        .join(', ') || 'None'}
+                      . Retrieved:{' '}
+                      {deadlineSummaries[catalog.catalog_id]!.retrieved_at ?? 'Not loaded'}.
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
@@ -496,9 +563,10 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
                   </p>
                   <p>Publication date (source timestamp): {m.published_at ?? 'Unavailable'}</p>
                   <p>
-                    Deadline (source timestamp):{' '}
+                    OCDS deadline (original source snapshot):{' '}
                     {m.deadline ?? 'Unavailable in OCDS; inspect the original publication'}
                   </p>
+                  <BkmsDeadlineSource evidence={hit.deadline_enrichment} />
                   <p>
                     {hit.is_latest_stored
                       ? 'Highest stored numeric version.'
@@ -572,6 +640,11 @@ export function BkmsDiscovery({ onBusyChange }: { onBusyChange: (busy: boolean) 
                         {outcome.status === 'ALREADY_PRESENT'
                           ? 'Existing local edits were retained.'
                           : 'Saved with official German attribution and no inferred skills.'}
+                      </p>
+                      <p>
+                        Local Opportunity deadline (server-confirmed):{' '}
+                        {outcome.record.opportunity.deadline ?? 'Not supplied'}. Official source
+                        values above do not replace it.
                       </p>
                       <div className="actions">
                         <Link to={`/opportunities?opportunity_id=${outcome.record.opportunity_id}`}>
